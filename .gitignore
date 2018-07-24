@@ -23,9 +23,12 @@
 # Logs and databases #
 ######################
 *.log
+*.pyc
 *.sql
 *.sqlite
 *.ini
+*.toml
+*.json
 *.sublime-projectw
 *.sublime-workspace
 *.bak
