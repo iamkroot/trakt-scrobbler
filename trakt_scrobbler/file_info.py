@@ -1,12 +1,10 @@
-import re
 import logging
+import re
 import guessit
 from pathlib import Path
-from trakt_interface import TraktAPI
+from trakt_interface import search as trakt_search
 from utils import cache, update_cache, config
 
-
-trakt = TraktAPI()
 logger = logging.getLogger('trakt_scrobbler')
 
 
@@ -47,7 +45,7 @@ def search_cache(title):
 def search_trakt(title, item_type):
     logger.debug('Searching trakt.')
     required_type = 'show' if item_type == 'episode' else 'movie'
-    results = trakt.search(title, [required_type])
+    results = trakt_search(title, [required_type])
     if not results:
         logger.warning('Trakt search yielded no results.')
         return

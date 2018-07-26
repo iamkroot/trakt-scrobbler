@@ -1,12 +1,12 @@
-import os
 import json
-import time
 import logging
+import os
 import threading
-from queue import Queue
+import time
 from pathlib import Path
-from utils import config
+from queue import Queue
 from player_monitors.monitor import Monitor
+from utils import config
 
 if os.name == 'posix':
     import select
@@ -49,7 +49,6 @@ class MPVMon(Monitor):
             'duration': self.vars['duration'],
             'time': time.time()
         }
-        print(self.status)
         self.send_to_queue()
 
     def update_vars(self):
@@ -183,8 +182,7 @@ class MPVWinMon(MPVMon):
             while True:
                 while not self.write_queue.empty():
                     f.write(self.write_queue.get_nowait())
-                data = f.read(16384)
-                print(data)
+                data = f.read(4096)
                 if not data:
                     break
                 self.on_data(data)

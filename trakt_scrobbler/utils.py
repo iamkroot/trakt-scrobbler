@@ -1,7 +1,8 @@
-import pytoml
 import json
-from pathlib import Path
 import logging
+import pytoml
+import requests
+from pathlib import Path
 
 
 def read_config(config_path='config.toml'):
@@ -80,6 +81,21 @@ LOGGING = {
         }
     }
 }
+
+
+logger = logging.getLogger('trakt_scrobbler')
+
+
+def safe_request(verb, params):
+    """ConnectionError handling for requests methods."""
+    try:
+        resp = requests.request(verb, **params)
+    except requests.exceptions.ConnectionError:
+        logger.error('Failed to connect.')
+        logger.debug(verb + str(params))
+        return None
+    else:
+        return resp
 
 
 if __name__ == '__main__':

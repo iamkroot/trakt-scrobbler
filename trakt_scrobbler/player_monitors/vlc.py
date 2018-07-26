@@ -1,7 +1,7 @@
 import logging
 from urllib.parse import unquote
-from utils import config
 from player_monitors.monitor import WebInterfaceMon
+from utils import config
 
 logger = logging.getLogger('trakt_scrobbler')
 

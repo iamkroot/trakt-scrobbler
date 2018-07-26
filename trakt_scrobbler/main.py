@@ -1,13 +1,16 @@
 import inspect
-from importlib import import_module
+import logging
 import logging.config
+from importlib import import_module
 from pathlib import Path
 from queue import Queue
-from utils import config, LOGGING
-from scrobbler import Scrobbler
 from player_monitors.monitor import Monitor
+from scrobbler import Scrobbler
+from trakt_interface import get_access_token, read_token_data
+from utils import config, LOGGING
 
 logging.config.dictConfig(LOGGING)
+logger = logging.getLogger('trakt_scrobbler')
 
 
 def get_monitors():
@@ -30,11 +33,13 @@ def get_monitors():
 
 
 def main():
-    q = Queue()
-    scrobbler = Scrobbler(q)
+    if not read_token_data():
+        get_access_token()
+    scrobble_queue = Queue()
+    scrobbler = Scrobbler(scrobble_queue)
     scrobbler.start()
     for Mon in get_monitors():
-        mon = Mon(q)
+        mon = Mon(scrobble_queue)
         mon.start()
 
 

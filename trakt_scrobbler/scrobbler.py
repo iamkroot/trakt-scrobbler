@@ -1,8 +1,8 @@
 import time
 import logging
 from threading import Thread
+from trakt_interface import scrobble as trakt_scrobble
 from utils import config
-from trakt_interface import TraktAPI
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -26,7 +26,6 @@ class Scrobbler(Thread):
         self.scrobble_interval = scrobble_interval
         self.players = config['players']['priorities']
         self.player_inds = {p: i for i, p in enumerate(self.players)}
-        self.trakt = TraktAPI()
         self._cache = []
         self.final_actions = []
 
@@ -123,7 +122,7 @@ class Scrobbler(Thread):
         self.determine_actions()
         for verb, data, item in self.final_actions:
             logger.info('Scrobbling ' + verb + str(data))
-            if not self.trakt.scrobble(verb, data):
+            if not trakt_scrobble(verb, data):
                 logger.warning('Invalid response while trying to scrobble.')
                 continue
             # clear cache upto current entry
