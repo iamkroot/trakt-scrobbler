@@ -31,6 +31,7 @@ def custom_regex(file_path):
 def use_guessit(file_path):
     logger.debug('Using guessit module to match.')
     guess = guessit.guessit(str(file_path))
+    logger.debug(guess)
     return guess
 
 
@@ -80,13 +81,13 @@ def prepare_data(trakt_id, guess):
         return {
             'show': {'ids': {'trakt': trakt_id}},
             'episode': {
-                'season': int(guess.get('season', 1)),
-                'number': int(guess['episode'])
+                'season': guess.get('season', 1),
+                'number': guess['episode']
             }
         }
 
 
-def get_data(path):
+def get_media_trakt_data(path):
     file_path = Path(path)
     logger.debug('Filepath ' + str(file_path))
     if not whitelist_file(file_path):
