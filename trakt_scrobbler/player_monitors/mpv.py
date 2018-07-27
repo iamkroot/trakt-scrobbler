@@ -88,9 +88,6 @@ class MPVMon(Monitor):
         elif 'request_id' in mpv_json:
             self.handle_cmd_response(mpv_json)
 
-    def write(self, data):
-        self.write_queue.put(data)
-
     def send_command(self, elements):
         with self.lock:
             command = {'command': elements, 'request_id': self.command_counter}
@@ -147,22 +144,24 @@ class MPVPosixMon(MPVMon):
         self.sock.connect(self.ipc_path)
         self.is_running = True
         self.update_vars()
-        while True:
+        while self.is_running:
             r, _, e = select.select([self.sock], [], [], 0.1)
             if r == [self.sock]:
                 # socket has data to read
                 data = self.sock.recv(4096)
                 if len(data) == 0:
                     # EOF reached
-                    break
+                    self.is_running = False
                 self.on_data(data)
             while not self.write_queue.empty():
                 # block until self.sock can be written to
                 select.select([], [self.sock], [])
-                self.sock.sendall(self.write_queue.get_nowait())
+                try:
+                    self.sock.sendall(self.write_queue.get_nowait())
+                except BrokenPipeError:
+                    self.is_running = False
         self.sock.close()
         logger.debug('Sock closed')
-        self.is_running = False
 
 
 class MPVWinMon(MPVMon):
@@ -187,4 +186,5 @@ class MPVWinMon(MPVMon):
                     break
                 self.on_data(data)
                 time.sleep(1)
+        logger.debug('Pipe closed.')
         self.is_running = False

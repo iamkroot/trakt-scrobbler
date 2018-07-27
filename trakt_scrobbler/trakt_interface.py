@@ -1,15 +1,12 @@
-import json
 import logging
 import time
-from pathlib import Path
 import trakt_key_holder
-from utils import safe_request
+from utils import safe_request, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
 
 CLIENT_ID = trakt_key_holder.get_id()
 CLIENT_SECRET = trakt_key_holder.get_secret()
-TOKEN_PATH = Path('trakt_token.json')
 API_URL = "https://api.trakt.tv"
 
 
@@ -94,23 +91,8 @@ def refresh_token(token_data):
         logger.info("Error refreshing token.")
 
 
-def read_token_data():
-    if not TOKEN_PATH.exists():
-        return None
-    with open(TOKEN_PATH, 'r') as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return None
-
-
-def save_token_data(token_data):
-    with open(TOKEN_PATH, 'w') as f:
-        json.dump(token_data, f, indent=4)
-
-
 def get_access_token():
-    token_data = read_token_data()
+    token_data = read_json('trakt_token.json')
     if not token_data:
         logger.info("Access token not found in config. " +
                     "Initiating device authentication.")
@@ -118,7 +100,7 @@ def get_access_token():
     elif token_data['expires_at'] - time.time() < 86400:
         logger.info("Access token about to expire. Refreshing.")
         token_data = refresh_token(token_data)
-    save_token_data(token_data)
+    write_json(token_data, 'trakt_token.json')
     return token_data['access_token']
 
 

@@ -2,7 +2,7 @@ import time
 import logging
 from threading import Thread
 from trakt_interface import scrobble as trakt_scrobble
-from utils import config
+from utils import config, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -22,23 +22,22 @@ class Scrobbler(Thread):
 
     def __init__(self, scrobble_queue, scrobble_interval=60):
         super().__init__(name='scrobbler')
+        logger.info('Started scrobbler thread.')
         self.scrobble_queue = scrobble_queue
         self.scrobble_interval = scrobble_interval
         self.players = config['players']['priorities']
         self.player_inds = {p: i for i, p in enumerate(self.players)}
-        self._cache = []
+        self._cache = read_json('scrobble_cache.json') or []
         self.final_actions = []
 
     def run(self):
         while True:
-            if self.scrobble_queue.qsize() == 0:
-                time.sleep(self.scrobble_interval)
-                continue
-            scrobble_data = self.scrobble_queue.get()
-            self._cache.append(scrobble_data)
-            if self.scrobble_queue.qsize() == 0:
-                self.scrobble()
-            self.scrobble_queue.task_done()
+            while not self.scrobble_queue.qsize() == 0:
+                scrobble_data = self.scrobble_queue.get()
+                self._cache.append(scrobble_data)
+                self.scrobble_queue.task_done()
+            self.scrobble()
+            time.sleep(self.scrobble_interval)
 
     def _get_last_states(self):
         """Extract the last known status of each file."""
@@ -121,13 +120,15 @@ class Scrobbler(Thread):
     def scrobble(self):
         self.determine_actions()
         for verb, data, item in self.final_actions:
-            logger.info('Scrobbling ' + verb + str(data))
+            logger.debug(f'Scrobbling {verb} {data!s}')
             if not trakt_scrobble(verb, data):
-                logger.warning('Invalid response while trying to scrobble.')
-                continue
-            # clear cache upto current entry
-            del self._cache[:self._cache.index(item) + 1]
-            if verb == 'start':
-                # save the media info for next time the queue is emptied
-                self._cache.append(item)
+                logger.warning('No response while trying to scrobble.')
+            else:
+                logger.info('Scrobble successful.')
+                # clear cache upto current entry
+                del self._cache[:self._cache.index(item) + 1]
+                if verb == 'start':
+                    # save the media info for next time the queue is emptied
+                    self._cache.append(item)
+            write_json(self._cache, 'scrobble_cache.json')
         self.final_actions.clear()

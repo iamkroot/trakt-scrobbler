@@ -3,9 +3,10 @@ import re
 import guessit
 from pathlib import Path
 from trakt_interface import search as trakt_search
-from utils import cache, update_cache, config
+from utils import config, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
+trakt_cache = read_json('trakt_cache.json') or {'movie': {}, 'show': {}}
 
 
 def whitelist_file(file_path):
@@ -36,7 +37,7 @@ def use_guessit(file_path):
 def search_cache(title):
     """Search cache for trakt ID of show or movie."""
     logger.debug('Searching cache.')
-    for value in cache.values():
+    for value in trakt_cache.values():
         if title in value:
             trakt_id = value[title]
             return trakt_id
@@ -51,9 +52,9 @@ def search_trakt(title, item_type):
         return
     result = results[0]
     trakt_id = result[required_type]['ids']['trakt']
-    cache[required_type][title] = trakt_id
+    trakt_cache[required_type][title] = trakt_id
     logger.debug(f'Trakt ID: {trakt_id}')
-    update_cache(cache)
+    write_json(trakt_cache, 'trakt_cache.json')
     return trakt_id
 
 
@@ -93,5 +94,5 @@ def get_media_trakt_data(path):
         return None
     trakt_id, guess = find_file(file_path)
     if trakt_id:
-        logger.info('Found Trakt ID of file.')
+        logger.info('Found Trakt ID of media.')
         return prepare_data(trakt_id, guess)

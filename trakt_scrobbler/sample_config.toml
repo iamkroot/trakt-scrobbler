@@ -4,24 +4,24 @@ whitelist = [
 	"/path/to/videos_folder"
 ]
 
-[fileinfo.include_regexes]
+[fileinfo.include_regexes]  # custom regex to identify media information
 # movie = [".*/(?P<name>.+?) \\((?P<year>[0-9]{4})\\).*",]
 episode = [".*/(?P<title>.+?) \\[[0-9]{3,4}p\\]/(?P<episode>\\d+) - (?P<episode_title>.*)\\.[a-z]{3,4}"]
 
-[players]
+[players]  # list the required players here, decreasing order of priority
 priorities = ['mpchc', 'mpv', 'vlc']
 
-[players.mpchc]
+[players.mpchc]  # enable web interface from options
 ip = "localhost"
 port = "13579"
 poll_interval = 10
 
-[players.vlc]
+[players.vlc]  # enable web interface from options
 ip = "localhost"
 port = "8080"
 password = "password"
 poll_interval = 10
 
-[players.mpv]
-ipc_path = "\\\\.\\pipe\\mpvpipe"
-# ipc_path = "/tmp/mpvsocket"
+[players.mpv]  # enable the JSON IPC server
+ipc_path = "\\\\.\\pipe\\mpvpipe"  # windows
+# ipc_path = "/tmp/mpvsocket"  # unix
