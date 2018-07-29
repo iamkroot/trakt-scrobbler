@@ -1,16 +1,33 @@
 # Trakt Scrobbler
-Simple python project to automatically scrobble media information to [Trakt.tv](https://trakt.tv). Fully pluggable, which enables taking data from multiple players at the *same* time. Currently has support for:
+Simple python project to automatically scrobble media information to [Trakt.tv](https://trakt.tv). Fully pluggable, which enables taking data from multiple players at the *same* time.
 
-+ [VLC](https://www.videolan.org/vlc/) (via web interface)
-+ [MPV](https://mpv.io) (via IPC server)
-+ [MPC-HC](https://mpc-hc.org) (via web interface).
-
+## Features
++ Uses [guessit](https://github.com/guessit-io/guessit) to extract media information from its file path.
++ Scrobbling is independent of the player(s) where the media is played. Support for new players can thus be easily added.
++ Currently has support for:
+	+ [VLC](https://www.videolan.org/vlc/) (via web interface)
+	+ [MPV](https://mpv.io) (via IPC server)
+	+ [MPC-HC](https://mpc-hc.org) (via web interface).
 
 ## Getting started
 ### Installation
 1. Clone the repo to a directory of your choice.
 2. Ensure you have Python 3.6 or higher installed, and in your system `PATH`.
-3. Run `pip install -r requirements.txt` to install the necessary requirements.
+3. Run `pip install pipenv` to install pipenv in your system.
+
+#### Linux
+At the root of cloned project directory, run `sudo env "PATH=$PATH" scripts/linux-install-service.sh`. This will install the files in your $HOME/.local/ directory, create the virtualenv, and also enable the startup service.
+
+#### Windows
+At the root of cloned project directory, run `scripts\windows-install.bat`. This will install the files in your %APPDATA% directory, create the virtualenv, and also enable the startup service.
+
+#### MacOS
+I will try to make a install script for Mac soon. Till then, here are the manual steps you can follow:
+1. Inside the project directory root, run `pipenv install`. This will create a virtualenv, and install the necessary requirements.
+2. Run `pipenv --py` to find the location of python interpreter of virtualenv. 
+3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
+4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
+5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
 
 ### Setting up
 #### Players
@@ -46,4 +63,4 @@ Feel free to create a new issue in case you find a bug/want to have a feature ad
 
 ## Acknowledgements
 + Inspired from [TraktForVLC](https://github.com/XaF/TraktForVLC)
-+ Some part of the MPV code is originally from [mpv-trakt-sync-daemon](https://github.com/stareInTheAir/mpv-trakt-sync-daemon)
++ [mpv-trakt-sync-daemon](https://github.com/stareInTheAir/mpv-trakt-sync-daemon) was a huge help in making the mpv monitor

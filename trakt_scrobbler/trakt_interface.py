@@ -1,5 +1,6 @@
 import logging
 import time
+import sys
 import trakt_key_holder
 from utils import safe_request, read_json, write_json
 
@@ -40,14 +41,14 @@ def get_device_token(device_code):
         return token_resp.json()
     else:
         logger.error('Invalid status code of token response.')
-        exit(0)
+        sys.exit(1)
 
 
 def device_auth():
     code_data = get_device_code()
     if not code_data:
         logger.error('Failed device auth.')
-        exit(0)
+        sys.exit(1)
 
     logger.debug(f"User Code: {code_data['user_code']}")
     logger.debug(f"Verification URL: {code_data['verification_url']}")
@@ -66,7 +67,7 @@ def device_auth():
             break
     else:
         logger.error('Timed out during auth.')
-        exit(0)
+        sys.exit(1)
     token_data['expires_at'] = token_data['created_at'] + token_data['expires_in']
     return token_data
 
