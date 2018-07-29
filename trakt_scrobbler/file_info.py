@@ -49,9 +49,9 @@ def search_trakt(title, item_type):
     results = trakt_search(title, [required_type])
     if not results:
         logger.warning('Trakt search yielded no results.')
-        return
-    result = results[0]
-    trakt_id = result[required_type]['ids']['trakt']
+        trakt_id = None
+    else:
+        trakt_id = results[0][required_type]['ids']['trakt']
     trakt_cache[required_type][title] = trakt_id
     logger.debug(f'Trakt ID: {trakt_id}')
     write_json(trakt_cache, 'trakt_cache.json')
