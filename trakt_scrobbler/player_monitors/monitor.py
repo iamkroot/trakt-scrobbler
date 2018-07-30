@@ -13,7 +13,7 @@ class Monitor(Thread):
      and puts the info to scrobble queue."""
 
     def __init__(self, scrobble_queue):
-        super().__init__(name=self.name)
+        super().__init__(name=self.name + 'mon')
         logger.info('Started monitor for ' + self.name)
         self.scrobble_queue = scrobble_queue
         self.is_running = False

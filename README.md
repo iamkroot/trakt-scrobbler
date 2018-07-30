@@ -2,7 +2,7 @@
 Simple python project to automatically scrobble media information to [Trakt.tv](https://trakt.tv). Fully pluggable, which enables taking data from multiple players at the *same* time.
 
 ## Features
-+ Uses [guessit](https://github.com/guessit-io/guessit) to extract media information from its file path.
++ Uses [guessit](https://github.com/guessit-io/guessit) to extract media information from its file path. For cases when it misidentifies the files, you can specify a regex to manually extract the necessary details.
 + Scrobbling is independent of the player(s) where the media is played. Support for new players can thus be easily added.
 + Currently has support for:
 	+ [VLC](https://www.videolan.org/vlc/) (via web interface)
@@ -45,7 +45,7 @@ All you have to do now is create a `config.toml` file with the required paramete
 Parameter | Explanation |
 --------- | -----------
 `fileinfo.whitelist`| List of strings \| Default: `[]` <br> List of directories you want to be scanned for shows or movies. If empty, all files played in the player are scanned. You can prevent the program from scanning all played files if your shows and movies are located in fixed directories. If possible you should use this option to minimize traffic on the Trakt API.
-`fileinfo.include_regexes`| Dict of list of strings \| Default: `{}` <br> If you find that the default module for identifying media info ([guessit](https://github.com/guessit-io/guessit)) is misidentifying some titles, you can specify the regex for that file path. <br>The minimum required information is the title of the file, and episode number in the case of TV Shows. If season is not found, it defaults to 1.
+`fileinfo.include_regexes`| Dict of list of strings \| Default: `{}` <br> If you find that the default module for identifying media info ([guessit](https://github.com/guessit-io/guessit)) is misidentifying some titles, you can specify the regex for that file path. <br> The regex should have posix-like path, and not Windows' `\` to separate directories. <br>The minimum required information is the title of the file, and episode number in the case of TV Shows. If season is not found, it defaults to 1.
 `players.priorites`| List of strings <br> Specify the decreasing order of priority for players which are to be monitored for scrobbling. In case multiple players are playing a media, the media from player with higher priority will be scrobbled as playing, and others will be scrobbled stop.
 Other player specific parameters| See sample config for the required attributes.
 

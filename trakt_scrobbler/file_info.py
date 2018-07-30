@@ -18,13 +18,15 @@ def whitelist_file(file_path):
 
 def custom_regex(file_path):
     logger.debug('Trying to match custom regex.')
+    path_posix = str(file_path.as_posix())
     for item_type, patterns in config['fileinfo']['include_regexes'].items():
         for pattern in patterns:
-            m = re.match(pattern, str(file_path))
+            m = re.match(pattern, path_posix)
             if m:
                 guess = m.groupdict()
                 guess['type'] = item_type
                 return guess
+    logger.debug('No regex matches for ' + path_posix)
 
 
 def use_guessit(file_path):

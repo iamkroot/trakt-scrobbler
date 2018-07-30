@@ -1,26 +1,28 @@
 import logging
 import logging.config
-import sys
+from utils import config
 
 
 class StoppedPlayersFilter(logging.Filter):
-    """Limit the logging of 'Unable to connect' for players not running."""
+    """Only allow the first 'Unable to connect' for players not running."""
 
     def __init__(self):
-        self.log_count = {}
+        self.log_count = set()
 
     def filter(self, record: logging.LogRecord):
-        if 'Unable to connect' in record.msg:
-            if record.thread not in self.log_count:
-                self.log_count[record.thread] = 1
-            else:
-                self.log_count[record.thread] += 1
-                if self.log_count[record.thread] % 100:
-                    return False
+        if record.threadName in config['players']['priorities']:
+            if 'Unable to connect' in record.msg:
+                val = record.thread not in self.log_count
+                print(val)
+                self.log_count.add(record.thread)
+                return val
+            else:  # some other message is sent from the thread
+                self.log_count.discard(record.thread)
         return True
 
 
 class ModuleFilter(logging.Filter):
+    """Specify the minimum log level required for the message from a module."""
     min_levels = {
         'file_info': logging.INFO,
     }
@@ -37,11 +39,11 @@ LOGGING_CONF = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{asctime} - {levelname} - {module} - {message}',
+            'format': '{asctime} - {levelname} - {threadName} - {module} - {message}',
             'style': '{'
         },
         'brief': {
-            'format': '{levelname} - {module} - {message}',
+            'format': '{levelname} - {threadName} - {module} - {message}',
             'style': '{'
         }
     },
@@ -61,18 +63,11 @@ LOGGING_CONF = {
             'level': 'DEBUG',
             'formatter': 'verbose',
             'filters': ['stoppedplayersfilter', 'modulesfilter']
-        },
-        'print': {
-            'class': 'logging.StreamHandler',
-            'level': 'INFO',
-            'stream': sys.stdout,
-            'formatter': 'brief',
-            'filters': ['stoppedplayersfilter', 'modulesfilter']
         }
     },
     'loggers': {
         'trakt_scrobbler': {
-            'handlers': ['file', 'print'],
+            'handlers': ['file'],
             'level': 'DEBUG'
         }
     }
