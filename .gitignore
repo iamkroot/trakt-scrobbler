@@ -38,3 +38,5 @@
 # Project specific files #
 ##########################
 
+
+*.sublime-project

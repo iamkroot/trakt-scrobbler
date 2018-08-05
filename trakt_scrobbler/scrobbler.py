@@ -32,12 +32,14 @@ class Scrobbler(Thread):
 
     def run(self):
         while True:
-            while not self.scrobble_queue.qsize() == 0:
+            if self.scrobble_queue.qsize() == 0:
+                time.sleep(self.scrobble_interval)
+                continue
+            while self.scrobble_queue.qsize():
                 scrobble_data = self.scrobble_queue.get()
                 self._cache.append(scrobble_data)
                 self.scrobble_queue.task_done()
             self.scrobble()
-            time.sleep(self.scrobble_interval)
 
     def _get_last_states(self):
         """Extract the last known status of each file."""
@@ -54,9 +56,9 @@ class Scrobbler(Thread):
     def _group_cache_by_player_name(self):
         """Group cache by players."""
         grouped = {}
-        for player in self.players:
-            grouped[player] = list(filter(
-                lambda item: item['player'] == player, self._cache))
+        for item in self._cache:
+            grouped.setdefault(item['player'], [])
+            grouped[item['player']].append(item)
         return grouped
 
     def determine_actions(self):
