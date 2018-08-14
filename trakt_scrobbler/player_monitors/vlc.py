@@ -52,4 +52,4 @@ class VLCMon(WebInterfaceMon):
         file_url = file_data['uri']
         if not file_url.startswith('file://'):
             return None
-        return unquote(file_url[file_url.find('://') + 3:])
+        return unquote(file_url)

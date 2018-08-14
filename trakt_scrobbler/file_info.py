@@ -12,7 +12,8 @@ trakt_cache = read_json('trakt_cache.json') or {'movie': {}, 'show': {}}
 def whitelist_file(file_path):
     if not config['fileinfo'].get('whitelist'):
         return True
-    return any(file_path.resolve() > Path(path).resolve()
+    parents = list(file_path.absolute().resolve().parents)
+    return any(Path(path).resolve() in parents
                for path in config['fileinfo']['whitelist'])
 
 
