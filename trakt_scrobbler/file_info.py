@@ -50,9 +50,11 @@ def search_trakt(title, item_type):
     logger.debug('Searching trakt.')
     required_type = 'show' if item_type == 'episode' else 'movie'
     results = trakt_search(title, [required_type])
-    if not results:
+    if results is None:  # Connection error
+        return 0  # Dont store in cache
+    elif not results:  # Empty list
         logger.warning('Trakt search yielded no results.')
-        trakt_id = None
+        trakt_id = -1
     else:
         trakt_id = results[0][required_type]['ids']['trakt']
     trakt_cache[required_type][title] = trakt_id
@@ -96,6 +98,6 @@ def get_media_trakt_data(path):
         logger.info("File path not in whitelist.")
         return None
     trakt_id, guess = find_file(file_path)
-    if trakt_id:
+    if trakt_id > 0:
         logger.info('Found Trakt ID of media.')
         return prepare_data(trakt_id, guess)
