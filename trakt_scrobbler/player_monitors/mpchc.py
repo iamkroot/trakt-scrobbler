@@ -29,6 +29,9 @@ class MPCHCMon(WebInterfaceMon):
         if variables['duration'] == '0':
             self.reset_status()
             return
-        for key in ('state', 'position', 'duration'):
-            self.status[key] = int(variables[key])
+        self.status['state'] = int(variables['state'])
+        for key in ('position', 'duration'):
+            self.status[key] = int(variables[key]) / 1000
+        if self.status['position'] == self.status['duration']:
+            self.status['state'] = 0
         self.status['filepath'] = variables['filepath']
