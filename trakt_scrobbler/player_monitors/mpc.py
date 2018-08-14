@@ -6,15 +6,15 @@ from utils import config
 logger = logging.getLogger('trakt_scrobbler')
 
 
-class MPCHCMon(WebInterfaceMon):
-    name = 'mpchc'
+class MPCMon(WebInterfaceMon):
+    exclude_import = True
     URL = "http://{ip}:{port}/variables.html"
 
     def __init__(self, scrobble_queue):
         try:
-            self.URL = self.URL.format(**config['players']['mpchc'])
+            self.URL = self.URL.format(**config['players'][self.name])
         except KeyError:
-            logger.error('Check config for correct MPCHC params.')
+            logger.error(f'Check config for correct {self.name} params.')
             return
         super().__init__(scrobble_queue)
 
@@ -35,3 +35,13 @@ class MPCHCMon(WebInterfaceMon):
         if self.status['position'] == self.status['duration']:
             self.status['state'] = 0
         self.status['filepath'] = variables['filepath']
+
+
+class MPCHCMon(MPCMon):
+    exclude_import = False
+    name = 'mpchc'
+
+
+class MPCBEMon(MPCHCMon):
+    exclude_import = False
+    name = 'mpcbe'

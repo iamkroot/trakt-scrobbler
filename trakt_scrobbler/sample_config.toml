@@ -9,7 +9,12 @@ whitelist = [
 episode = [".*/(?P<title>.+?) \\[[0-9]{3,4}p\\]/(?P<episode>\\d+) - (?P<episode_title>.*)\\.[a-z]{3,4}"]
 
 [players]  # list the required players here, decreasing order of priority
-priorities = ['mpchc', 'mpv', 'vlc']
+priorities = ['mpcbe', 'mpchc', 'mpv', 'vlc']
+
+[players.mpcbe]  # enable web interface from options
+ip = "localhost"
+port = "13579"
+poll_interval = 10
 
 [players.mpchc]  # enable web interface from options
 ip = "localhost"

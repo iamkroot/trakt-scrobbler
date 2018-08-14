@@ -7,6 +7,7 @@ Simple python project to automatically scrobble media information to [Trakt.tv](
 + Currently has support for:
 	+ [VLC](https://www.videolan.org/vlc/) (via web interface)
 	+ [MPV](https://mpv.io) (via IPC server)
+	+ [MPC-BE](https://sourceforge.net/projects/mpcbe/) (via web interface).
 	+ [MPC-HC](https://mpc-hc.org) (via web interface).
 
 ## Getting started
@@ -37,7 +38,7 @@ I will try to make a install script for Mac soon. Till then, here are the manual
 
 + MPV: Enable the [JSON IPC](https://mpv.io/manual/master/#json-ipc), either via the mpv.conf file, or by passing it as a command line option.
 
-+ MPC-HC: Enable the web interface from Options.
++ MPC-BE/MPC-HC: Enable the web interface from Options.
 
 #### Configuration
 All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml`.
