@@ -11,6 +11,8 @@ from utils import config
 if os.name == 'posix':
     import select
     import socket
+elif os.name == 'nt':
+    import win32file
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -29,16 +31,30 @@ class MPVMon(Monitor):
         super().__init__(scrobble_queue)
         self.buffer = ''
         self.lock = threading.Lock()
+        self.poll_timer = None
         self.write_queue = Queue()
         self.sent_commands = {}
         self.command_counter = 1
-        self.watched_vars = ['pause', 'path',
-                             'working-directory', 'duration', 'time-pos']
+        self.mpv_props = ['pause', 'path', 'working-directory',
+                          'duration', 'time-pos']
         self.vars = {}
-        self.status = {}
+
+    def run(self):
+        while True:
+            if self.can_connect():
+                self.update_vars()
+                self.conn_loop()
+                if self.poll_timer:
+                    self.poll_timer.cancel()
+                time.sleep(1)
+            else:
+                logger.info('Unable to connect to MPV. Check ipc path.')
+                time.sleep(10)
 
     def update_status(self):
         fpath = Path(self.vars['working-directory']) / Path(self.vars['path'])
+
+        # Update last known position if player is stopped
         pos = self.vars['time-pos']
         if self.vars['state'] == 0 and self.status['state'] == 2:
             pos += round(time.time() - self.status['time'], 3)
@@ -49,21 +65,51 @@ class MPVMon(Monitor):
             'duration': self.vars['duration'],
             'time': time.time()
         }
-        self.send_to_queue()
+        if self.state_changed():
+            self.send_to_queue()
+            self.prev_values = self.status.copy()
 
     def update_vars(self):
-        self.updated = []
-        for var in self.watched_vars:
-            self.send_command(['get_property', var])
+        """Query mpv for required properties."""
+        self.updated_props_count = 0
+        for prop in self.mpv_props:
+            self.send_command(['get_property', prop])
+        if self.poll_timer:
+            logger.debug("Resetting timer")
+            self.poll_timer.cancel()
+        self.poll_timer = threading.Timer(10, self.update_vars)
+        self.poll_timer.name = 'mpvpoll'
+        self.poll_timer.start()
 
-    def run(self):
-        while True:
-            if self.can_connect():
-                self.conn_loop()
-                time.sleep(1)
-            else:
-                logger.info('Unable to connect to MPV. Check ipc path.')
-                time.sleep(10)
+    def handle_event(self, event):
+        if event == 'end-file':
+            self.vars['state'] = 0
+            self.is_running = False
+            self.update_status()
+        elif event == 'pause':
+            self.vars['state'] = 1
+            self.update_vars()
+        elif event == 'unpause' or event == 'playback-restart':
+            self.vars['state'] = 2
+            self.update_vars()
+
+    def handle_cmd_response(self, resp):
+        command = self.sent_commands[resp['request_id']]['command']
+        del self.sent_commands[resp['request_id']]
+        if resp['error'] != 'success':
+            logger.error(f'Error with command {command!s}. Response: {resp!s}')
+            return
+        elif command[0] != 'get_property':
+            return
+        param = command[1]
+        data = resp['data']
+        if param == 'pause':
+            self.vars['state'] = 1 if data else 2
+        if param in self.mpv_props:
+            self.vars[param] = data
+            self.updated_props_count += 1
+        if self.updated_props_count == len(self.mpv_props):
+            self.update_status()
 
     def on_data(self, data):
         self.buffer = self.buffer + data.decode('utf-8')
@@ -95,36 +141,6 @@ class MPVMon(Monitor):
             self.command_counter += 1
             self.write_queue.put(str.encode(json.dumps(command) + '\n'))
 
-    def handle_event(self, event):
-        if event == 'end-file':
-            self.vars['state'] = 0
-            self.update_status()
-        elif event == 'pause':
-            self.vars['state'] = 1
-            self.update_vars()
-        elif event == 'unpause' or event == 'playback-restart':
-            self.vars['state'] = 2
-            self.update_vars()
-        else:
-            return
-
-    def handle_cmd_response(self, resp):
-        command = self.sent_commands[resp['request_id']]['command']
-        if resp['error'] != 'success':
-            logger.error(f'Error with command {command!s}. Response: {resp!s}')
-            return
-        elif command[0] != 'get_property':
-            return
-        param = command[1]
-        data = resp['data']
-        if param == 'pause':
-            self.vars['state'] = 1 if data else 2
-        if param in self.watched_vars:
-            self.vars[param] = data
-            self.updated.append(param)
-        if len(self.updated) == len(self.watched_vars):
-            self.update_status()
-
 
 class MPVPosixMon(MPVMon):
     exclude_import = os.name != 'posix'
@@ -143,7 +159,6 @@ class MPVPosixMon(MPVMon):
         self.sock = socket.socket(socket.AF_UNIX)
         self.sock.connect(self.ipc_path)
         self.is_running = True
-        self.update_vars()
         while self.is_running:
             r, _, e = select.select([self.sock], [], [], 0.1)
             if r == [self.sock]:
@@ -152,6 +167,7 @@ class MPVPosixMon(MPVMon):
                 if len(data) == 0:
                     # EOF reached
                     self.is_running = False
+                    break
                 self.on_data(data)
             while not self.write_queue.empty():
                 # block until self.sock can be written to
@@ -172,19 +188,36 @@ class MPVWinMon(MPVMon):
         self.file_handle = None
 
     def can_connect(self):
-        return os.path.exists(self.ipc_path)
+        return win32file.GetFileAttributes((self.ipc_path)) == \
+            win32file.FILE_ATTRIBUTE_NORMAL
 
     def conn_loop(self):
         self.is_running = True
         self.update_vars()
-        with open(self.ipc_path, 'rb+', 0) as f:
-            while True:
+        self.file_handle = win32file.CreateFile(
+            self.ipc_path,
+            win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+            0, None,
+            win32file.OPEN_EXISTING,
+            0, None
+        )
+        while self.is_running:
+            try:
                 while not self.write_queue.empty():
-                    f.write(self.write_queue.get_nowait())
-                data = f.read(4096)
-                if not data:
-                    break
-                self.on_data(data)
+                    win32file.WriteFile(
+                        self.file_handle, self.write_queue.get_nowait())
+            except win32file.error:
+                logger.debug('Exception while writing to pipe.')
+                self.is_running = False
+                break
+            size = win32file.GetFileSize(self.file_handle)
+            if size > 0:
+                while size > 0:
+                    # pipe has data to read
+                    _, data = win32file.ReadFile(self.file_handle, 4096)
+                    self.on_data(data)
+                    size = win32file.GetFileSize(self.file_handle)
+            else:
                 time.sleep(1)
+        win32file.CloseHandle(self.file_handle)
         logger.debug('Pipe closed.')
-        self.is_running = False

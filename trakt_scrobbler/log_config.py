@@ -13,7 +13,6 @@ class StoppedPlayersFilter(logging.Filter):
         if record.threadName in config['players']['priorities']:
             if 'Unable to connect' in record.msg:
                 val = record.thread not in self.log_count
-                print(val)
                 self.log_count.add(record.thread)
                 return val
             else:  # some other message is sent from the thread

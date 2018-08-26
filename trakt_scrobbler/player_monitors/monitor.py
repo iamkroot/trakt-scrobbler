@@ -18,6 +18,7 @@ class Monitor(Thread):
         self.scrobble_queue = scrobble_queue
         self.is_running = False
         self.reset_status()
+        self.prev_values = self.status.copy()
         self.watched_vars = ['state', 'filepath']
 
     def reset_status(self):
@@ -27,6 +28,10 @@ class Monitor(Thread):
             'duration': 0,
             'filepath': None
         }
+
+    def state_changed(self):
+        return any(self.prev_values[key] != self.status[key]
+                   for key in self.watched_vars)
 
     def send_to_queue(self):
         data = {'player': self.name, 'time': time.time()}
@@ -48,7 +53,6 @@ class WebInterfaceMon(Monitor):
         super().__init__(scrobble_queue)
         self.sess = requests.Session()
         self.poll_interval = config['players'][self.name]['poll_interval']
-        self.prev_values = self.status.copy()
 
     def can_connect(self):
         try:
@@ -60,10 +64,6 @@ class WebInterfaceMon(Monitor):
         else:
             self.is_running = True
         return self.is_running
-
-    def state_changed(self):
-        return any(self.prev_values[key] != self.status[key]
-                   for key in self.watched_vars)
 
     def run(self):
         while True:
