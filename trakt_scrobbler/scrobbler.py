@@ -26,7 +26,6 @@ class Scrobbler(Thread):
         self.scrobble_queue = scrobble_queue
         self.scrobble_interval = scrobble_interval
         self.players = config['players']['priorities']
-        self.player_inds = {p: i for i, p in enumerate(self.players)}
         self._cache = read_json('scrobble_cache.json') or []
         self.final_actions = []
 
@@ -80,8 +79,8 @@ class Scrobbler(Thread):
         self._cache.reverse()
         playing_shortlist = []  # all items with 'playing' as their last status
 
-        # player with most priority, will be overriden later
-        best_player = self.players[-1]
+        # index of player with most priority, will be overriden later
+        best_player_index = len(self.players) - 1
 
         for item in last_states:
             if item['state'] < 2:  # if item is stopped/paused
@@ -89,8 +88,8 @@ class Scrobbler(Thread):
                 self.create_action(['stop', 'pause'][item['state']], item)
                 continue
 
-            player = item['player']
-            filtered_cache = cache_by_player[player]
+            player_name = item['player']
+            filtered_cache = cache_by_player[player_name]
             ind = filtered_cache.index(item)
 
             # there is another item in the player cache after the current item
@@ -98,15 +97,16 @@ class Scrobbler(Thread):
                 # update the progress according to the next item's time
                 update_percent(item, filtered_cache[ind - 1]['time'])
                 self.create_action('stop', item)
-            # this is the last known item with playing status in player
             elif ind == 0:
+                # this is the last known item with playing status in player
                 update_percent(item, time.time())
                 if item['progress'] == 100:
                     self.create_action('stop', item)
                     continue
                 playing_shortlist.append(item)
-                if self.player_inds[player] < self.player_inds[best_player]:
-                    best_player = player  # find player with highest priority
+                best_player_index = min(
+                    best_player_index, self.players.index(player_name))
+        best_player = self.players[best_player_index]
 
         for item in playing_shortlist:
             if item['player'] == best_player:
@@ -115,6 +115,9 @@ class Scrobbler(Thread):
                 self.create_action('stop', item)
 
     def create_action(self, verb, item):
+        if item.get('scrobbled') and item['state'] < 2:
+            # don't create an action if item has already been scrobbled stop
+            return
         data = item['file_info'].copy()
         data['progress'] = item['progress']
         self.final_actions.append((verb, data, item))
@@ -127,6 +130,7 @@ class Scrobbler(Thread):
                 logger.warning('No response while trying to scrobble.')
             else:
                 logger.info('Scrobble successful.')
+                item['scrobbled'] = True
                 # clear cache upto current entry
                 del self._cache[:self._cache.index(item) + 1]
                 if verb == 'start':
