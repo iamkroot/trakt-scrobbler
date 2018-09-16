@@ -1,5 +1,5 @@
 import logging
-from urllib.parse import unquote
+from urllib.parse import urlparse, unquote
 from player_monitors.monitor import WebInterfaceMon
 from utils import config
 
@@ -52,4 +52,4 @@ class VLCMon(WebInterfaceMon):
         file_url = file_data['uri']
         if not file_url.startswith('file://'):
             return None
-        return unquote(file_url)
+        return urlparse(unquote(file_url))[2]
