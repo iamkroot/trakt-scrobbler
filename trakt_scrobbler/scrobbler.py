@@ -46,9 +46,9 @@ class Scrobbler(Thread):
         last_states = []
         self._cache.reverse()
         for item in self._cache:
-            if item.get('file_info') and item['file_info'] not in unique_media:
+            if item.get('media_info') and item['media_info'] not in unique_media:
                 last_states.append(item)
-                unique_media.append(item['file_info'])
+                unique_media.append(item['media_info'])
         last_states.reverse()  # most recent entries will be at the end
         return last_states
 
@@ -118,15 +118,13 @@ class Scrobbler(Thread):
         if item.get('scrobbled') and item['state'] < 2:
             # don't create an action if item has already been scrobbled stop
             return
-        data = item['file_info'].copy()
-        data['progress'] = item['progress']
-        self.final_actions.append((verb, data, item))
+        self.final_actions.append((verb, item))
 
     def scrobble(self):
         self.determine_actions()
-        for verb, data, item in self.final_actions:
-            logger.debug(f'Scrobbling {verb} {data!s}')
-            if not trakt_scrobble(verb, data):
+        for verb, item in self.final_actions:
+            logger.debug(f'Scrobbling {verb} {item!s}')
+            if not trakt_scrobble(verb, **item):
                 logger.warning('No response while trying to scrobble.')
             else:
                 logger.info('Scrobble successful.')

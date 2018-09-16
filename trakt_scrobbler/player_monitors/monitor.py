@@ -3,7 +3,7 @@ import logging
 import requests
 from threading import Thread
 from utils import config
-from file_info import get_media_trakt_data
+from file_info import get_media_info
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -41,7 +41,7 @@ class Monitor(Thread):
                 if key != 'filepath':
                     data[key] = value
                 else:
-                    data['file_info'] = get_media_trakt_data(value)
+                    data['media_info'] = get_media_info(value)
         logger.debug(data)
         self.scrobble_queue.put(data)
 

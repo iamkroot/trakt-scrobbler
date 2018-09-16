@@ -9,6 +9,7 @@ logger = logging.getLogger('trakt_scrobbler')
 CLIENT_ID = trakt_key_holder.get_id()
 CLIENT_SECRET = trakt_key_holder.get_secret()
 API_URL = "https://api.trakt.tv"
+trakt_cache = read_json('trakt_cache.json') or {'movie': {}, 'show': {}}
 
 
 def get_device_code():
@@ -68,7 +69,8 @@ def device_auth():
     else:
         logger.error('Timed out during auth.')
         sys.exit(1)
-    token_data['expires_at'] = token_data['created_at'] + token_data['expires_in']
+    token_data['expires_at'] = token_data['created_at'] + \
+        token_data['expires_in']
     return token_data
 
 
@@ -114,16 +116,6 @@ def get_headers():
     }
 
 
-def scrobble(verb, data):
-    scrobble_params = {
-        "url": API_URL + '/scrobble/' + verb,
-        "headers": get_headers(),
-        "json": data
-    }
-    scrobble_resp = safe_request('post', scrobble_params)
-    return scrobble_resp.json() if scrobble_resp else None
-
-
 def search(query, types=None, extended=False):
     if not types:
         types = ['movie', 'show', 'episode']
@@ -134,3 +126,57 @@ def search(query, types=None, extended=False):
     }
     r = safe_request('get', search_params)
     return r.json() if r else None
+
+
+def get_trakt_id(title, item_type):
+    required_type = 'show' if item_type == 'episode' else 'movie'
+
+    logger.debug('Searching cache.')
+    trakt_id = trakt_cache[required_type].get(title)
+    if trakt_id:
+        return trakt_id
+
+    logger.debug('Searching trakt.')
+    results = search(title, [required_type])
+    if results is None:  # Connection error
+        return 0  # Dont store in cache
+    elif not results:  # Empty list
+        logger.warning('Trakt search yielded no results.')
+        trakt_id = -1
+    else:
+        trakt_id = results[0][required_type]['ids']['trakt']
+
+    trakt_cache[required_type][title] = trakt_id
+    logger.debug(f'Trakt ID: {trakt_id}')
+    write_json(trakt_cache, 'trakt_cache.json')
+    return trakt_id
+
+
+def prepare_scrobble_data(title, type, *args, **kwargs):
+    trakt_id = get_trakt_id(title, type)
+    if trakt_id < 1:
+        return None
+    if type == 'movie':
+        return {'movie': {'ids': {'trakt': trakt_id}}}
+    elif type == 'episode':
+        return {
+            'show': {'ids': {'trakt': trakt_id}},
+            'episode': {
+                'season': kwargs['season'],
+                'number': kwargs['episode']
+            }
+        }
+
+
+def scrobble(verb, media_info, progress, *args, **kwargs):
+    scrobble_data = prepare_scrobble_data(**media_info)
+    if not scrobble_data:
+        return None
+    scrobble_data['progress'] = progress
+    scrobble_params = {
+        "url": API_URL + '/scrobble/' + verb,
+        "headers": get_headers(),
+        "json": scrobble_data
+    }
+    scrobble_resp = safe_request('post', scrobble_params)
+    return scrobble_resp.json() if scrobble_resp else None
