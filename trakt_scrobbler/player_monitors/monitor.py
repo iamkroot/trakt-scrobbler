@@ -30,6 +30,13 @@ class Monitor(Thread):
         if media_info is None:
             return {}
 
+        if 'episode' in media_info and isinstance(media_info['episode'], list):
+            num_eps = len(media_info['episode'])
+            self.status['duration'] = self.status['duration'] // num_eps
+            ep_num = int(self.status['position'] // self.status['duration'])
+            media_info['episode'] = media_info['episode'][ep_num]
+            self.status['position'] %= self.status['duration']
+
         progress = min(round(self.status['position'] * 100 /
                              self.status['duration'], 2), 100)
         return {
