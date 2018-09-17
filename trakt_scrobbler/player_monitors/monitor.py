@@ -35,7 +35,8 @@ class Monitor(Thread):
         return {
             'state': self.status['state'],
             'progress': progress,
-            'media_info': media_info
+            'media_info': media_info,
+            'updated_at': time.time()
         }
 
     def scrobble_if_state_changed(self, prev, current):

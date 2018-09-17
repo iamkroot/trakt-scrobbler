@@ -2,6 +2,7 @@ import logging
 import time
 import sys
 import trakt_key_holder
+from datetime import datetime as dt
 from utils import safe_request, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
@@ -51,10 +52,10 @@ def device_auth():
         logger.error('Failed device auth.')
         sys.exit(1)
 
-    logger.debug(f"User Code: {code_data['user_code']}")
-    logger.debug(f"Verification URL: {code_data['verification_url']}")
-    print("User Code:", code_data['user_code'])
+    logger.info(f"Verification URL: {code_data['verification_url']}")
+    logger.info(f"User Code: {code_data['user_code']}")
     print(f"Go to {code_data['verification_url']} and enter this code.")
+    print("User Code:", code_data['user_code'])
 
     start = time.time()
     while time.time() - start < code_data['expires_in']:
@@ -180,3 +181,38 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     }
     scrobble_resp = safe_request('post', scrobble_params)
     return scrobble_resp.json() if scrobble_resp else None
+
+
+def prepare_history_data(watched_at, title, type, *args, **kwargs):
+    trakt_id = get_trakt_id(title, type)
+    if trakt_id < 1:
+        return None
+    if type == 'movie':
+        return {'movies': [{'ids': {'trakt': trakt_id},
+                            'watched_at': watched_at}]}
+    else:
+        return {'shows': [
+            {'ids': {'trakt': trakt_id}, 'seasons': [
+                {'number': kwargs['season'], 'episodes': [
+                    {'number': kwargs['episode'], 'watched_at': watched_at}]
+                 }]
+             }]
+        }
+
+
+def add_to_history(media_info, updated_at, *args, **kwargs):
+    watched_at = dt.utcfromtimestamp(updated_at).isoformat() + 'Z'
+    history = prepare_history_data(watched_at=watched_at, **media_info)
+    if not history:
+        return
+    params = {
+        "url": API_URL + '/sync/history',
+        "headers": get_headers(),
+        "json": history
+    }
+    resp = safe_request('post', params)
+    if resp:
+        added = resp.json()['added']
+        if (media_info['type'] == 'movie' and added['movies'] > 0) or \
+           (media_info['type'] == 'episode' and added['episodes'] > 0):
+            return True
