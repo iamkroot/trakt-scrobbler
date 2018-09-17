@@ -3,14 +3,16 @@ import time
 import sys
 import trakt_key_holder
 from datetime import datetime as dt
-from utils import safe_request, read_json, write_json
+from utils import DATA_DIR, safe_request, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
 
 CLIENT_ID = trakt_key_holder.get_id()
 CLIENT_SECRET = trakt_key_holder.get_secret()
 API_URL = "https://api.trakt.tv"
-trakt_cache = read_json('trakt_cache.json') or {'movie': {}, 'show': {}}
+TRAKT_CACHE_PATH = DATA_DIR / 'trakt_cache.json'
+TRAKT_TOKEN_PATH = DATA_DIR / 'trakt_token.json'
+trakt_cache = read_json(TRAKT_CACHE_PATH) or {'movie': {}, 'show': {}}
 
 
 def get_device_code():
@@ -96,7 +98,7 @@ def refresh_token(token_data):
 
 
 def get_access_token():
-    token_data = read_json('trakt_token.json')
+    token_data = read_json(TRAKT_TOKEN_PATH)
     if not token_data:
         logger.info("Access token not found in config. " +
                     "Initiating device authentication.")
@@ -104,7 +106,7 @@ def get_access_token():
     elif token_data['expires_at'] - time.time() < 86400:
         logger.info("Access token about to expire. Refreshing.")
         token_data = refresh_token(token_data)
-    write_json(token_data, 'trakt_token.json')
+    write_json(token_data, TRAKT_TOKEN_PATH)
     return token_data['access_token']
 
 
@@ -149,7 +151,7 @@ def get_trakt_id(title, item_type):
 
     trakt_cache[required_type][title] = trakt_id
     logger.debug(f'Trakt ID: {trakt_id}')
-    write_json(trakt_cache, 'trakt_cache.json')
+    write_json(trakt_cache, TRAKT_CACHE_PATH)
     return trakt_id
 
 

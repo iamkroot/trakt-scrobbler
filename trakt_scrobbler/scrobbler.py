@@ -1,9 +1,10 @@
 import logging
 from threading import Thread, Timer
 import trakt_interface as trakt
-from utils import read_json, write_json
+from utils import DATA_DIR, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
+WATCHED_CACHE_PATH = DATA_DIR / 'watched_cache.json'
 
 
 class Scrobbler(Thread):
@@ -13,7 +14,7 @@ class Scrobbler(Thread):
         super().__init__(name='scrobbler')
         logger.info('Started scrobbler thread.')
         self.scrobble_queue = scrobble_queue
-        self.watched_cache = read_json('watched_cache.json') or []
+        self.watched_cache = read_json(WATCHED_CACHE_PATH) or []
         self.watched_cache_clean_interval = watched_cache_clean_interval
         self.clear_watched_cache()
 
@@ -30,7 +31,7 @@ class Scrobbler(Thread):
         elif verb == 'stop' and data['progress'] > 80:
             logger.warning('Scrobble unsuccessful. Will try again later.')
             self.watched_cache.append(data)
-            write_json(self.watched_cache, 'watched_cache.json')
+            write_json(self.watched_cache, WATCHED_CACHE_PATH)
         else:
             logger.warning('Scrobble unsuccessful.')
 
@@ -47,4 +48,4 @@ class Scrobbler(Thread):
                 successful.append(item)
         for item in successful:
             self.watched_cache.remove(item)
-        write_json(self.watched_cache, 'watched_cache.json')
+        write_json(self.watched_cache, WATCHED_CACHE_PATH)

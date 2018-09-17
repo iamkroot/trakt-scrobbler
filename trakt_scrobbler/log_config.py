@@ -1,6 +1,6 @@
 import logging
 import logging.config
-from utils import config
+from utils import DATA_DIR, config
 
 
 class StoppedPlayersFilter(logging.Filter):
@@ -57,8 +57,10 @@ LOGGING_CONF = {
     },
     'handlers': {
         'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'trakt_scrobbler.log',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': DATA_DIR / 'trakt_scrobbler.log',
+            'maxBytes': 131072,
+            'backupCount': 5,
             'mode': 'a',
             'level': 'DEBUG',
             'formatter': 'verbose',

@@ -2,11 +2,14 @@ import json
 import logging
 import pytoml
 import requests
+from pathlib import Path
 
+DATA_DIR = Path('data')
+DATA_DIR.mkdir(exist_ok=True)
 logger = logging.getLogger('trakt_scrobbler')
 
 
-def read_config(config_path='config.toml'):
+def read_config(config_path=DATA_DIR / 'config.toml'):
     with open(config_path) as f:
         return pytoml.load(f)
 

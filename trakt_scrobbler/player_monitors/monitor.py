@@ -2,7 +2,7 @@ import time
 import logging
 import requests
 from threading import Thread
-from utils import config
+from utils import DATA_DIR, config
 from file_info import get_media_info
 
 logger = logging.getLogger('trakt_scrobbler')
