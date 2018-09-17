@@ -6,6 +6,7 @@ from utils import config
 from file_info import get_media_info
 
 logger = logging.getLogger('trakt_scrobbler')
+SCROBBLE_VERBS = ('stop', 'pause', 'start')
 
 
 class Monitor(Thread):
@@ -17,33 +18,44 @@ class Monitor(Thread):
         logger.info('Started monitor for ' + self.name)
         self.scrobble_queue = scrobble_queue
         self.is_running = False
-        self.reset_status()
-        self.prev_values = self.status.copy()
+        self.status = {}
+        self.prev_state = {}
         self.watched_vars = ['state', 'filepath']
 
-    def reset_status(self):
-        self.status = {
-            'state': 0,
-            'position': 0,
-            'duration': 0,
-            'filepath': None
+    def parse_status(self):
+        if 'filepath' not in self.status or not self.status.get('duration'):
+            return {}
+
+        media_info = get_media_info(self.status['filepath'])
+        if media_info is None:
+            return {}
+
+        progress = min(round(self.status['position'] * 100 /
+                             self.status['duration'], 2), 100)
+        return {
+            'state': self.status['state'],
+            'progress': progress,
+            'media_info': media_info
         }
 
-    def state_changed(self):
-        return any(self.prev_values[key] != self.status[key]
-                   for key in self.watched_vars)
+    def scrobble_if_state_changed(self, prev, current):
+        if not prev and not current:
+            return
+        if not current or \
+           (prev and prev['media_info'] != current['media_info'] and
+                prev['state'] != 0):
+            self.scrobble_queue.put(('stop', prev))
+        if not prev or \
+           (current and (prev['state'] != current['state'] or
+                         prev['media_info'] != current['media_info'] or
+                         current['progress'] - prev['progress'] > 10)):
+            verb = SCROBBLE_VERBS[current['state']]
+            self.scrobble_queue.put((verb, current))
 
-    def send_to_queue(self):
-        data = {'player': self.name, 'time': time.time()}
-
-        if self.is_running and self.status['filepath']:
-            for key, value in self.status.items():
-                if key != 'filepath':
-                    data[key] = value
-                else:
-                    data['media_info'] = get_media_info(value)
-        logger.debug(data)
-        self.scrobble_queue.put(data)
+    def handle_status_update(self):
+        current_state = self.parse_status()
+        self.scrobble_if_state_changed(self.prev_state, current_state)
+        self.prev_state = current_state
 
 
 class WebInterfaceMon(Monitor):
@@ -54,24 +66,13 @@ class WebInterfaceMon(Monitor):
         self.sess = requests.Session()
         self.poll_interval = config['players'][self.name]['poll_interval']
 
-    def can_connect(self):
-        try:
-            self.sess.head(self.URL)
-        except requests.ConnectionError:
-            logger.info(f'Unable to connect to {self.name}. ' +
-                        'Ensure that the web interface is running.')
-            self.is_running = False
-        else:
-            self.is_running = True
-        return self.is_running
-
     def run(self):
         while True:
-            if self.can_connect():
+            try:
                 self.update_status()
-            else:
-                self.reset_status()
-            if self.state_changed():
-                self.send_to_queue()
-                self.prev_values = self.status.copy()
+            except (requests.ConnectionError, requests.ConnectTimeout):
+                logger.info(f'Unable to connect to {self.name}. Ensure that '
+                            'the web interface is running.')
+                self.status = {}
+            self.handle_status_update()
             time.sleep(self.poll_interval)

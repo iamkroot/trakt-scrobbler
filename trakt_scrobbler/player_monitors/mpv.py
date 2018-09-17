@@ -65,9 +65,7 @@ class MPVMon(Monitor):
             'duration': self.vars['duration'],
             'time': time.time()
         }
-        if self.state_changed():
-            self.send_to_queue()
-            self.prev_values = self.status.copy()
+        self.handle_status_update()
 
     def update_vars(self):
         """Query mpv for required properties."""
@@ -75,7 +73,6 @@ class MPVMon(Monitor):
         for prop in self.mpv_props:
             self.send_command(['get_property', prop])
         if self.poll_timer:
-            logger.debug("Resetting timer")
             self.poll_timer.cancel()
         self.poll_timer = threading.Timer(10, self.update_vars)
         self.poll_timer.name = 'mpvpoll'

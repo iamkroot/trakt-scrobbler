@@ -6,21 +6,23 @@ from utils import config
 logger = logging.getLogger('trakt_scrobbler')
 
 
-def search_dict_for_current(search_dict):
-    if isinstance(search_dict, list):
-        for d in search_dict:
+def search_dict_for_current(dict_):
+    """Find a dict which has 'current' key."""
+    if isinstance(dict_, list):
+        for d in dict_:
             data = search_dict_for_current(d)
             if data:
                 return data
-    elif 'current' in search_dict:
-        return search_dict
-    elif 'children' in search_dict:
-        return search_dict_for_current(search_dict['children'])
+    elif 'current' in dict_:
+        return dict_
+    elif 'children' in dict_:
+        return search_dict_for_current(dict_['children'])
 
 
 class VLCMon(WebInterfaceMon):
     name = 'vlc'
     URL = "http://{ip}:{port}"
+    STATES = ['stopped', 'paused', 'playing']
 
     def __init__(self, scrobble_queue):
         try:
@@ -34,16 +36,15 @@ class VLCMon(WebInterfaceMon):
         self.sess.auth = ('', web_pwd)
         self.status_url = self.URL + '/requests/status.json'
         self.playlist_url = self.URL + '/requests/playlist.json'
-        self.states = ['stopped', 'paused', 'playing']
 
     def update_status(self):
         status_data = self.sess.get(self.status_url).json()
         if not status_data['length']:
-            self.reset_status()
+            self.status = {}
             return
         self.status['duration'] = status_data['length']
         self.status['position'] = status_data['time']
-        self.status['state'] = self.states.index(status_data['state'])
+        self.status['state'] = self.STATES.index(status_data['state'])
         self.status['filepath'] = self._get_filepath()
 
     def _get_filepath(self):

@@ -10,7 +10,7 @@ class StoppedPlayersFilter(logging.Filter):
         self.log_count = set()
 
     def filter(self, record: logging.LogRecord):
-        if record.threadName in config['players']['priorities']:
+        if record.threadName in config['players']['monitored']:
             if 'Unable to connect' in record.msg:
                 val = record.thread not in self.log_count
                 self.log_count.add(record.thread)
@@ -24,6 +24,7 @@ class ModuleFilter(logging.Filter):
     """Specify the minimum log level required for the message from a module."""
     min_levels = {
         'file_info': logging.INFO,
+        'trakt_interface': logging.INFO,
     }
 
     def filter(self, record: logging.LogRecord):

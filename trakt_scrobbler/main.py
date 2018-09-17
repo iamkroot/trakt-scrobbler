@@ -21,7 +21,7 @@ logger = logging.getLogger('trakt_scrobbler')
 def get_monitors():
     """Collect the monitors from 'player_monitors' subdirectory."""
     modules = Path('player_monitors').glob('*.py')
-    allowed_monitors = config['players']['priorities']
+    allowed_monitors = config['players']['monitored']
 
     for module_path in modules:
         if module_path.stem == '__init__' or module_path.stem == 'monitor':
