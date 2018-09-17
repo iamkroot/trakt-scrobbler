@@ -4,12 +4,12 @@ whitelist = [
 	"/path/to/videos_folder"
 ]
 
-[fileinfo.include_regexes]  # custom regex to identify media information
+[fileinfo.include_regexes]  # custom regex to identify media information, should be posix path
 # movie = [".*/(?P<name>.+?) \\((?P<year>[0-9]{4})\\).*",]
 episode = [".*/(?P<title>.+?) \\[[0-9]{3,4}p\\]/(?P<episode>\\d+) - (?P<episode_title>.*)\\.[a-z]{3,4}"]
 
 [players]  # list the required players here, decreasing order of priority
-priorities = ['mpcbe', 'mpchc', 'mpv', 'vlc']
+monitored = ['mpcbe', 'mpchc', 'mpv', 'vlc']
 
 [players.mpcbe]  # enable web interface from options
 ip = "localhost"
