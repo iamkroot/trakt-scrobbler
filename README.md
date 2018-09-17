@@ -41,7 +41,7 @@ I will try to make a install script for Mac soon. Till then, here are the manual
 + MPC-BE/MPC-HC: Enable the web interface from Options.
 
 #### Configuration
-All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml`.
+All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml` under `trakt_scrobbler/data` directory.
 
 Parameter | Explanation |
 --------- | -----------
@@ -51,7 +51,7 @@ Parameter | Explanation |
 Other player specific parameters| See sample config for the required attributes.
 
 ### Running
-After setting up `config.toml`, type `python main.py` to start the program.
+After setting up `config.toml`, type `pipenv run python main.py` to start the program.
 During the first run, you will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process.
 
 That's it! Now the program will automatically monitor the enabled players for media information, and scrobble the relevant details to Trakt.
