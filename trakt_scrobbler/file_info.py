@@ -45,7 +45,7 @@ def get_media_info(file_path):
     guess = custom_regex(file_path) or use_guessit(file_path)
     if any(key not in guess for key in ('title', 'type')) or \
        (guess['type'] == 'episode' and 'episode' not in guess):
-        logger.warning('Failed to parse filename for episode/movie info. ' +
+        logger.warning('Failed to parse filename for episode/movie info. '
                        'Consider renaming/using custom regex.')
         return None
     if guess['type'] == 'episode':

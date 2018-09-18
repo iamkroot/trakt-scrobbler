@@ -14,13 +14,12 @@ class Monitor(Thread):
      and puts the info to scrobble queue."""
 
     def __init__(self, scrobble_queue):
-        super().__init__(name=self.name + 'mon')
+        super().__init__()
         logger.info('Started monitor for ' + self.name)
         self.scrobble_queue = scrobble_queue
         self.is_running = False
         self.status = {}
         self.prev_state = {}
-        self.watched_vars = ['state', 'filepath']
 
     def parse_status(self):
         if 'filepath' not in self.status or not self.status.get('duration'):

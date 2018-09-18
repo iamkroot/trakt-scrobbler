@@ -27,7 +27,7 @@ class MPCMon(WebInterfaceMon):
     def update_status(self):
         variables = self.get_vars()
         if variables['duration'] == '0':
-            self.reset_status()
+            self.status = {}
             return
         self.status['state'] = int(variables['state'])
         for key in ('position', 'duration'):

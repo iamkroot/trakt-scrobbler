@@ -31,7 +31,7 @@ def get_monitors():
         # get the required Monitor subclasses
         for _, mon in inspect.getmembers(monitor_module, inspect.isclass):
             if issubclass(mon, Monitor) and mon.name in allowed_monitors \
-               and not mon.__dict__.get('exclude_import'):
+               and not getattr(mon, 'exclude_import', False):
                 yield mon
 
 

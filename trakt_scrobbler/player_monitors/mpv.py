@@ -20,6 +20,8 @@ logger = logging.getLogger('trakt_scrobbler')
 class MPVMon(Monitor):
     name = 'mpv'
     exclude_import = True
+    WATCHED_PROPS = ['pause', 'path', 'working-directory',
+                     'duration', 'time-pos']
 
     def __init__(self, scrobble_queue):
         try:
@@ -35,8 +37,6 @@ class MPVMon(Monitor):
         self.write_queue = Queue()
         self.sent_commands = {}
         self.command_counter = 1
-        self.mpv_props = ['pause', 'path', 'working-directory',
-                          'duration', 'time-pos']
         self.vars = {}
 
     def run(self):
@@ -70,7 +70,7 @@ class MPVMon(Monitor):
     def update_vars(self):
         """Query mpv for required properties."""
         self.updated_props_count = 0
-        for prop in self.mpv_props:
+        for prop in self.WATCHED_PROPS:
             self.send_command(['get_property', prop])
         if self.poll_timer:
             self.poll_timer.cancel()
@@ -102,10 +102,10 @@ class MPVMon(Monitor):
         data = resp['data']
         if param == 'pause':
             self.vars['state'] = 1 if data else 2
-        if param in self.mpv_props:
+        if param in self.WATCHED_PROPS:
             self.vars[param] = data
             self.updated_props_count += 1
-        if self.updated_props_count == len(self.mpv_props):
+        if self.updated_props_count == len(self.WATCHED_PROPS):
             self.update_status()
 
     def on_data(self, data):
