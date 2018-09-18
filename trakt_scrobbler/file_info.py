@@ -16,10 +16,10 @@ def whitelist_file(file_path):
 
 
 def custom_regex(file_path):
-    # TODO: Check if key exists in config
     logger.debug('Trying to match custom regex.')
+    regexes = config['fileinfo'].get('include_regexes', {})
     path_posix = str(file_path.as_posix())
-    for item_type, patterns in config['fileinfo']['include_regexes'].items():
+    for item_type, patterns in regexes.items():
         for pattern in patterns:
             m = re.match(pattern, path_posix)
             if m:
