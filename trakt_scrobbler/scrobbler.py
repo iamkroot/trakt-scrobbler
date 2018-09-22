@@ -28,6 +28,8 @@ class Scrobbler(Thread):
         logger.debug(f'{data}')
         if trakt.scrobble(verb, **data):
             logger.info(f'Scrobble {verb} successful.')
+            if self.watched_cache:
+                self.clear_watched_cache()
         elif verb == 'stop' and data['progress'] > 80:
             logger.warning('Scrobble unsuccessful. Will try again later.')
             self.watched_cache.append(data)
@@ -36,16 +38,18 @@ class Scrobbler(Thread):
             logger.warning('Scrobble unsuccessful.')
 
     def clear_watched_cache(self):
-        self.watched_cache_timer = Timer(self.watched_cache_clean_interval,
-                                         self.clear_watched_cache)
-        self.watched_cache_timer.name = 'watched_cache_cleaner'
-        self.watched_cache_timer.start()
+        if getattr(self, 'watched_cache_timer', False):
+            self.watched_cache_timer.cancel()
         successful = []
         for item in self.watched_cache:
-            logger.debug(f'{item}')
+            logger.debug(f'Adding item to history {item}')
             if trakt.add_to_history(**item):
                 logger.info('Successfully added media to history.')
                 successful.append(item)
         for item in successful:
             self.watched_cache.remove(item)
         write_json(self.watched_cache, WATCHED_CACHE_PATH)
+        self.watched_cache_timer = Timer(self.watched_cache_clean_interval,
+                                         self.clear_watched_cache)
+        self.watched_cache_timer.name = 'watched_cache_cleaner'
+        self.watched_cache_timer.start()
