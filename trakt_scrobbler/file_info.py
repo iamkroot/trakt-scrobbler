@@ -50,4 +50,6 @@ def get_media_info(file_path):
         return None
     if guess['type'] == 'episode':
         guess.setdefault('season', 1)
+        guess['episode'] = int(guess['episode'])
+        guess['season'] = int(guess['season'])
     return guess
