@@ -22,10 +22,7 @@ class StoppedPlayersFilter(logging.Filter):
 
 class ModuleFilter(logging.Filter):
     """Specify the minimum log level required for the message from a module."""
-    min_levels = {
-        'file_info': logging.INFO,
-        'trakt_interface': logging.INFO,
-    }
+    min_levels = {}
 
     def filter(self, record: logging.LogRecord):
         if record.module in self.min_levels.keys() and \

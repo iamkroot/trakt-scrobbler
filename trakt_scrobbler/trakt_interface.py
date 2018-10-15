@@ -3,6 +3,7 @@ import time
 import sys
 import trakt_key_holder
 from datetime import datetime as dt
+from functools import lru_cache
 from utils import DATA_DIR, safe_request, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
@@ -131,6 +132,7 @@ def search(query, types=None, extended=False):
     return r.json() if r else None
 
 
+@lru_cache(maxsize=None)
 def get_trakt_id(title, item_type):
     required_type = 'show' if item_type == 'episode' else 'movie'
 

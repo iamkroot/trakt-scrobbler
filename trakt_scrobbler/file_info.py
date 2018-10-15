@@ -1,6 +1,7 @@
 import logging
 import re
 import guessit
+from functools import lru_cache
 from pathlib import Path
 from utils import config
 
@@ -36,6 +37,7 @@ def use_guessit(file_path):
     return guess
 
 
+@lru_cache(maxsize=None)
 def get_media_info(file_path):
     logger.debug(f'Filepath {file_path}')
     file_path = Path(file_path)
