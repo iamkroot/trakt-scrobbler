@@ -10,8 +10,8 @@ from queue import Queue
 
 from player_monitors.monitor import Monitor
 from scrobbler import Scrobbler
-from trakt_interface import TRAKT_TOKEN_PATH, get_access_token
-from utils import config, read_json
+from trakt_interface import get_access_token
+from utils import config
 from log_config import LOGGING_CONF
 
 logging.config.dictConfig(LOGGING_CONF)
@@ -69,8 +69,7 @@ def register_exception_handler():
 
 def main():
     register_exception_handler()
-    if not read_json(TRAKT_TOKEN_PATH):
-        get_access_token()
+    assert get_access_token()
     scrobble_queue = Queue()
     scrobbler = Scrobbler(scrobble_queue)
     scrobbler.start()

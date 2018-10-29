@@ -14,6 +14,7 @@ API_URL = "https://api.trakt.tv"
 TRAKT_CACHE_PATH = DATA_DIR / 'trakt_cache.json'
 TRAKT_TOKEN_PATH = DATA_DIR / 'trakt_token.json'
 trakt_cache = read_json(TRAKT_CACHE_PATH) or {'movie': {}, 'show': {}}
+token_data = read_json(TRAKT_TOKEN_PATH)
 
 
 def get_device_code():
@@ -97,16 +98,23 @@ def refresh_token(token_data):
 
 
 def get_access_token():
-    token_data = read_json(TRAKT_TOKEN_PATH)
+    global token_data
     if not token_data:
         logger.info("Access token not found in config. " +
                     "Initiating device authentication.")
         token_data = device_auth()
+        write_json(token_data, TRAKT_TOKEN_PATH)
     elif token_data['created_at'] + token_data['expires_in'] - \
             time.time() < 86400:
         logger.info("Access token about to expire. Refreshing.")
         token_data = refresh_token(token_data)
-    write_json(token_data, TRAKT_TOKEN_PATH)
+        write_json(token_data, TRAKT_TOKEN_PATH)
+    try:
+        assert token_data
+    except AssertionError:
+        logger.error("Unable to get access token. "
+                     f"Try deleting {TRAKT_TOKEN_PATH!s} and retry.")
+        sys.exit(1)
     return token_data['access_token']
 
 
