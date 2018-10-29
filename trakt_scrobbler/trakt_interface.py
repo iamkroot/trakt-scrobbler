@@ -73,8 +73,6 @@ def device_auth():
     else:
         logger.error('Timed out during auth.')
         sys.exit(1)
-    token_data['expires_at'] = token_data['created_at'] + \
-        token_data['expires_in']
     return token_data
 
 
@@ -104,7 +102,8 @@ def get_access_token():
         logger.info("Access token not found in config. " +
                     "Initiating device authentication.")
         token_data = device_auth()
-    elif token_data['expires_at'] - time.time() < 86400:
+    elif token_data['created_at'] + token_data['expires_in'] - \
+            time.time() < 86400:
         logger.info("Access token about to expire. Refreshing.")
         token_data = refresh_token(token_data)
     write_json(token_data, TRAKT_TOKEN_PATH)
