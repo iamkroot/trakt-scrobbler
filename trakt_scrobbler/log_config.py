@@ -36,7 +36,7 @@ LOGGING_CONF = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{asctime} - {levelname} - {threadName} - {module} - {message}',
+            'format': '{asctime} - {levelname} - {threadName} - {module} - {message}',  # Ignore PycodestyleBear (E501)
             'style': '{'
         },
         'brief': {
