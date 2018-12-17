@@ -11,25 +11,6 @@ Simple python project to automatically scrobble media information to [Trakt.tv](
 	+ [MPC-HC](https://mpc-hc.org) (via web interface).
 
 ## Getting started
-### Installation
-1. Clone the repo to a directory of your choice.
-2. Ensure you have Python 3.6 or higher installed, and in your system `PATH`.
-3. Run `pip install pipenv` to install pipenv in your system.
-
-#### Linux
-At the root of cloned project directory, run `sudo env "PATH=$PATH" scripts/linux-install-service.sh`. This will install the files in your $HOME/.local/ directory, create the virtualenv, and also enable the startup service.
-
-#### Windows
-At the root of cloned project directory, run `scripts\windows-install.bat`. This will install the files in your %APPDATA% directory, create the virtualenv, and also enable the startup service.
-
-#### MacOS
-I will try to make a install script for Mac soon. Till then, here are the manual steps you can follow:
-1. Inside the project directory root, run `pipenv install`. This will create a virtualenv, and install the necessary requirements.
-2. Run `pipenv --py` to find the location of python interpreter of virtualenv. 
-3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
-4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
-5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
-
 ### Setting up
 #### Players
 + VLC: Enable the Lua Web Interface from advanced options. Don't forget to specify the password in Lua options.
@@ -50,9 +31,27 @@ Parameter | Explanation |
 `players.monitored`| List of strings <br> Specify players which are to be monitored for scrobbling.
 Other player specific parameters| See sample config for the required attributes.
 
+### Installation
+1. Clone the repo to a directory of your choice.
+2. Ensure you have Python 3.6 or higher installed, and in your system `PATH`.
+3. Run `pip install pipenv` to install pipenv in your system.
+4. Depending on your OS, proceed as follows: 
+	+ **Linux**<br>
+		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt_scrobbler`, create the virtualenv, and also enable the startup service (needs sudo for last part).
+
+	+ **Windows**<br>
+		At the root of cloned project directory, run `scripts\windows-install.bat`. This will copy the files to `%APPDATA%\trakt_scrobbler` directory, create the virtualenv, and also enable the startup service.
+
+	+ **MacOS**<br>
+		I will try to make a install script for Mac soon. Till then, here are the manual steps you can follow:
+		1. Inside the project directory root, run `pipenv install`. This will create a virtualenv, and install the necessary requirements.
+		2. Run `pipenv --py` to find the location of python interpreter of virtualenv. 
+		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
+		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
+		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
+
 ### Running
-After setting up `config.toml`, type `pipenv run python main.py` to start the program.
-During the first run, you will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process.
+For the first run, type `pipenv run python main.py`  *inside the installation directory* (not the clone location) to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
 
 That's it! Now the program will automatically monitor the enabled players for media information, and scrobble the relevant details to Trakt.
 
