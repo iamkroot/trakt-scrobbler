@@ -152,7 +152,7 @@ def get_trakt_id(title, item_type):
     results = search(title, [required_type])
     if results is None:  # Connection error
         return 0  # Dont store in cache
-    elif results == [] or results[0]['score'] < 0.1:  # Weak or no match
+    elif results == [] or results[0]['score'] < 5:  # Weak or no match
         logger.warning('Trakt search yielded no results.')
         trakt_id = -1
     else:
