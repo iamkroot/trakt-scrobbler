@@ -45,13 +45,17 @@ def get_media_info(file_path):
         logger.info("File path not in whitelist.")
         return None
     guess = custom_regex(file_path) or use_guessit(file_path)
+
     if any(key not in guess for key in ('title', 'type')) or \
        (guess['type'] == 'episode' and 'episode' not in guess):
         logger.warning('Failed to parse filename for episode/movie info. '
                        'Consider renaming/using custom regex.')
         return None
+
+    req_keys = ['type', 'title']
     if guess['type'] == 'episode':
-        guess.setdefault('season', 1)
         guess['episode'] = int(guess['episode'])
-        guess['season'] = int(guess['season'])
-    return guess
+        guess['season'] = int(guess.get('season', 1))
+        req_keys += ['season', 'episode']
+
+    return {key: guess[key] for key in req_keys}
