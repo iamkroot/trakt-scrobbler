@@ -54,7 +54,7 @@ def get_media_info(file_path):
 
     req_keys = ['type', 'title']
     if guess['type'] == 'episode':
-        guess['episode'] = int(guess['episode'])
+        guess['episode'] = guess['episode']
         guess['season'] = int(guess.get('season', 1))
         req_keys += ['season', 'episode']
 
