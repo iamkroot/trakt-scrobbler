@@ -11,7 +11,7 @@ SCROBBLE_VERBS = ('stop', 'pause', 'start')
 
 class Monitor(Thread):
     """Generic base class that polls the player for state changes,
-     and puts the info to scrobble queue."""
+     and sends the info to scrobble queue."""
 
     def __init__(self, scrobble_queue):
         super().__init__()
@@ -30,6 +30,7 @@ class Monitor(Thread):
             return {}
 
         if 'episode' in media_info and isinstance(media_info['episode'], list):
+            media_info = media_info.copy()
             num_eps = len(media_info['episode'])
             self.status['duration'] = self.status['duration'] // num_eps
             ep_num = int(self.status['position'] // self.status['duration'])
