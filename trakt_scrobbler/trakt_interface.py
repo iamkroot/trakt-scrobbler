@@ -4,6 +4,7 @@ import sys
 import trakt_key_holder
 from datetime import datetime as dt
 from functools import lru_cache
+from notifier import notify
 from utils import DATA_DIR, safe_request, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
@@ -58,8 +59,8 @@ def device_auth():
 
     logger.info(f"Verification URL: {code_data['verification_url']}")
     logger.info(f"User Code: {code_data['user_code']}")
-    print(f"Go to {code_data['verification_url']} and enter this code.")
-    print("User Code:", code_data['user_code'])
+    notify("Open {verification_url} in your browser and enter this code: "
+           "{user_code}".format(**code_data), timeout=30)
 
     start = time.time()
     while time.time() - start < code_data['expires_in']:
@@ -68,12 +69,11 @@ def device_auth():
             logger.debug('Waiting for user to authorize app.')
             time.sleep(int(code_data['interval']))
         else:
-            print('Successful.')
+            notify('App authorized successfully.')
             logger.info('Device auth successful.')
             break
     else:
         logger.error('Timed out during auth.')
-        sys.exit(1)
     return token_data
 
 
@@ -114,6 +114,7 @@ def get_access_token():
     except AssertionError:
         logger.error("Unable to get access token. "
                      f"Try deleting {TRAKT_TOKEN_PATH!s} and retry.")
+        notify("Failed to authorize application.")
         sys.exit(1)
     return token_data['access_token']
 
@@ -182,6 +183,7 @@ def prepare_scrobble_data(title, type, *args, **kwargs):
 
 def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_data = prepare_scrobble_data(**media_info)
+    logger.debug(scrobble_data)
     if not scrobble_data:
         return None
     scrobble_data['progress'] = progress

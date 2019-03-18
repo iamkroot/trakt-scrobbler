@@ -1,3 +1,6 @@
+[general]
+enable_notifs = true
+
 [fileinfo]  # if defined, only files from these directories will be scrobbled
 whitelist = [
 	"/path/to/movies_folder",

@@ -1,5 +1,6 @@
 import logging
 from threading import Thread, Timer
+from notifier import notify
 import trakt_interface as trakt
 from utils import DATA_DIR, read_json, write_json
 
@@ -25,9 +26,11 @@ class Scrobbler(Thread):
             self.scrobble_queue.task_done()
 
     def scrobble(self, verb, data):
-        logger.debug(f'{data}')
         if trakt.scrobble(verb, **data):
             logger.info(f'Scrobble {verb} successful.')
+            if verb != 'pause':
+                notify(f"Scrobble {verb} successful for "
+                       f"{data['media_info']['title']}.")
             if self.watched_cache:
                 self.clear_watched_cache()
         elif verb == 'stop' and data['progress'] > 80:
