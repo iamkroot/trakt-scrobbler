@@ -19,7 +19,7 @@ After=network.target
 [Service]
 ExecStart=$py_path main.py
 WorkingDirectory=$HOME/.local/trakt_scrobbler
-Restart=on-failure
+Restart=no
 KillSignal=SIGINT
 
 [Install]

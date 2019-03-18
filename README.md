@@ -49,6 +49,10 @@ Other player specific parameters| See sample config for the required attributes.
 		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
 		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
 		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
+5. To enable notification support on Linux/MacOS, the dbus libraries need to be installed.
+	Ubuntu: `apt install python3-dbus`
+	MacOS: `brew install dbus`
+
 
 ### Running
 For the first run, type `pipenv run python main.py`  *inside the installation directory* (not the clone location) to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
@@ -59,7 +63,7 @@ That's it! Now the program will automatically monitor the enabled players for me
 Feel free to create a new issue in case you find a bug/want to have a feature added. Proper PRs are welcome.
 
 ## Authors
-+ [mach64](https://www.github.com/mach64)
++ [iamkroot](https://www.github.com/iamkroot)
 
 ## Acknowledgements
 + Inspired from [TraktForVLC](https://github.com/XaF/TraktForVLC)
