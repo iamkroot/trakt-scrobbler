@@ -37,7 +37,7 @@ Other player specific parameters| See sample config for the required attributes.
 3. Run `pip install pipenv` to install pipenv in your system.
 4. Depending on your OS, proceed as follows: 
 	+ **Linux**<br>
-		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt_scrobbler`, create the virtualenv, and also enable the startup service (needs sudo for last part).
+		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt-scrobbler`, create the virtualenv, and also enable the startup service.
 
 	+ **Windows**<br>
 		At the root of cloned project directory, run `scripts\windows-install.bat`. This will copy the files to `%APPDATA%\trakt_scrobbler` directory, create the virtualenv, and also enable the startup service.

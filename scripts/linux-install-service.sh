@@ -1,30 +1,32 @@
 #!/bin/bash
 command -v pipenv >/dev/null 2>&1 || { echo >&2 "Please install pipenv first."; exit 1; }
-
-echo "Installing to $HOME/.local/trakt_scrobbler"
-cp -r trakt_scrobbler/ $HOME/.local/
-cp ./{Pipfile,Pipfile.lock} $HOME/.local/trakt_scrobbler/
-cd $HOME/.local/trakt_scrobbler/
+[ "${PWD##*/}" == "scripts" ] && cd ..
+dest=$HOME/.local/trakt-scrobbler
+echo Installing to $dest
+cp -r trakt_scrobbler/ $dest
+cp ./{Pipfile,Pipfile.lock} $dest
+cd $dest
 
 pipenv --venv >/dev/null 2>&1 || { pipenv install ; }  # create venv if not present
 py_path=$(pipenv --py)
 
-echo "Creating system service."
+echo Creating system service.
 
-sudo tee /etc/systemd/system/trakt-scrobbler.service > /dev/null << EOL
+mkdir -p $HOME/.config/systemd/user 
+tee $HOME/.config/systemd/user/trakt-scrobbler.service > /dev/null << EOL
 [Unit]
-Description=Trakt Scrobbler
+Description=Trakt Scrobbler Service
 After=network.target
 
 [Service]
 ExecStart=$py_path main.py
-WorkingDirectory=$HOME/.local/trakt_scrobbler
-Restart=no
-KillSignal=SIGINT
+WorkingDirectory=$dest
 
 [Install]
 WantedBy=multi-user.target
 EOL
 
-sudo systemctl daemon-reload
-sudo systemctl enable trakt-scrobbler.service
+systemctl --user daemon-reload
+systemctl --user enable trakt-scrobbler
+
+echo Setup complete. You can proceed with configuration at: $dest/data/sample_config.toml.
