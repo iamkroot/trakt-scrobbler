@@ -40,7 +40,7 @@ Other player specific parameters| See sample config for the required attributes.
 		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt-scrobbler`, create the virtualenv, and also enable the startup service.
 
 	+ **Windows**<br>
-		At the root of cloned project directory, run `scripts\windows-install.bat`. This will copy the files to `%APPDATA%\trakt_scrobbler` directory, create the virtualenv, and also enable the startup service.
+		At the root of cloned project directory, run `scripts\windows-install.bat`. This will copy the files to `%APPDATA%\trakt-scrobbler` directory, create the virtualenv, and also enable the startup service.
 
 	+ **MacOS**<br>
 		I will try to make a install script for Mac soon. Till then, here are the manual steps you can follow:
