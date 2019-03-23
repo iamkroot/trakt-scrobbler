@@ -16,14 +16,13 @@ mkdir -p $HOME/.config/systemd/user
 tee $HOME/.config/systemd/user/trakt-scrobbler.service > /dev/null << EOL
 [Unit]
 Description=Trakt Scrobbler Service
-After=network.target
 
 [Service]
 ExecStart=$py_path main.py
 WorkingDirectory=$dest
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 EOL
 
 systemctl --user daemon-reload
