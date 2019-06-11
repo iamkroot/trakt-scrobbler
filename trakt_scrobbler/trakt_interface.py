@@ -1,6 +1,7 @@
 import logging
 import time
 import sys
+import webbrowser
 import trakt_key_holder
 from datetime import datetime as dt
 from functools import lru_cache
@@ -60,7 +61,8 @@ def device_auth():
     logger.info(f"Verification URL: {code_data['verification_url']}")
     logger.info(f"User Code: {code_data['user_code']}")
     notify("Open {verification_url} in your browser and enter this code: "
-           "{user_code}".format(**code_data), timeout=30)
+           "{user_code}".format(**code_data), timeout=60)
+    webbrowser.open(code_data['verification_url'])
 
     start = time.time()
     while time.time() - start < code_data['expires_in']:
