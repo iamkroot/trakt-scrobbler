@@ -28,4 +28,4 @@ EOL
 systemctl --user daemon-reload
 systemctl --user enable trakt-scrobbler
 
-echo Setup complete. You can proceed with configuration at: $dest/data/sample_config.toml.
+echo Setup complete.

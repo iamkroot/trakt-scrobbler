@@ -22,7 +22,7 @@ Simple python project to automatically scrobble media information to [Trakt.tv](
 + MPC-BE/MPC-HC: Enable the web interface from Options.
 
 #### Configuration
-All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml` under `trakt_scrobbler/data` directory.
+All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml` under `trakt_scrobbler/data` directory. Remember, only put the necessary players in `monitored` list.
 
 Parameter | Explanation |
 --------- | -----------
@@ -32,7 +32,7 @@ Parameter | Explanation |
 Other player specific parameters| See sample config for the required attributes.
 
 ### Installation
-1. Clone the repo to a directory of your choice.
+1. Clone the repo to a directory of your choice/click "Download as zip" and extract it.
 2. Ensure you have Python 3.6 or higher installed, and in your system `PATH`.
 3. Run `pip install pipenv` to install pipenv in your system.
 4. Depending on your OS, proceed as follows: 
@@ -49,14 +49,18 @@ Other player specific parameters| See sample config for the required attributes.
 		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
 		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
 		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
-5. The program will now autostart at boot, so you'll have to **restart** your PC once to get it working! (Protip for linux peeps: You can run `systemctl --user start trakt-scrobbler` just this once and skip the restart. It is not required every time.)
-6. To enable notification support on Linux/MacOS, the dbus libraries need to be installed.
+5. To enable notification support on Linux/MacOS, the dbus libraries need to be installed.
 	- Ubuntu: `apt install python3-dbus`
 	- MacOS: `brew install dbus`
+6. Follow the instructions for the first run to complete the setup.
 
-
-### Running
-For the first run, type `pipenv run python main.py`  *inside the installation directory* (not the clone location) to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
+### First Run
+1. Open a terminal/command prompt and change the directory to installation folder.
+	- Linux: `$HOME/.local/trakt-scrobbler`
+	- MacOS: Currently, it is inside git clone directory, under `trakt_scrobbler` (Notice the `_`).
+	- Windows: Press `Win` + `R` and enter `%APPDATA%\trakt-scrobbler`.
+2. Type `pipenv run python main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
+3. Reboot.
 
 That's it! Now the program will automatically monitor the enabled players for media information, and scrobble the relevant details to Trakt.
 
