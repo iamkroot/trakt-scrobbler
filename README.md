@@ -49,9 +49,10 @@ Other player specific parameters| See sample config for the required attributes.
 		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
 		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
 		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
-5. To enable notification support on Linux/MacOS, the dbus libraries need to be installed.
-	Ubuntu: `apt install python3-dbus`
-	MacOS: `brew install dbus`
+5. The program will now autostart at boot, so you'll have to **restart** your PC once to get it working! (Protip for linux peeps: You can run `systemctl --user start trakt-scrobbler` just this once and skip the restart. It is not required every time.)
+6. To enable notification support on Linux/MacOS, the dbus libraries need to be installed.
+	- Ubuntu: `apt install python3-dbus`
+	- MacOS: `brew install dbus`
 
 
 ### Running
