@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "80271fed2994eb0706485f59bbdfb192baa74faff717f0e4c43a389c1dd325eb"
+            "sha256": "78dc3ca10da1df4c5a8a773a3c0b3b98a02fc3db4e7ba7c75afe71abfc9f50fe"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -44,10 +44,10 @@
         },
         "guessit": {
             "hashes": [
-                "sha256:590cfaac6adbc65a0297f7b2a44c2accf2cc660eeed6283b43cbad30e65806e0"
+                "sha256:37803ec0d7f20f2e1425dfe3bb978dc3b9c65872aa3760c664b31a9115232ec1"
             ],
             "index": "pypi",
-            "version": "==3.0.3"
+            "version": "==3.0.4"
         },
         "idna": {
             "hashes": [
@@ -70,8 +70,6 @@
                 "sha256:67adf399debc1d5d14dffc1ab5acacb800da569754fafdc576b2a039485aa775",
                 "sha256:71be40c1fbd28594214ecaecb58e7aa8b708eabfa0125c8a109ebd51edbd776a"
             ],
-            "index": "pypi",
-            "markers": "sys_platform == 'win32'",
             "version": "==223"
         },
         "python-dateutil": {
@@ -99,6 +97,8 @@
                 "sha256:6dbc4219fe45ece6a0cc6baafe0105604fdee551b5e876dc475d3955b77190ec",
                 "sha256:9bd07746ce7f2198021a9fa187fa80df7b221ec5e4c234ab6f00ea355a3baf99"
             ],
+            "index": "pypi",
+            "markers": "sys_platform == 'win32'",
             "version": "==224"
         },
         "rebulk": {
@@ -109,11 +109,11 @@
         },
         "requests": {
             "hashes": [
-                "sha256:502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e",
-                "sha256:7bf2a778576d825600030a110f3c0e3e8edc51dfaafe1c146e39a2027784957b"
+                "sha256:11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4",
+                "sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"
             ],
             "index": "pypi",
-            "version": "==2.21.0"
+            "version": "==2.22.0"
         },
         "six": {
             "hashes": [
@@ -124,10 +124,10 @@
         },
         "urllib3": {
             "hashes": [
-                "sha256:61bf29cada3fc2fbefad4fdf059ea4bd1b4a86d2b6d15e1c7c0b582b9752fe39",
-                "sha256:de9529817c93f27c8ccbfead6985011db27bd0ddfcdb2d86f3f663385c6a9c22"
+                "sha256:b246607a25ac80bedac05c6f282e3cdaf3afb65420fd024ac94435cabe6e18d1",
+                "sha256:dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232"
             ],
-            "version": "==1.24.1"
+            "version": "==1.25.3"
         },
         "win10toast": {
             "hashes": [
