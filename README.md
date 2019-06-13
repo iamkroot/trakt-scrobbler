@@ -1,5 +1,5 @@
 # Trakt Scrobbler
-Simple python project to automatically scrobble media information to [Trakt.tv](https://trakt.tv). Fully pluggable, which enables taking data from multiple players at the *same* time.
+Simple python project to automatically scrobble media information to [Trakt.tv](https://trakt.tv). Fully pluggable, which enables taking data from multiple players.
 
 ## Features
 + Uses [guessit](https://github.com/guessit-io/guessit) to extract media information from its file path. For cases when it misidentifies the files, you can specify a regex to manually extract the necessary details.
@@ -22,13 +22,13 @@ Simple python project to automatically scrobble media information to [Trakt.tv](
 + MPC-BE/MPC-HC: Enable the web interface from Options.
 
 #### Configuration
-All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml` under `trakt_scrobbler/data` directory. Remember, only put the necessary players in `monitored` list.
+All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml` under `trakt_scrobbler/data` directory.
 
 Parameter | Explanation |
 --------- | -----------
 `fileinfo.whitelist`| List of strings \| Default: `[]` <br> List of directories you want to be scanned for shows or movies. If empty, all files played in the player are scanned. You can prevent the program from scanning all played files if your shows and movies are located in fixed directories. If possible you should use this option to minimize traffic on the Trakt API.
 `fileinfo.include_regexes`| Dict of list of strings \| Default: `{}` <br> If you find that the default module for identifying media info ([guessit](https://github.com/guessit-io/guessit)) is misidentifying some titles, you can specify the regex for that file path. <br> The regex should have posix-like path, and not Windows' `\` to separate directories. <br>The minimum required information is the title of the file, and episode number in the case of TV Shows. If season is not found, it defaults to 1.
-`players.monitored`| List of strings <br> Specify players which are to be monitored for scrobbling.
+`players.monitored`| List of strings <br> Specify players which are to be monitored for scrobbling. (Ensure that if both MPCHC and MPCBE are to be monitored, then their ports should be different.)
 Other player specific parameters| See sample config for the required attributes.
 
 ### Installation
@@ -37,10 +37,10 @@ Other player specific parameters| See sample config for the required attributes.
 3. Run `pip install pipenv` to install pipenv in your system.
 4. Depending on your OS, proceed as follows: 
 	+ **Linux**<br>
-		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt-scrobbler`, create the virtualenv, and also enable the startup service.
+		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt-scrobbler`, create the virtualenv, enable the startup service and finish device authentication with trakt.
 
 	+ **Windows**<br>
-		At the root of cloned project directory, run `scripts\windows-install.bat`. This will copy the files to `%APPDATA%\trakt-scrobbler` directory, create the virtualenv, and also enable the startup service.
+		At the root of cloned project directory, run `scripts\windows-install.bat`. This will copy the files to `%LOCALAPPDATA%\trakt-scrobbler` directory, create the virtualenv, enable the startup service and finish device authentication with trakt.
 
 	+ **MacOS**<br>
 		I will try to make a install script for Mac soon. Till then, here are the manual steps you can follow:
@@ -49,20 +49,11 @@ Other player specific parameters| See sample config for the required attributes.
 		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
 		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
 		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
-5. To enable notification support on Linux/MacOS, the dbus libraries need to be installed.
+		6. Type `pipenv run python main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
+
+5. To enable notification support on Linux/MacOS, the dbus libraries need to be installed (Reboot after installation).
 	- Ubuntu: `apt install python3-dbus`
 	- MacOS: `brew install dbus`
-6. Follow the instructions for the first run to complete the setup.
-
-### First Run
-1. Open a terminal/command prompt and change the directory to installation folder.
-	- Linux: `$HOME/.local/trakt-scrobbler`
-	- MacOS: Currently, it is inside git clone directory, under `trakt_scrobbler` (Notice the `_`).
-	- Windows: Press `Win` + `R` and enter `%APPDATA%\trakt-scrobbler`.
-2. Type `pipenv run python main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
-3. Reboot.
-
-That's it! Now the program will automatically monitor the enabled players for media information, and scrobble the relevant details to Trakt.
 
 ## Contributing
 Feel free to create a new issue in case you find a bug/want to have a feature added. Proper PRs are welcome.

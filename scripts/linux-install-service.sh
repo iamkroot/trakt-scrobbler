@@ -28,4 +28,7 @@ EOL
 systemctl --user daemon-reload
 systemctl --user enable trakt-scrobbler
 
-echo Setup complete.
+echo Setup complete. Starting device authentication.
+pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()"
+systemctl --user start trakt-scrobbler
+echo Done.
