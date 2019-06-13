@@ -1,17 +1,24 @@
 import json
 import logging
-import pytoml
+import toml
 import requests
 from pathlib import Path
 
 DATA_DIR = Path('data')
-DATA_DIR.mkdir(exist_ok=True)
 logger = logging.getLogger('trakt_scrobbler')
 
 
 def read_config(config_path=DATA_DIR / 'config.toml'):
-    with open(config_path) as f:
-        return pytoml.load(f)
+    try:
+        with open(config_path) as f:
+            try:
+                return toml.load(f)
+            except toml.TomlDecodeError:
+                logger.error('Unable to load config.toml!')
+                exit(1)
+    except FileNotFoundError:
+        logger.error('config.toml not found!')
+        exit(1)
 
 
 config = read_config()
