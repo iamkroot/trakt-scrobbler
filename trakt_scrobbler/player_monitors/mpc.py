@@ -9,6 +9,7 @@ logger = logging.getLogger('trakt_scrobbler')
 class MPCMon(WebInterfaceMon):
     exclude_import = True
     URL = "http://{ip}:{port}/variables.html"
+    PATTERN = re.compile(r'\<p id=\"([a-z]+)\"\>(.*?)\<', re.MULTILINE)
 
     def __init__(self, scrobble_queue):
         try:
@@ -20,9 +21,8 @@ class MPCMon(WebInterfaceMon):
 
     def get_vars(self):
         response = self.sess.get(self.URL)
-        pattern = re.compile(r'\<p id=\"([a-z]+)\"\>(.*?)\<', re.MULTILINE)
-        matches = pattern.findall(response.text)
-        return {var[0]: var[1] for var in matches}
+        matches = self.PATTERN.findall(response.text)
+        return dict(matches)
 
     def update_status(self):
         variables = self.get_vars()
@@ -32,7 +32,8 @@ class MPCMon(WebInterfaceMon):
         self.status['state'] = int(variables['state'])
         for key in ('position', 'duration'):
             self.status[key] = int(variables[key]) / 1000
-        if self.status['position'] == self.status['duration']:
+        # instead of stopping, mpc pauses the file at the last second
+        if variables['positionstring'] == variables['durationstring']:
             self.status['state'] = 0
         self.status['filepath'] = variables['filepath']
 
