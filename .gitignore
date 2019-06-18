@@ -29,7 +29,7 @@
 *.ini
 *.toml
 *.json
-*.sublime-projectw
+*.sublime-project
 *.sublime-workspace
 *.bak
 .vscode/*
@@ -37,6 +37,3 @@
 
 # Project specific files #
 ##########################
-
-
-*.sublime-project
