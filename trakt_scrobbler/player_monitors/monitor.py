@@ -49,9 +49,9 @@ class Monitor(Thread):
     def scrobble_if_state_changed(self, prev, current):
         if not prev and not current:
             return
-        if not current or \
-           (prev and prev['media_info'] != current['media_info'] and
-                prev['state'] != 0):
+        if (not current and (not prev or prev['state'] != 0)) or \
+           (prev and current and prev['state'] != 0 and
+                prev['media_info'] != current['media_info']):
             self.scrobble_queue.put(('stop', prev))
         if not prev or \
            (current and (prev['state'] != current['state'] or
