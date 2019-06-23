@@ -4,7 +4,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.github.mach64.trakt-scrobbler</string>
+    <string>com.github.iamkroot.trakt-scrobbler</string>
     <key>ProgramArguments</key>
     <array>
         <string>Enter the output of pipenv --py here!</string>
