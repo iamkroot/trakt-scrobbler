@@ -3,7 +3,7 @@ for /f "delims=\" %%a in ("%cd%") do if "%%~nxa"=="scripts" cd ..
 
 where pipenv >NUL 2>&1 || echo Please install pipenv first. && goto :EOF
 
-set install-dir="%LOCALAPPDATA%\trakt scrobbler"
+set install-dir="%LOCALAPPDATA%\trakt-scrobbler"
 echo Installing to %install-dir%
 
 xcopy /i /s /r /y .\trakt_scrobbler %install-dir%\ >NUL
