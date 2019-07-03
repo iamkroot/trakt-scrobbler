@@ -1,0 +1,41 @@
+[general]
+enable_notifs = true
+
+[fileinfo]
+whitelist = [  # if defined, only files from these directories will be scrobbled. Keep as [] to allow all.
+	"/path/to/movies_folder",
+	"/path/to/videos_folder"
+]
+
+# example regexes. To test your custom regexes, try regex101.com
+[fileinfo.include_regexes]  # custom regex to identify media information, should be posix path. Use single quotes for the strings.
+movie = [
+	'.*/(?P<name>.+?) \((?P<year>[0-9]{4})\).*',  # matches /a/b/Taxi Driver (1976).mkv
+]
+episode = [
+	'.*/(?P<title>.+?) \[[0-9]{3,4}p\]/(?P<episode>\d+) - (?P<episode_title>.*)\.[a-z]{3,4}',  # matches "/a/b/One Punch Man [1080p]/01 - Return of the Hero.mkv"
+	'.*/(?P<title>.+?)\s*?(\[[0-9]{3,4}p\])?/(S|Season)\s?(?P<season>\d+)/(?P<episode>\d+).*',  # matches "/a/b/Mob Psycho 100/Season 2/01 - Ripped Apart ~Someone Is Watching~.mkv"
+]
+
+[players]  # list the required players here, decreasing order of priority
+monitored = ['mpcbe', 'mpchc', 'mpv', 'vlc']
+
+[players.mpcbe]  # enable web interface from options
+ip = "localhost"
+port = "13579"
+poll_interval = 10
+
+[players.mpchc]  # enable web interface from options
+ip = "localhost"
+port = "13579"
+poll_interval = 10
+
+[players.vlc]  # enable web interface from options
+ip = "localhost"
+port = "8080"
+password = "password"
+poll_interval = 10
+
+[players.mpv]  # enable the JSON IPC server
+ipc_path = '\\.\pipe\mpvpipe'  # windows (single quotes are important)
+# ipc_path = "/tmp/mpvsocket"  # unix

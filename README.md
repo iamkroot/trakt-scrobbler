@@ -22,7 +22,7 @@ Simple python project to automatically scrobble media information to [Trakt.tv](
 + MPC-BE/MPC-HC: Enable the web interface from Options.
 
 #### Configuration
-All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml` under `trakt_scrobbler/data` directory.
+All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml`.
 
 Parameter | Explanation |
 --------- | -----------

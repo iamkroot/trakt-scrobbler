@@ -1,14 +1,42 @@
 import json
 import logging
+import sys
 import toml
 import requests
 from pathlib import Path
 
-DATA_DIR = Path('data')
 logger = logging.getLogger('trakt_scrobbler')
 
 
-def read_config(config_path=DATA_DIR / 'config.toml'):
+def get_dirs():
+    NAME = 'trakt-scrobbler'
+    DATA_DIR = None
+
+    def dir_path(path: str) -> Path:
+        return Path(path).expanduser() / NAME
+
+    if sys.platform == 'win32':
+        DATA_DIR = dir_path('~/AppData/Roaming')
+        CFG_DIR = DATA_DIR
+    elif sys.platform == 'linux':
+        DATA_DIR = dir_path('~/.local/share')
+        CFG_DIR = dir_path('~/.config')
+    elif sys.platform == 'darwin':
+        DATA_DIR = dir_path('~/Library/Application Support')
+        CFG_DIR = dir_path('~/Library/Preferences')
+    else:
+        logger.error('Unknown OS')
+        exit(1)
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    CFG_DIR.mkdir(parents=True, exist_ok=True)
+    return DATA_DIR, CFG_DIR
+
+
+DATA_DIR, CFG_DIR = get_dirs()
+
+
+def read_config(config_path):
     try:
         with open(config_path) as f:
             try:
@@ -21,7 +49,7 @@ def read_config(config_path=DATA_DIR / 'config.toml'):
         exit(1)
 
 
-config = read_config()
+config = read_config(CFG_DIR / 'config.toml')
 
 
 def read_json(file_path):
