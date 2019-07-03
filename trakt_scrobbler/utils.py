@@ -33,35 +33,30 @@ def get_dirs():
     return DATA_DIR, CFG_DIR
 
 
-DATA_DIR, CFG_DIR = get_dirs()
-
-
-def read_config(config_path):
+def read_config(config_path: Path):
     try:
-        with open(config_path) as f:
-            try:
-                return toml.load(f)
-            except toml.TomlDecodeError:
-                logger.error('Unable to load config.toml!')
-                exit(1)
+        return toml.load(config_path)
+    except toml.TomlDecodeError:
+        logger.error('Unable to load config.toml!')
+        exit(1)
     except FileNotFoundError:
         logger.error('config.toml not found!')
         exit(1)
 
 
+DATA_DIR, CFG_DIR = get_dirs()
 config = read_config(CFG_DIR / 'config.toml')
 
 
 def read_json(file_path):
     try:
         with open(file_path) as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                logger.warning(f'Invalid json in {file_path}.')
-                return None
+            return json.load(f)
+    except json.JSONDecodeError:
+        logger.warning(f'Invalid json in {file_path}.')
+        return None
     except FileNotFoundError:
-        logger.warning(f"{file_path} doesn't exist.")
+        logger.debug(f"{file_path} doesn't exist.")
         return None
 
 
