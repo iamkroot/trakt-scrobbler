@@ -34,7 +34,7 @@ for /F "tokens=* USEBACKQ" %%F in (`pipenv --venv`) do set venv_path=%%F
 set py_path="%venv_path%\Scripts\pythonw.exe"
 
 echo Setup complete. Starting device authentication.
-pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || goto :EOF
+pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || echo "You can run this script again once the issue is fixed. Quitting." && goto :EOF
 
 echo
 echo Adding to startup commands.

@@ -35,7 +35,7 @@ pipenv sync || { echo >&2 "Error while creating venv"; exit 1; }
 py_path=$(pipenv --py)
 
 echo Setup complete. Starting device authentication.
-pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || exit 1;
+pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || echo "You can run this script again once the issue is fixed. Quitting." && exit 1;
 
 echo
 echo Creating system service.
