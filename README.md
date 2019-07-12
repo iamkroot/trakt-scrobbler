@@ -69,10 +69,9 @@ Substitute the values according to your OS in the following steps
 
 Steps:
 1. Clone/download this repo at some place (let's call this `Dir1`)
-2. Open the current install location (`Dir2`)
-3. Copy the `data` folder from `Dir2` to `Dir1\trakt_scrobbler` (Notice the `_`). You'll be asked to replace/skip the `sample_config.toml`, you can do either.
-4. Kill app (method depends on OS). Delete the folder at `Dir2`.
-5. Run the install script from `Dir1\scripts`.
+2. Kill app (method depends on OS).
+3. Delete the folder at `Dir2`.
+4. Run the install script from `Dir1\scripts`.
 
 ## Contributing
 Feel free to create a new issue in case you find a bug/want to have a feature added. Proper PRs are welcome.
