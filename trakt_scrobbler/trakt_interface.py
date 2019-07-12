@@ -157,6 +157,7 @@ def get_trakt_id(title, item_type):
         return 0  # Dont store in cache
     elif results == [] or results[0]['score'] < 5:  # Weak or no match
         logger.warning('Trakt search yielded no results.')
+        notify('Trakt search yielded no results for ' + title)
         trakt_id = -1
     else:
         trakt_id = results[0][required_type]['ids']['trakt']
