@@ -22,8 +22,6 @@ Simple python project to automatically scrobble media information to [Trakt.tv](
 + MPC-BE/MPC-HC: Enable the web interface from Options.
 
 #### Configuration
-All you have to do now is create a `config.toml` file with the required parameters. See `sample_config.toml`.
-
 Parameter | Explanation |
 --------- | -----------
 `fileinfo.whitelist`| List of strings \| Default: `[]` <br> List of directories you want to be scanned for shows or movies. If empty, all files played in the player are scanned. You can prevent the program from scanning all played files if your shows and movies are located in fixed directories. If possible you should use this option to minimize traffic on the Trakt API.
@@ -33,9 +31,10 @@ Other player specific parameters| See sample config for the required attributes.
 
 ### Installation
 1. Clone the repo to a directory of your choice/click "Download as zip" and extract it.
-2. Ensure you have Python 3.6 or higher installed, and in your system `PATH`.
-3. Run `pip install pipenv` to install pipenv in your system.
-4. Depending on your OS, proceed as follows: 
+2. Rename the `sample_config.toml` to `config.toml` and set the required values (See [Configuration](#Configuration) section). 
+3. Ensure you have Python 3.6 or higher installed, and in your system `PATH`.
+4. Run `pip install pipenv` to install pipenv in your system.
+5. Depending on your OS, proceed as follows: 
 	+ **Linux**<br>
 		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt-scrobbler`, create the virtualenv, enable the startup service and finish device authentication with trakt.
 
@@ -51,7 +50,7 @@ Other player specific parameters| See sample config for the required attributes.
 		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
 		6. Type `pipenv run python main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
 
-5. To enable notification support on Linux/MacOS, the dbus libraries need to be installed (Reboot after installation).
+6. To enable notification support on Linux/MacOS, the dbus libraries need to be installed (Reboot after installation).
 	- Ubuntu: `apt install python3-dbus`
 	- MacOS: `brew install dbus`
 
