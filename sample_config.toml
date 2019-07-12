@@ -17,8 +17,9 @@ episode = [
 	'.*/(?P<title>.+?)\s*?(\[[0-9]{3,4}p\])?/(S|Season)\s?(?P<season>\d+)/(?P<episode>\d+).*',  # matches "/a/b/Mob Psycho 100/Season 2/01 - Ripped Apart ~Someone Is Watching~.mkv"
 ]
 
-[players]  # list the required players here, decreasing order of priority
-monitored = ['mpcbe', 'mpchc', 'mpv', 'vlc']
+[players]
+monitored = ['mpcbe', 'mpchc', 'mpv', 'vlc']  # list the required players here, decreasing order of priority
+skip_interval = 5  # min percent jump to consider for scrobbling to trakt
 
 [players.mpcbe]  # enable web interface from options
 ip = "localhost"

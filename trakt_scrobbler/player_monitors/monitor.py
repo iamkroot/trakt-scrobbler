@@ -20,6 +20,7 @@ class Monitor(Thread):
         self.is_running = False
         self.status = {}
         self.prev_state = {}
+        self.skip_interval = config['players'].get('skip_interval', 5)
 
     def parse_status(self):
         if 'filepath' not in self.status or not self.status.get('duration'):
@@ -56,7 +57,8 @@ class Monitor(Thread):
         if not prev or \
            (current and (prev['state'] != current['state'] or
                          prev['media_info'] != current['media_info'] or
-                         current['progress'] - prev['progress'] > 10)):
+                         current['progress'] - prev['progress'] >
+                         self.skip_interval)):
             verb = SCROBBLE_VERBS[current['state']]
             self.scrobble_queue.put((verb, current))
 
