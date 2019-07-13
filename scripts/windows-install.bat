@@ -20,10 +20,11 @@ if not exist %cfg-dir%config.toml (
 	echo Please ensure that it matches sample_config.toml, or the app may crash unexpectedly.
 )
 
-echo
+echo,
 echo Installing to %install-dir%
 
 xcopy /i /s /r /y .\trakt_scrobbler %install-dir%\ >NUL
+xcopy /i /r /y Pipfile %install-dir%\ >NUL
 xcopy /i /r /y Pipfile.lock %install-dir%\ >NUL
 
 pushd %install-dir%
@@ -36,7 +37,7 @@ set py_path="%venv_path%\Scripts\pythonw.exe"
 echo Setup complete. Starting device authentication.
 pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || echo "You can run this script again once the issue is fixed. Quitting." && goto :EOF
 
-echo
+echo,
 echo Adding to startup commands.
 
 set batch_path="%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\trakt-scrobbler.bat"
@@ -46,7 +47,8 @@ echo start %py_path% %install-dir%\main.py >>%batch_path%
 
 popd
 
-%py_path% %install-dir%\main.py
+echo Starting trakt-scrobbler.
+start "" %py_path% %install-dir%\main.py
 
 echo Done.
 :EOF
