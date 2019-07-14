@@ -1,11 +1,19 @@
 @echo off
-where pipenv >NUL 2>&1 || echo Please install pipenv first. && goto :EOF
+
+echo Checking pipenv install.
+where pipenv >NUL 2>&1
+if %ERRORLEVEL% NEQ 0 (
+	echo Pipenv not found. Installing.
+	pip install pipenv || echo Error while installing pipenv. Exiting. && goto :EOF
+	where pipenv >NUL 2>&1 || echo Still unable to run pipenv. Check you PATH variable. && goto :EOF
+)
 
 for /f "delims=\" %%a in ("%cd%") do if "%%~nxa"=="scripts" cd ..
-
+ 
 set install-dir="%LOCALAPPDATA%\trakt-scrobbler"
 set cfg-dir="%APPDATA%\trakt-scrobbler\"
 
+echo,
 echo Checking config file
 if not exist %cfg-dir%config.toml (
 	if not exist config.toml (

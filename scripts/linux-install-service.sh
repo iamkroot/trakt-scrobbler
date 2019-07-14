@@ -1,6 +1,11 @@
 #!/bin/bash
 
-command -v pipenv >/dev/null 2>&1 || { echo >&2 "Please install pipenv first."; exit 1; }
+echo "Checking pipenv install."
+if ! [ -x "$(command -v pipenv)" ]; then
+  echo "Pipenv not found. Installing." >&2
+  pip install -q --user pipenv || { echo "Error while installing pipenv. Exiting." >&2; exit 1; }
+  command -v pipenv >/dev/null 2>&1 || { echo >&2 "Still unable to run pipenv. Check you PATH variable."; exit 1; }
+fi
 
 [ "${PWD##*/}" == "scripts" ] && cd ..
 
@@ -9,6 +14,7 @@ cfg_dir="$HOME/.config/trakt-scrobbler/"
 mkdir -p "$dest"
 mkdir -p "$cfg_dir"
 
+echo
 echo "Checking config file"
 if [ ! -e "$cfg_dir/config.toml" ]; then
 	if [ ! -e config.toml ]; then
@@ -35,7 +41,7 @@ pipenv sync || { echo >&2 "Error while creating venv"; exit 1; }
 py_path=$(pipenv --py)
 
 echo Setup complete. Starting device authentication.
-pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || echo "You can run this script again once the issue is fixed. Quitting." && exit 1;
+pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || { echo "You can run this script again once the issue is fixed. Quitting."; exit 1; }
 
 echo
 echo Creating system service.
@@ -55,6 +61,9 @@ EOL
 
 systemctl --user daemon-reload
 systemctl --user enable trakt-scrobbler
+
+echo Starting trakt-scrobbler.
+
 systemctl --user start trakt-scrobbler
 
 echo Done.
