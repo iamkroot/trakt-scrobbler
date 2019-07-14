@@ -22,6 +22,8 @@ Simple python project to automatically scrobble media information to [Trakt.tv](
 + MPC-BE/MPC-HC: Enable the web interface from Options.
 
 #### Configuration
+The config is stored in [TOML](https://github.com/toml-lang/toml) format. After editing, please use [this](http://toml-online-parser.ovonick.com/) website to validate the file. 
+
 Parameter | Explanation |
 --------- | -----------
 `fileinfo.whitelist`| List of strings \| Default: `[]` <br> List of directories you want to be scanned for shows or movies. If empty, all files played in the player are scanned. You can prevent the program from scanning all played files if your shows and movies are located in fixed directories. If possible you should use this option to minimize traffic on the Trakt API.

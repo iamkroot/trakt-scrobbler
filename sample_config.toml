@@ -4,7 +4,8 @@ enable_notifs = true
 [fileinfo]
 whitelist = [  # if defined, only files from these directories will be scrobbled. Keep as [] to allow all.
 	"/path/to/movies_folder",
-	"/path/to/videos_folder"
+	"/path/to/videos_folder",
+	'D:\path\to\windows\folder'  # single quotes are important in windows paths due to '\' character
 ]
 
 # example regexes. To test your custom regexes, try regex101.com
