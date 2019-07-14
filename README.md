@@ -32,9 +32,9 @@ Parameter | Explanation |
 Other player specific parameters| See sample config for the required attributes.
 
 ### Installation
-1. Clone the repo to a directory of your choice/click "Download as zip" and extract it.
+1. Clone the repo to a directory of your choice/click "[Download as zip](https://github.com/iamkroot/trakt-scrobbler/archive/master.zip)" and extract it.
 2. Rename the `sample_config.toml` to `config.toml` and set the required values (See [Configuration](#Configuration) section). 
-3. Ensure you have Python 3.6 or higher installed, and in your system `PATH`.
+3. Ensure you have [Python 3.6](https://www.python.org/downloads/) or higher installed, and in your system `PATH`.
 4. Run `pip install pipenv` to install pipenv in your system.
 5. Depending on your OS, proceed as follows: 
 	+ **Linux**<br>
