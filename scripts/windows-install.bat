@@ -5,7 +5,7 @@ where pipenv >NUL 2>&1
 if %ERRORLEVEL% NEQ 0 (
 	echo Pipenv not found. Installing.
 	pip install pipenv || echo Error while installing pipenv. Exiting. && goto :EOF
-	where pipenv >NUL 2>&1 || echo Still unable to run pipenv. Check you PATH variable. && goto :EOF
+	pipenv --version >NUL 2>&1 || echo Still unable to run pipenv. Check you PATH variable. && goto :EOF
 )
 
 for /f "delims=\" %%a in ("%cd%") do if "%%~nxa"=="scripts" cd ..

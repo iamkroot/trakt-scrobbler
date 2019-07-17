@@ -4,7 +4,7 @@ echo "Checking pipenv install."
 if ! [ -x "$(command -v pipenv)" ]; then
   echo "Pipenv not found. Installing." >&2
   pip install -q --user pipenv || { echo "Error while installing pipenv. Exiting." >&2; exit 1; }
-  command -v pipenv >/dev/null 2>&1 || { echo >&2 "Still unable to run pipenv. Check you PATH variable."; exit 1; }
+  pipenv --version >/dev/null 2>&1 || { echo >&2 "Still unable to run pipenv. Check you PATH variable."; exit 1; }
 fi
 
 [ "${PWD##*/}" == "scripts" ] && cd ..
