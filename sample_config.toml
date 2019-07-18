@@ -24,20 +24,20 @@ skip_interval = 5  # min percent jump to consider for scrobbling to trakt
 
 [players.mpcbe]  # enable web interface from options
 ip = "localhost"
-port = "13579"
-poll_interval = 10
+port = "13579"  # from Options -> Player -> Web Interface -> Listen on port  (ensure it is ticked) 
+poll_interval = 10  # in seconds. How frequently the monitor should check for player update.
 
 [players.mpchc]  # enable web interface from options
 ip = "localhost"
-port = "13579"  # if both mpchc and mpcbe are monitored, then ensure that their ports are different
-poll_interval = 10
+port = "13579"  # if both mpchc and mpcbe are to be monitored, then ensure that their ports are different
+poll_interval = 10  # in seconds
 
 [players.vlc]  # enable web interface from options
 ip = "localhost"
-port = "8080"
-password = "password"
-poll_interval = 10
+port = "8080"  # from Preferences -> All -> Input/Codecs -> HTTP Server Port
+password = "password"  # from Preferences -> All -> Interface -> Main Interfaces -> Lua -> Lua HTTP Password
+poll_interval = 10  # in seconds. How frequently the monitor should check for player update.
 
-[players.mpv]  # enable the JSON IPC server
+[players.mpv]  # enable the JSON IPC server. Either via cmd line arg (eg: --input-ipc-server=\\.\pipe\mpvpipe), or in mpv.conf file
 ipc_path = '\\.\pipe\mpvpipe'  # windows (single quotes are important)
 # ipc_path = "/tmp/mpvsocket"  # unix
