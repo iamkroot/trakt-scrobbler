@@ -19,7 +19,7 @@ episode = [
 ]
 
 [players]
-monitored = ['mpcbe', 'mpchc', 'mpv', 'vlc']  # list the required players here, decreasing order of priority
+monitored = ['mpchc', 'mpv']  # players to be monitored. Allowed: 'mpcbe', 'mpchc', 'mpv', 'vlc'
 skip_interval = 5  # min percent jump to consider for scrobbling to trakt
 
 [players.mpcbe]  # enable web interface from options
@@ -29,7 +29,7 @@ poll_interval = 10
 
 [players.mpchc]  # enable web interface from options
 ip = "localhost"
-port = "13579"
+port = "13579"  # if both mpchc and mpcbe are monitored, then ensure that their ports are different
 poll_interval = 10
 
 [players.vlc]  # enable web interface from options
