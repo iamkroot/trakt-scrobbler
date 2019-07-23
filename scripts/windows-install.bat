@@ -51,12 +51,12 @@ echo Adding to startup commands.
 set batch_path="%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\trakt-scrobbler.bat"
 echo @echo off >%batch_path%
 echo pushd %install-dir% >>%batch_path%
-echo start %py_path% %install-dir%\main.py >>%batch_path%
+echo start /D %install-dir% "" %py_path% %install-dir%\main.py >>%batch_path%
 
 popd
 
 echo Starting trakt-scrobbler.
-start "" %py_path% %install-dir%\main.py
+start /D %install-dir% "" %py_path% %install-dir%\main.py
 
 echo Done.
 :EOF
