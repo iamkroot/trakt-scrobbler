@@ -1,5 +1,11 @@
 # Trakt Scrobbler
-Simple python project to automatically scrobble media information to [Trakt.tv](https://trakt.tv). Fully pluggable, which enables taking data from multiple players.
+A trakt.tv scrobbler for your computer.
+
+## What is Trakt?
+Automatically scrobble TV show episodes and movies you are watching to [Trakt.tv](https://trakt.tv)! It keeps a history of everything you've watched!
+
+## What is trakt-scrobbler?
+Trakt.tv has a lot of [plugins](https://trakt.tv/apps) to automatically scrobble the movies and episodes you watch from your media center. But there is a dearth of up-to-date apps for syncing your progress on Desktop environments. This is where `trakt-scrobbler` comes in! Built using Python, it supports all major OS platforms (Linux, Mac and Windows), as well as all major media players.
 
 ## Features
 + Uses [guessit](https://github.com/guessit-io/guessit) to extract media information from its file path. For cases when it misidentifies the files, you can specify a regex to manually extract the necessary details.
