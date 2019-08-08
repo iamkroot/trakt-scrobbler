@@ -4,7 +4,6 @@ import sys
 import webbrowser
 import trakt_key_holder
 from datetime import datetime as dt
-from functools import lru_cache
 from notifier import notify
 from utils import DATA_DIR, safe_request, read_json, write_json
 
@@ -102,7 +101,7 @@ def refresh_token(token_data):
 def get_access_token():
     global token_data
     if not token_data:
-        logger.info("Access token not found in config. " +
+        logger.info("Access token not found in config. "
                     "Initiating device authentication.")
         token_data = device_auth()
         write_json(token_data, TRAKT_TOKEN_PATH)
@@ -111,9 +110,7 @@ def get_access_token():
         logger.info("Access token about to expire. Refreshing.")
         token_data = refresh_token(token_data)
         write_json(token_data, TRAKT_TOKEN_PATH)
-    try:
-        assert token_data
-    except AssertionError:
+    if not token_data:
         logger.error("Unable to get access token. "
                      f"Try deleting {TRAKT_TOKEN_PATH!s} and retry.")
         notify("Failed to authorize application.")
@@ -142,7 +139,6 @@ def search(query, types=None, extended=False):
     return r.json() if r else None
 
 
-@lru_cache(maxsize=None)
 def get_trakt_id(title, item_type):
     required_type = 'show' if item_type == 'episode' else 'movie'
 
@@ -206,7 +202,7 @@ def prepare_history_data(watched_at, title, type, *args, **kwargs):
     if type == 'movie':
         return {'movies': [{'ids': {'trakt': trakt_id},
                             'watched_at': watched_at}]}
-    else:
+    else:  # TODO: Group data by show instead of sending episode-wise
         return {'shows': [
             {'ids': {'trakt': trakt_id}, 'seasons': [
                 {'number': kwargs['season'], 'episodes': [
@@ -227,8 +223,8 @@ def add_to_history(media_info, updated_at, *args, **kwargs):
         "json": history
     }
     resp = safe_request('post', params)
-    if resp:
-        added = resp.json()['added']
-        if (media_info['type'] == 'movie' and added['movies'] > 0) or \
-           (media_info['type'] == 'episode' and added['episodes'] > 0):
-            return True
+    if not resp:
+        return False
+    added = resp.json()['added']
+    return (media_info['type'] == 'movie' and added['movies'] > 0) or \
+        (media_info['type'] == 'episode' and added['episodes'] > 0)
