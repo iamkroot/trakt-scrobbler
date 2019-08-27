@@ -1,7 +1,6 @@
 import logging
-from urllib.parse import urlparse, unquote
 from player_monitors.monitor import WebInterfaceMon
-from utils import config
+from utils import config, file_uri_to_path
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -50,7 +49,4 @@ class VLCMon(WebInterfaceMon):
     def _get_filepath(self):
         playlist_data = self.sess.get(self.playlist_url).json()
         file_data = search_dict_for_current(playlist_data)
-        file_url = file_data['uri']
-        if not file_url.startswith('file://'):
-            return None
-        return urlparse(unquote(file_url))[2]
+        return file_uri_to_path(file_data['uri'])

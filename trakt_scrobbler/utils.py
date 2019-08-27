@@ -4,6 +4,7 @@ import sys
 import toml
 import requests
 from pathlib import Path
+from urllib.parse import urlparse, unquote
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -75,3 +76,12 @@ def safe_request(verb, params):
         return None
     else:
         return resp
+
+
+def file_uri_to_path(file_uri):
+    if not file_uri.startswith('file://'):
+            return None
+    path = urlparse(unquote(file_uri)).path
+    if sys.platform == 'win32' and path.startswith('/'):
+        path = path[1:]
+    return path
