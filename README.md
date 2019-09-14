@@ -62,22 +62,16 @@ Other player specific parameters| See sample config for the required attributes.
 	- MacOS: `brew install dbus`
 
 ## Updating
-Substitute the values according to your OS in the following steps
-- Linux:
-  - `Dir2`: `~/.local/trakt-scrobbler`
-  - Kill app: `systemctl --user stop trakt-srobbler`
-- Mac:
-  - `Dir2`: Depends on where you installed.
-  - Kill app: `launchctl unload ~/Library/LaunchAgents/trakt_scrobbler.plist`
-- Windows:
-  - `Dir2`: `%LOCALAPPDATA%\trakt-scrobbler`
-  - Kill app: Kill `pythonw.exe` from task manager
-
-Steps:
-1. Clone/download this repo at some place (let's call this `Dir1`)
-2. Kill app (method depends on OS).
-3. Delete the folder at `Dir2`.
-4. Run the install script from `Dir1\scripts`.
+1. Kill the app.
+	- Linux: `systemctl --user stop trakt-srobbler`
+	- Mac: `launchctl unload ~/Library/LaunchAgents/trakt_scrobbler.plist`
+	- Windows: Kill `pythonw.exe` from task manager
+2. Open terminal in old installation directory and run `pipenv --rm` then close the terminal and remove the directory.
+	- Linux: `~/.local/trakt-scrobbler`
+	- Mac: Depends on where you installed
+	- Windows: `%LOCALAPPDATA%\trakt-scrobbler`
+3. Clone/download this repo to some directory or run `git pull` if you already have it cloned.
+4. Run the install script from `scripts` subdirectory for your platform.
 
 ## Contributing
 Feel free to create a new issue in case you find a bug/want to have a feature added. Proper PRs are welcome.
