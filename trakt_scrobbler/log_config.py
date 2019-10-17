@@ -25,10 +25,7 @@ class ModuleFilter(logging.Filter):
     min_levels = {}
 
     def filter(self, record: logging.LogRecord):
-        if record.module in self.min_levels.keys() and \
-           record.levelno < self.min_levels[record.module]:
-            return False
-        return True
+        return record.levelno >= self.min_levels.get(record.module, -1)
 
 
 LOGGING_CONF = {
@@ -36,7 +33,7 @@ LOGGING_CONF = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{asctime} - {levelname} - {threadName} - {module} - {message}',  # Ignore PycodestyleBear (E501)
+            'format': '{asctime} - {levelname} - {threadName} - {module} - {message}',
             'style': '{'
         },
         'brief': {
