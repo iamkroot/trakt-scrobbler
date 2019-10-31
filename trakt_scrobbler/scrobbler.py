@@ -1,8 +1,9 @@
 import logging
 from threading import Thread, Timer
+from app_dirs import DATA_DIR
 from notifier import notify
 import trakt_interface as trakt
-from utils import DATA_DIR, read_json, write_json
+from utils import read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
 WATCHED_CACHE_PATH = DATA_DIR / 'watched_cache.json'

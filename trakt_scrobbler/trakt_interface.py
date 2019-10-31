@@ -4,8 +4,9 @@ import sys
 import webbrowser
 import trakt_key_holder
 from datetime import datetime as dt
+from app_dirs import DATA_DIR
 from notifier import notify
-from utils import DATA_DIR, safe_request, read_json, write_json
+from utils import safe_request, read_json, write_json
 
 logger = logging.getLogger('trakt_scrobbler')
 

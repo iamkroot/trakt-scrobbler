@@ -1,6 +1,5 @@
 import inspect
 import logging
-import logging.config
 import sys
 import threading
 
@@ -12,9 +11,6 @@ from player_monitors.monitor import Monitor
 from scrobbler import Scrobbler
 from trakt_interface import get_access_token
 from utils import config
-from log_config import LOGGING_CONF
-
-logging.config.dictConfig(LOGGING_CONF)
 logger = logging.getLogger('trakt_scrobbler')
 
 
