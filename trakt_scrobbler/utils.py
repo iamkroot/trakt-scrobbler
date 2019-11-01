@@ -11,18 +11,13 @@ logging.config.dictConfig(LOGGING_CONF)
 logger = logging.getLogger('trakt_scrobbler')
 
 
-def read_config(config_path: Path):
+def read_toml(file_path: Path):
     try:
-        return toml.load(config_path)
+        return toml.load(file_path)
     except toml.TomlDecodeError:
-        logger.error('Unable to load config.toml!')
-        exit(1)
+        logger.error(f'Invalid TOML in {file_path}.')
     except FileNotFoundError:
-        logger.error('config.toml not found!')
-        exit(1)
-
-
-config = read_config(CFG_DIR / 'config.toml')
+        logger.error(f"{file_path} doesn't exist.")
 
 
 def read_json(file_path):
@@ -31,10 +26,8 @@ def read_json(file_path):
             return json.load(f)
     except json.JSONDecodeError:
         logger.warning(f'Invalid json in {file_path}.')
-        return None
     except FileNotFoundError:
         logger.debug(f"{file_path} doesn't exist.")
-        return None
 
 
 def write_json(data, file_path):
@@ -61,3 +54,9 @@ def file_uri_to_path(file_uri):
     if sys.platform == 'win32' and path.startswith('/'):
         path = path[1:]
     return path
+
+
+config = read_toml(CFG_DIR / 'config.toml')
+if config is None:
+    logger.critical("Error while reading config file. Quitting.")
+    exit(1)
