@@ -43,7 +43,6 @@ def get_device_token(device_code):
     if not token_resp:
         return
     elif token_resp.status_code == 400:
-        logger.info('Waiting for user to authorize the app.')
         return
     elif token_resp.status_code == 200:
         return token_resp.json()
@@ -61,17 +60,17 @@ def device_auth():
     logger.info(f"Verification URL: {code_data['verification_url']}")
     logger.info(f"User Code: {code_data['user_code']}")
     notify("Open {verification_url} in your browser and enter this code: "
-           "{user_code}".format(**code_data), timeout=60)
+           "{user_code}".format(**code_data), timeout=60, stdout=True)
     webbrowser.open(code_data['verification_url'])
 
     start = time.time()
     while time.time() - start < code_data['expires_in']:
         token_data = get_device_token(code_data['device_code'])
         if not token_data:
-            logger.debug('Waiting for user to authorize app.')
+            logger.debug('Waiting for user to authorize the app.')
             time.sleep(int(code_data['interval']))
         else:
-            notify('App authorized successfully.')
+            notify('App authorized successfully.', stdout=True)
             logger.info('Device auth successful.')
             break
     else:
@@ -114,7 +113,7 @@ def get_access_token():
     if not token_data:
         logger.error("Unable to get access token. "
                      f"Try deleting {TRAKT_TOKEN_PATH!s} and retry.")
-        notify("Failed to authorize application.")
+        notify("Failed to authorize application.", stdout=True)
         sys.exit(1)
     return token_data['access_token']
 
