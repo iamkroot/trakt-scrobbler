@@ -28,6 +28,7 @@ def read_json(file_path):
         logger.warning(f'Invalid json in {file_path}.')
     except FileNotFoundError:
         logger.debug(f"{file_path} doesn't exist.")
+    return {}  # fallback to empty json
 
 
 def write_json(data, file_path):
