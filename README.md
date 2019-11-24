@@ -12,6 +12,7 @@ Trakt.tv has a lot of [plugins](https://trakt.tv/apps) to automatically scrobble
 * Scrobbling is independent of the player(s) where the media is played. Support for new players can thus be easily added.
 * Currently has support for:
 	* [VLC](https://www.videolan.org/vlc/) (via web interface)
+	* [Plex](https://www.plex.tv) (doesn't require Plex Pass)
 	* [MPV](https://mpv.io) (via IPC server)
 	* [MPC-BE](https://sourceforge.net/projects/mpcbe/) (via web interface).
 	* [MPC-HC](https://mpc-hc.org) (via web interface).
@@ -23,6 +24,8 @@ Trakt.tv has a lot of [plugins](https://trakt.tv/apps) to automatically scrobble
 * **VLC:** Enable the Lua Web Interface from advanced options. Don't forget to specify the password in Lua options.
 
 	![VLC Web Interface](https://wiki.videolan.org/images/thumb/VLC_2.0_Activate_HTTP.png/450px-VLC_2.0_Activate_HTTP.png)
+
+* **Plex:** No server side set up is required, as the app uses the existing API. Do note that since this is a polling based approach, it will be inferior to Webhooks. So if you are a premium user of Plex, it is recommended to use that directly. This app is mainly useful for those users who don't need most of the features of Plex Pass.
 
 * **MPV:** Enable the [JSON IPC](https://mpv.io/manual/master/#json-ipc), either via the mpv.conf file, or by passing it as a command line option.
 
