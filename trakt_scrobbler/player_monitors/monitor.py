@@ -79,6 +79,9 @@ class WebInterfaceMon(Monitor):
         self.sess = requests.Session()
         self.poll_interval = config['players'][self.name]['poll_interval']
 
+    def update_status(self):
+        raise NotImplementedError
+
     def run(self):
         while True:
             try:
