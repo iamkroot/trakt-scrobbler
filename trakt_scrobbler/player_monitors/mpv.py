@@ -28,7 +28,7 @@ class MPVMon(Monitor):
             mpv_config = config['players']['mpv']
             self.ipc_path = mpv_config['ipc_path']
         except KeyError:
-            logger.error('Check config for correct MPV params.')
+            logger.exception('Check config for correct MPV params.')
             return
         super().__init__(scrobble_queue)
         self.buffer = ''
@@ -124,7 +124,7 @@ class MPVMon(Monitor):
         try:
             mpv_json = json.loads(line)
         except json.JSONDecodeError:
-            logger.warning('Invalid JSON received. Skipping. ' + line)
+            logger.warning('Invalid JSON received. Skipping. ' + line, exc_info=True)
             return
         if 'event' in mpv_json:
             self.handle_event(mpv_json['event'])
@@ -204,7 +204,7 @@ class MPVWinMon(MPVMon):
                     win32file.WriteFile(
                         self.file_handle, self.write_queue.get_nowait())
             except win32file.error:
-                logger.debug('Exception while writing to pipe.')
+                logger.debug('Exception while writing to pipe.', exc_info=True)
                 self.is_running = False
                 break
             size = win32file.GetFileSize(self.file_handle)

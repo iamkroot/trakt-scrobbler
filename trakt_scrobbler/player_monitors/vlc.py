@@ -29,7 +29,7 @@ class VLCMon(WebInterfaceMon):
             web_pwd = vlc_conf['password']
             self.URL = self.URL.format(**vlc_conf)
         except KeyError:
-            logger.error('Check config for correct VLC params.')
+            logger.exception('Check config for correct VLC params.')
             return
         super().__init__(scrobble_queue)
         self.sess.auth = ('', web_pwd)

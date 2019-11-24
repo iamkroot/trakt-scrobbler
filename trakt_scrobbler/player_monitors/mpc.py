@@ -15,7 +15,7 @@ class MPCMon(WebInterfaceMon):
         try:
             self.URL = self.URL.format(**config['players'][self.name])
         except KeyError:
-            logger.error(f'Check config for correct {self.name} params.')
+            logger.exception(f'Check config for correct {self.name} params.')
             return
         super().__init__(scrobble_queue)
 
