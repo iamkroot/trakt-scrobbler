@@ -19,7 +19,7 @@ episode = [
 ]
 
 [players]
-monitored = ['mpchc', 'mpv']  # players to be monitored. Allowed: 'mpcbe', 'mpchc', 'mpv', 'vlc'
+monitored = ['mpchc', 'mpv']  # players to be monitored. Allowed: 'mpcbe', 'mpchc', 'mpv', 'plex', 'vlc'
 skip_interval = 5  # min percent jump to consider for scrobbling to trakt
 
 [players.mpcbe]  # enable web interface from options
@@ -41,3 +41,10 @@ poll_interval = 10  # in seconds. How frequently the monitor should check for pl
 [players.mpv]  # enable the JSON IPC server. Either via cmd line arg (eg: --input-ipc-server=\\.\pipe\mpvpipe), or in mpv.conf file
 ipc_path = '\\.\pipe\mpvpipe'  # windows (single quotes are important)
 # ipc_path = "/tmp/mpvsocket"  # unix
+
+[players.plex]
+ip = "localhost"  # IP of the plex server. Only supports http for now.
+port = 32400
+login = "login"
+password = "password"
+poll_interval = 10  # in seconds. How frequently the monitor should check for player update.
