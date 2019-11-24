@@ -40,7 +40,7 @@ def safe_request(verb, params):
     try:
         resp = requests.request(verb, **params)
     except requests.exceptions.ConnectionError:
-        logger.error('Failed to connect.')
+        logger.exception('Failed to connect.')
         logger.debug(f'Request: {verb} {params}')
         return None
     else:
