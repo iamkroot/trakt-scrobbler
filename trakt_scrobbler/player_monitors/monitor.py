@@ -90,5 +90,8 @@ class WebInterfaceMon(Monitor):
                 logger.info(f'Unable to connect to {self.name}. Ensure that '
                             'the web interface is running.')
                 self.status = {}
+            else:
+                if not self.status.get("filepath"):
+                    self.status = {}
             self.handle_status_update()
             time.sleep(self.poll_interval)

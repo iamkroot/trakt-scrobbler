@@ -50,7 +50,8 @@ def safe_request(verb, params):
 
 def file_uri_to_path(file_uri):
     if not file_uri.startswith('file://'):
-            return None
+        logger.warning(f"Invalid file uri '{file_uri}'")
+        return None
     path = urlparse(unquote(file_uri)).path
     if sys.platform == 'win32' and path.startswith('/'):
         path = path[1:]
