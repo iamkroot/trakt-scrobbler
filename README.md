@@ -62,9 +62,9 @@ Other player specific parameters| See sample config for the required attributes.
 		6. `mkdir ~/Library/Preferences/trakt-scrobbler/ && cp config.toml ~/Library/Preferences/trakt-scrobbler/`
 		7. Type `pipenv run python trakt_scrobbler/main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
 
-5. To enable notification support on Linux, the dbus libraries need to be installed (Reboot after installation).
-	- Arch/Manjaro: `pacman -S python-dbus`
-	- Ubuntu: `apt install python3-dbus`
+5. To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
+	- Arch/Manjaro: `pacman -S libnotify`
+	- Ubuntu: `apt install libnotify-bin`
 
 ## Updating
 1. Kill the currently installed app:

@@ -8,8 +8,6 @@ requests = "*"
 guessit = "*"
 pywin32 = {version = "*", sys_platform = "== 'win32'"}
 win10toast = {version = "*", sys_platform = "== 'win32'"}
-notify2 = {version = "*", sys_platform = "!= 'win32'"}
-dbus-python = {version = "*", sys_platform = "== 'linux'"}
 toml = "*"
 appdirs = "*"
 

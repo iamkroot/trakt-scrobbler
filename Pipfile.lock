@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f7973ca29df9c61a40e73318cc3150b3b38a41c15c3af409f82556b4ea6191d4"
+            "sha256": "4d5184db9bca6f1afb8f030b6d58b16d1c12fedf080ff6c57e0b1942df83348e"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -30,10 +30,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50",
-                "sha256:fd7c7c74727ddcf00e9acd26bba8da604ffec95bf1c2144e67aff7a8b50e6cef"
+                "sha256:017c25db2a153ce562900032d5bc68e9f191e44e9a0f762f373977de9df1fbb3",
+                "sha256:25b64c7da4cd7479594d035c08c2d809eb4aab3a26e5a990ea98cc450c320f1f"
             ],
-            "version": "==2019.9.11"
+            "version": "==2019.11.28"
         },
         "chardet": {
             "hashes": [
@@ -41,14 +41,6 @@
                 "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"
             ],
             "version": "==3.0.4"
-        },
-        "dbus-python": {
-            "hashes": [
-                "sha256:cdd4de2c4f5e58f287b12013ed7b41dee81d503c8d0d2397c5bd2fb01badf260"
-            ],
-            "index": "pypi",
-            "markers": "sys_platform == 'linux'",
-            "version": "==1.2.12"
         },
         "guessit": {
             "hashes": [
@@ -63,15 +55,6 @@
                 "sha256:ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"
             ],
             "version": "==2.8"
-        },
-        "notify2": {
-            "hashes": [
-                "sha256:33fa108d50c42f3cd3407cc437518ad3f6225d1bb237011f16393c9dd3ce197d",
-                "sha256:d7e27e63c2120c074225e526754101e22f029e38e5f002b1ceaa965258bf1073"
-            ],
-            "index": "pypi",
-            "markers": "sys_platform != 'win32'",
-            "version": "==0.3.1"
         },
         "pypiwin32": {
             "hashes": [
