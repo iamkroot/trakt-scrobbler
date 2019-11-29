@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 from app_dirs import DATA_DIR
 from player_monitors.monitor import WebInterfaceMon
 from utils import config, read_json, write_json, safe_request
@@ -74,6 +75,7 @@ class PlexMon(WebInterfaceMon):
         # TODO: Use plex metadata to directly get media info instead of filepath
         self.status["filepath"] = self._get_filepath(status_data["ratingKey"])
 
+    @lru_cache()
     def _get_filepath(self, key):
         metadata = self.get_data(self.metadata_url.format(key))
         try:
