@@ -1,3 +1,5 @@
+import json
+import requests
 import logging
 from player_monitors.monitor import WebInterfaceMon
 from utils import config, file_uri_to_path
@@ -37,7 +39,10 @@ class VLCMon(WebInterfaceMon):
         self.playlist_url = self.URL + '/requests/playlist.json'
 
     def update_status(self):
-        status_data = self.sess.get(self.status_url).json()
+        try:
+            status_data = self.sess.get(self.status_url).json()
+        except json.JSONDecodeError:
+            raise requests.ConnectionError
         if not status_data['length']:
             self.status = {}
             return

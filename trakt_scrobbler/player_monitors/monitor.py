@@ -86,7 +86,7 @@ class WebInterfaceMon(Monitor):
         while True:
             try:
                 self.update_status()
-            except (requests.ConnectionError, requests.ConnectTimeout):
+            except requests.ConnectionError:
                 logger.info(f'Unable to connect to {self.name}. Ensure that '
                             'the web interface is running.')
                 self.status = {}
