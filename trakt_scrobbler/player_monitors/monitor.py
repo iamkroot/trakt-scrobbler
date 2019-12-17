@@ -23,10 +23,16 @@ class Monitor(Thread):
         self.skip_interval = config['players'].get('skip_interval', 5)
 
     def parse_status(self):
-        if 'filepath' not in self.status or not self.status.get('duration'):
+        if (
+            'filepath' not in self.status and 'media_info' not in self.status
+        ) or not self.status.get('duration'):
             return {}
 
-        media_info = get_media_info(self.status['filepath'])
+        if 'filepath' in self.status:
+            media_info = get_media_info(self.status['filepath'])
+        else:
+            media_info = self.status['media_info']
+
         if media_info is None:
             return {}
 
@@ -90,8 +96,7 @@ class WebInterfaceMon(Monitor):
                 logger.info(f'Unable to connect to {self.name}. Ensure that '
                             'the web interface is running.')
                 self.status = {}
-            else:
-                if not self.status.get("filepath"):
-                    self.status = {}
+            if not self.status.get("filepath") and not self.status.get("media_info"):
+                self.status = {}
             self.handle_status_update()
             time.sleep(self.poll_interval)

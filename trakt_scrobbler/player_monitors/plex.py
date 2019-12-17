@@ -1,5 +1,4 @@
 import logging
-from functools import lru_cache
 from app_dirs import DATA_DIR
 from player_monitors.monitor import WebInterfaceMon
 from utils import config, read_json, write_json, safe_request
@@ -57,7 +56,6 @@ class PlexMon(WebInterfaceMon):
         self.sess.headers["Accept"] = "application/json"
         self.sess.headers["X-Plex-Token"] = self.token
         self.session_url = self.URL + "/status/sessions"
-        self.metadata_url = self.URL + "/library/metadata/{}"
 
     def get_data(self, url):
         data = self.sess.get(url).json()["MediaContainer"]
@@ -72,14 +70,19 @@ class PlexMon(WebInterfaceMon):
         self.status["duration"] = int(status_data["duration"]) / 1000
         self.status["position"] = int(status_data["viewOffset"]) / 1000
         self.status["state"] = self.STATES.get(status_data["Player"]["state"], 0)
-        # TODO: Use plex metadata to directly get media info instead of filepath
-        self.status["filepath"] = self._get_filepath(status_data["ratingKey"])
+        self.status["media_info"] = self._get_media_info(status_data)
 
-    @lru_cache()
-    def _get_filepath(self, key):
-        metadata = self.get_data(self.metadata_url.format(key))
-        try:
-            return metadata["Media"][0]["Part"][0]["file"]
-        except (KeyError, AttributeError):
-            logger.exception("Unable to fetch filepath.")
-            logger.debug(metadata)
+    @staticmethod
+    def _get_media_info(status_data):
+        if status_data["type"] == "movie":
+            return {
+                "type": "movie",
+                "title": status_data["title"]
+            }
+        elif status_data["type"] == "episode":
+            return {
+                "type": "episode",
+                "title": status_data["grandparentTitle"],
+                "season": status_data["parentIndex"],
+                "episode": status_data["index"]
+            }
