@@ -21,9 +21,7 @@ def plex_token_auth(login, password):
         }
     }
     resp = safe_request("post", auth_params)
-    if not resp:
-        return None
-    return resp.json()["user"]["authToken"]
+    return resp and resp.json()["user"]["authToken"]
 
 
 def get_token(**kwargs):
@@ -56,6 +54,7 @@ class PlexMon(WebInterfaceMon):
         self.sess.headers["Accept"] = "application/json"
         self.sess.headers["X-Plex-Token"] = self.token
         self.session_url = self.URL + "/status/sessions"
+        self.media_info_cache = {}
 
     def get_data(self, url):
         data = self.sess.get(url).json()["MediaContainer"]
@@ -70,7 +69,14 @@ class PlexMon(WebInterfaceMon):
         self.status["duration"] = int(status_data["duration"]) / 1000
         self.status["position"] = int(status_data["viewOffset"]) / 1000
         self.status["state"] = self.STATES.get(status_data["Player"]["state"], 0)
-        self.status["media_info"] = self._get_media_info(status_data)
+        self.status["media_info"] = self.get_media_info(status_data)
+
+    def get_media_info(self, status_data):
+        media_info = self.media_info_cache.get(status_data["ratingKey"])
+        if not media_info:
+            media_info = self._get_media_info(status_data)
+            self.media_info_cache[status_data["ratingKey"]] = media_info
+        return media_info
 
     @staticmethod
     def _get_media_info(status_data):
