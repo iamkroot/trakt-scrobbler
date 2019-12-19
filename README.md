@@ -59,19 +59,46 @@ Other player specific parameters| See sample config for the required attributes.
 		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
 		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
 		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
-		6. `mkdir ~/Library/Preferences/trakt-scrobbler/ && cp config.toml ~/Library/Preferences/trakt-scrobbler/`
+		6. `mkdir "~/Library/Application Support/trakt-scrobbler/" && cp config.toml "~/Library/Application Support/trakt-scrobbler/"`
 		7. Type `pipenv run python trakt_scrobbler/main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
 
 5. To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
 	- Arch/Manjaro: `pacman -S libnotify`
 	- Ubuntu: `apt install libnotify-bin`
 
-## Updating
-1. Kill the currently installed app:
-	- Linux: `systemctl --user stop trakt-srobbler`
-	- Mac: `launchctl unload ~/Library/LaunchAgents/trakt_scrobbler.plist`
-	- Windows: Terminate `pythonw.exe` from task manager
+## FAQs
+#### It doesn't work. What do I do?
+First, look through the [log file](#where-is-the-log-fileother-data-stored) to see what went wrong. If you are unable to fix the problem, feel free to create an [Issue](https://github.com/iamkroot/trakt-scrobbler/issues).
+
+#### How to stop the running app?
+- **Linux:** `systemctl --user stop trakt-srobbler`
+- **Mac:** `launchctl unload ~/Library/LaunchAgents/trakt_scrobbler.plist`
+- **Windows:** Terminate `pythonw.exe` from task manager
+
+#### How to update?
+1. Stop the app using instructions above.
 2. Follow the steps given in [Installation section](#installation)
+
+#### How to edit config after installation?
+Location for config file:
+- **Linux:** `~/.config/trakt-scrobbler/config.toml`
+- **Mac:** `~/Library/Application Support/trakt-scrobbler/config.toml`
+- **Windows:** `C:\Users\<your name>\AppData\Roaming\trakt-scrobbler\config.toml` (Shortcut: `%APPDATA%\trakt-scrobbler`)
+
+After editing, reboot your PC for the  changes to take effect.
+
+#### Where is the log file/other data stored?
+- **Linux:** `~/.local/share/trakt-scrobbler/`
+- **Mac:** Same as config file (see above)
+- **Windows:** Same as config file (see above)
+
+Everything is in human readable form, so that you can figure out what data is used by the app. While submitting a bug report, be sure to include the log file contents.
+
+## TODO
+- [ ] Switch to poetry for dependency management
+- [ ] Make a unified installer script for all OSes
+- [ ] Proper configuration management module with autodetection for players
+- [ ] A CLI command for controlling the app (start, stop, list recents, config, etc.)
 
 ## Contributing
 Feel free to create a new issue in case you find a bug/want to have a feature added. Proper PRs are welcome.
