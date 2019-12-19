@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "trakt-scrobbler"
+version = "0.1.0"
+description = "Scrobbler for trakt.tv that supports VLC, Plex, MPC-HC, and MPV"
+authors = ["iamkroot <kroot.patel@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+requests = "^2.22.0"
+guessit = "^3.1.0"
+toml = "^0.10.0"
+appdirs = "^1.4.3"
+pywin32 = {version = "^227", platform = "win32"}
+win10toast = {version = "^0.9", platform = "win32"}
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

@@ -37,3 +37,5 @@
 
 # Project specific files #
 ##########################
+!pyproject.toml
+!sample_config.toml

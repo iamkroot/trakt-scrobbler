@@ -54,13 +54,13 @@ Other player specific parameters| See sample config for the required attributes.
 
 	* **MacOS**<br>
 		I will try to make a install script for Mac soon. Till then, here are the manual steps you can follow:
-		1. Inside the project directory root, run `pipenv install`. This will create a virtualenv, and install the necessary requirements.
-		2. Run `pipenv --py` to find the location of python interpreter of virtualenv. 
+		1. Inside the project directory root, run `poetry install`. This will create a virtualenv, and install the necessary requirements.
+		2. Run `poetry show -v` to find the location of python interpreter of virtualenv. 
 		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
 		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
 		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
 		6. `mkdir "~/Library/Application Support/trakt-scrobbler/" && cp config.toml "~/Library/Application Support/trakt-scrobbler/"`
-		7. Type `pipenv run python trakt_scrobbler/main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
+		7. Type `poetry run python trakt_scrobbler/main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
 
 5. To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
 	- Arch/Manjaro: `pacman -S libnotify`
@@ -95,7 +95,7 @@ After editing, reboot your PC for the  changes to take effect.
 Everything is in human readable form, so that you can figure out what data is used by the app. While submitting a bug report, be sure to include the log file contents.
 
 ## TODO
-- [ ] Switch to poetry for dependency management
+- [x] Switch to poetry for dependency management
 - [ ] Make a unified installer script for all OSes
 - [ ] Proper configuration management module with autodetection for players
 - [ ] A CLI command for controlling the app (start, stop, list recents, config, etc.)

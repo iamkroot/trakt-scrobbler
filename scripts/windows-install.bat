@@ -1,11 +1,11 @@
 @echo off
 
-echo Checking pipenv install.
-where pipenv >NUL 2>&1
+echo Checking poetry install.
+where poetry >NUL 2>&1
 if %ERRORLEVEL% NEQ 0 (
-	echo Pipenv not found. Installing.
-	pip install pipenv || echo Error while installing pipenv. Exiting. && goto :EOF
-	pipenv --version >NUL 2>&1 || echo Still unable to run pipenv. Check you PATH variable. && goto :EOF
+	echo Poetry not found. Installing.
+	pip install poetry || echo Error while installing poetry. Exiting. && goto :EOF
+	poetry --version >NUL 2>&1 || echo Still unable to run poetry. Check you PATH variable. && goto :EOF
 )
 
 for /f "delims=\" %%a in ("%cd%") do if "%%~nxa"=="scripts" cd ..
@@ -32,18 +32,16 @@ echo,
 echo Installing to %install-dir%
 
 xcopy /i /s /r /y .\trakt_scrobbler %install-dir%\ >NUL
-xcopy /i /r /y Pipfile %install-dir%\ >NUL
-xcopy /i /r /y Pipfile.lock %install-dir%\ >NUL
+xcopy /i /r /y pyproject.toml %install-dir%\ >NUL
+xcopy /i /r /y poetry.lock %install-dir%\ >NUL
 
 pushd %install-dir%
-pipenv --venv >NUL 2>&1 && pipenv clean
-pipenv sync || echo >&2 "Error while creating venv" && goto :EOF
+poetry install --no-dev || echo >&2 "Error while creating venv" && goto :EOF
 
-for /F "tokens=* USEBACKQ" %%F in (`pipenv --venv`) do set venv_path=%%F
-set py_path="%venv_path%\Scripts\pythonw.exe"
+for /f %%i in ('poetry env info -p') do set py_path=%%i\Scripts\pythonw.exe
 
 echo Setup complete. Starting device authentication.
-pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || echo "You can run this script again once the issue is fixed. Quitting." && goto :EOF
+poetry run python -c "import trakt_interface; trakt_interface.get_access_token()" || echo You can run this script again once the issue is fixed. Quitting. && goto :EOF
 
 echo,
 echo Adding to startup commands.
@@ -53,10 +51,9 @@ echo @echo off >%batch_path%
 echo pushd %install-dir% >>%batch_path%
 echo start /D %install-dir% "" %py_path% %install-dir%\main.py >>%batch_path%
 
-popd
-
 echo Starting trakt-scrobbler.
 start /D %install-dir% "" %py_path% %install-dir%\main.py
 
 echo Done.
 :EOF
+popd

@@ -7,7 +7,7 @@
     <string>com.github.iamkroot.trakt-scrobbler</string>
     <key>ProgramArguments</key>
     <array>
-        <string>Enter the output of pipenv --py here!</string>
+        <string>Enter the first line output of "poetry show -v" here!</string>
         <string>trakt_scrobbler/main.py</string>
     </array>
     <key>WorkingDirectory</key>

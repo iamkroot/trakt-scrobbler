@@ -1,10 +1,10 @@
 #!/bin/bash
 
-echo "Checking pipenv install."
-if ! [ -x "$(command -v pipenv)" ]; then
-  echo "Pipenv not found. Installing." >&2
-  pip install -q --user pipenv || { echo "Error while installing pipenv. Exiting." >&2; exit 1; }
-  pipenv --version >/dev/null 2>&1 || { echo >&2 "Still unable to run pipenv. Check you PATH variable."; exit 1; }
+echo "Checking poetry install."
+if ! [ -x "$(command -v poetry)" ]; then
+  echo "Poetry not found. Installing." >&2
+  pip install -q --user poetry || { echo "Error while installing poetry. Exiting." >&2; exit 1; }
+  poetry --version >/dev/null 2>&1 || { echo >&2 "Still unable to run poetry. Check you PATH variable."; exit 1; }
 fi
 
 [ "${PWD##*/}" == "scripts" ] && cd ..
@@ -32,16 +32,14 @@ fi
 echo
 echo Installing to "$dest"
 cp -r trakt_scrobbler/** "$dest"
-cp ./{Pipfile,Pipfile.lock} "$dest"
+cp ./{pyproject.toml,poetry.lock} "$dest"
 
 cd "$dest" || { echo >&2 "Unable to access install location"; exit 1; }
 
-pipenv --venv >/dev/null 2>&1 && pipenv clean
-pipenv sync || { echo >&2 "Error while creating venv"; exit 1; }
-py_path=$(pipenv --py)
+poetry install --no-dev || { echo >&2 "Error while creating venv"; exit 1; }
 
 echo Setup complete. Starting device authentication.
-pipenv run python -c "import trakt_interface; trakt_interface.get_access_token()" || { echo "You can run this script again once the issue is fixed. Quitting."; exit 1; }
+poetry run python -c "import trakt_interface; trakt_interface.get_access_token()" || { echo "You can run this script again once the issue is fixed. Quitting."; exit 1; }
 
 echo
 echo Creating system service.
@@ -52,7 +50,7 @@ tee "$HOME"/.config/systemd/user/trakt-scrobbler.service > /dev/null << EOL
 Description=Trakt Scrobbler Service
 
 [Service]
-ExecStart=$py_path main.py
+ExecStart=$(which poetry) run python main.py
 WorkingDirectory=$dest
 
 [Install]
