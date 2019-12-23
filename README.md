@@ -45,24 +45,13 @@ Other player specific parameters| See sample config for the required attributes.
 1. Clone the repo to a directory of your choice/click "[Download as zip](https://github.com/iamkroot/trakt-scrobbler/archive/master.zip)" and extract it.
 2. Rename the `sample_config.toml` to `config.toml` and set the required values (See [Configuration](#Configuration) section). 
 3. Ensure you have [Python 3.6](https://www.python.org/downloads/) or higher installed, and in your system `PATH`.
-4. Depending on your OS, proceed as follows: 
-	* **Linux**<br>
-		At the root of cloned project directory, run `scripts/linux-install-service.sh`. This will copy the files to `~/.local/trakt-scrobbler`, create the virtualenv, enable the startup service and finish device authentication with trakt.
+4. Open a terminal/command prompt.
+5. Navigate to the directory from Step 1. (Using `cd` command)
+6. Run `cd tools`
+7. Run `python install.py` This will complete all the steps for installation. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
 
-	* **Windows**<br>
-		At the root of cloned project directory, run `scripts\windows-install.bat`. This will copy the files to `%LOCALAPPDATA%\trakt-scrobbler` directory, create the virtualenv, enable the startup service and finish device authentication with trakt.
-
-	* **MacOS**<br>
-		I will try to make a install script for Mac soon. Till then, here are the manual steps you can follow:
-		1. Inside the project directory root, run `poetry install`. This will create a virtualenv, and install the necessary requirements.
-		2. Run `poetry show -v` to find the location of python interpreter of virtualenv. 
-		3. Edit the `scripts/trakt_scrobbler.plist` file to add the correct folder path of the project.
-		4. `cp scripts/trakt_scrobbler.plist ~/Library/LaunchAgents/`
-		5. `launchctl load ~/Library/LaunchAgents/trakt_scrobbler.plist`
-		6. `mkdir "~/Library/Application Support/trakt-scrobbler/" && cp config.toml "~/Library/Application Support/trakt-scrobbler/"`
-		7. Type `poetry run python trakt_scrobbler/main.py` to start the program. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
-
-5. To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
+**For Linux:**
+To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
 	- Arch/Manjaro: `pacman -S libnotify`
 	- Ubuntu: `apt install libnotify-bin`
 
@@ -96,7 +85,7 @@ Everything is in human readable form, so that you can figure out what data is us
 
 ## TODO
 - [x] Switch to poetry for dependency management
-- [ ] Make a unified installer script for all OSes
+- [x] Make a unified installer script for all OSes
 - [ ] Proper configuration management module with autodetection for players
 - [ ] A CLI command for controlling the app (start, stop, list recents, config, etc.)
 
