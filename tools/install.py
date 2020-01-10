@@ -26,7 +26,7 @@ def get_default_paths():
         return (Path(path) / APP_NAME).expanduser()
 
     if sys.platform == "darwin":
-        install_dir = (get_path("~/Library/"),)
+        install_dir = get_path("~/Library/")
         cfg_dir = get_path("~/Library/Application Support/")
     elif sys.platform == "linux":
         install_dir = get_path("~/.local/")
