@@ -126,6 +126,7 @@ def create_systemd_service(work_dir: Path, python_path: Path):
         WantedBy=default.target
         """
     )
+    service_path.parent.mkdir(parents=True, exist_ok=True)
     with open(service_path, "w") as f:
         f.write(contents.strip())
     sp.run(["systemctl", "--user", "daemon-reload"])
@@ -179,6 +180,7 @@ def create_mac_plist(work_dir: Path, python_path: Path):
         </plist>
         """
     )
+    PLIST_LOC.parent.mkdir(parents=True, exist_ok=True)
     with open(PLIST_LOC, "w") as f:
         f.write(plist.strip())
     sp.run(["launchctl", "load", "-w", str(PLIST_LOC)])
