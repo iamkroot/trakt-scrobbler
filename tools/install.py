@@ -43,6 +43,19 @@ def get_default_paths():
     return source_dir, install_dir, cfg_dir
 
 
+def run_poetry_install(install_dir: Path):
+    try:
+        sp.run(["poetry", "install", "--no-dev"], cwd=str(install_dir))
+    except FileNotFoundError:
+        print_quit(
+            "poetry is required for installation. Visit",
+            "https://python-poetry.org/docs/#installation",
+            "and run this script again after installing poetry.",
+        )
+    except Exception as e:
+        print_quit("Error while installing venv using poetry.", str(e))
+
+
 def copy_config(source_dir: Path, cfg_dir: Path):
     cfg_name = "config.toml"
     target_path = cfg_dir / cfg_name
@@ -77,19 +90,6 @@ def copy_files(source_dir: Path, install_dir: Path):
     shutil.copytree(source_dir / "trakt_scrobbler", install_dir)
     for file in ("pyproject.toml", "poetry.lock"):
         shutil.copyfile(source_dir / file, install_dir / file)
-
-
-def run_poetry_install(install_dir: Path):
-    try:
-        sp.run(["poetry", "install", "--no-dev"], cwd=str(install_dir))
-    except FileNotFoundError:
-        print_quit(
-            "poetry is required for installation. Visit",
-            "https://python-poetry.org/docs/#installation",
-            "and run this script again after installing poetry.",
-        )
-    except Exception as e:
-        print_quit("Error while installing venv using poetry.", str(e))
 
 
 def get_venv_python(install_dir: Path) -> Path:
