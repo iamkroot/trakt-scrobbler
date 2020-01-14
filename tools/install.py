@@ -7,6 +7,7 @@ from pathlib import Path
 from textwrap import dedent
 
 APP_NAME = "trakt-scrobbler"
+platform = sys.platform
 
 
 def print_quit(*msg, status=1):
@@ -25,13 +26,13 @@ def get_default_paths():
     def get_path(path: str):
         return (Path(path) / APP_NAME).expanduser()
 
-    if sys.platform == "darwin":
+    if platform == "darwin":
         install_dir = get_path("~/Library/")
         cfg_dir = get_path("~/Library/Application Support/")
-    elif sys.platform == "linux":
+    elif platform == "linux":
         install_dir = get_path("~/.local/")
         cfg_dir = get_path("~/.config/")
-    elif sys.platform == "win32":
+    elif platform == "win32":
         install_dir = Path(os.getenv("LOCALAPPDATA")) / APP_NAME
         cfg_dir = Path(os.getenv("APPDATA")) / APP_NAME
     else:
@@ -45,7 +46,11 @@ def get_default_paths():
 
 def run_poetry_install(install_dir: Path):
     try:
-        sp.run(["poetry", "install", "--no-dev"], cwd=str(install_dir))
+        sp.run(
+            ["poetry", "install", "--no-dev"],
+            cwd=str(install_dir),
+            shell=platform == "win32",
+        )
     except FileNotFoundError:
         print_quit(
             "poetry is required for installation. Visit",
@@ -79,7 +84,11 @@ def copy_config(source_dir: Path, cfg_dir: Path):
 
 def check_config(install_dir: Path):
     try:
-        sp.check_call(["poetry", "run", "python", "utils.py"], cwd=str(install_dir))
+        sp.check_call(
+            ["poetry", "run", "python", "utils.py"],
+            cwd=str(install_dir),
+            shell=platform == "win32",
+        )
     except sp.CalledProcessError:
         print_quit("Invalid config file!")
 
@@ -96,12 +105,15 @@ def get_venv_python(install_dir: Path) -> Path:
     try:
         venv_path = Path(
             sp.check_output(
-                ["poetry", "env", "info", "-p"], cwd=str(install_dir), text=True
+                ["poetry", "env", "info", "-p"],
+                cwd=str(install_dir),
+                text=True,
+                shell=platform == "win32",
             )
         )
     except Exception as e:
         print_quit("Error while finding venv location using poetry.", str(e))
-    if sys.platform == "win32":
+    if platform == "win32":
         python_path = venv_path / "Scripts" / "pythonw.exe"
     else:
         python_path = venv_path / "bin" / "python"
@@ -188,9 +200,9 @@ def create_mac_plist(work_dir: Path, python_path: Path):
 
 def enable_autostart(work_dir: Path):
     python_path = get_venv_python(work_dir)
-    if sys.platform == "darwin":
+    if platform == "darwin":
         create_mac_plist(work_dir, python_path)
-    elif sys.platform == "linux":
+    elif platform == "linux":
         create_systemd_service(work_dir, python_path)
     else:
         create_win_startup(work_dir, python_path)
@@ -198,7 +210,11 @@ def enable_autostart(work_dir: Path):
 
 def perform_trakt_auth(install_dir: Path):
     trakt_cmd = "import trakt_interface; trakt_interface.get_access_token()"
-    sp.run(["poetry", "run", "python", "-c", trakt_cmd], cwd=str(install_dir))
+    sp.run(
+        ["poetry", "run", "python", "-c", trakt_cmd],
+        cwd=str(install_dir),
+        shell=platform == "win32",
+    )
 
 
 def main():
