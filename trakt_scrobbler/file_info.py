@@ -3,7 +3,7 @@ import re
 import guessit
 from functools import lru_cache
 from pathlib import Path
-from utils import config
+from utils import cleanup_encoding, config
 
 logger = logging.getLogger('trakt_scrobbler')
 config = config.get('fileinfo', {})
@@ -14,6 +14,7 @@ regexes = config.get('include_regexes', {})
 def whitelist_file(file_path):
     if not whitelist:
         return True
+    file_path = cleanup_encoding(file_path)
     parents = tuple(file_path.absolute().resolve().parents)
     return any(Path(path).resolve() in parents for path in whitelist)
 

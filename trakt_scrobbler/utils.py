@@ -58,6 +58,23 @@ def file_uri_to_path(file_uri):
     return path
 
 
+def cleanup_encoding(file_path: Path):
+    if sys.platform == "win32":
+        enc = sys.stdout.encoding
+        try:
+            file_path = Path(str(file_path).encode(enc).decode())
+        except (UnicodeEncodeError, UnicodeDecodeError) as e:
+            logger.debug(f"System encoding scheme: '{enc}'")
+            try:
+                logger.debug(f"UTF8: {str(file_path).encode('utf-8')}")
+                logger.debug(f"System: {str(file_path).encode(enc)}")
+            except UnicodeEncodeError as e:
+                logger.debug(f"Error while logging {e!s}")
+            else:
+                logger.warning(f"Ignoring encoding error {e!s}")
+    return file_path
+
+
 config = read_toml(CFG_DIR / 'config.toml')
 if config is None:
     logger.critical("Error while reading config file. Quitting.")
