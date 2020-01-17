@@ -21,6 +21,8 @@ Trakt.tv has a lot of [plugins](https://trakt.tv/apps) to automatically scrobble
     * [MPC-BE](https://sourceforge.net/projects/mpcbe/)/[MPC-HC](https://mpc-hc.org) (via web interface).
 * **Folder whitelisting:** Only media files from subdirectories of these folders are synced with trakt.
 
+For more information, see the [`How it works`](#how-it-works) section.
+
 ## Getting started
 
 ### Setting up
@@ -105,6 +107,21 @@ After editing, reboot your PC for the changes to take effect.
 
 The latest log is stored in a file named `trakt_scrobbler.log`; older logs can be found in the files `...log.1`, `...log.2`, and so on.
 Everything is in human readable form, so that you can figure out what data is used by the app. While submitting a bug report, be sure to include the log file contents.
+
+## How it works
+
+This is an application written in the Python programming language, designed for hassle-free integration of your media players with Trakt. Once set up, you can forget that it exists.
+
+* The app is designed to start with your PC, and remain running in the backgroud.
+* It has a "monitor" for each media player you specify. This monitor keeps checking if the media player is running or not. If not, you get the "Could not connect..." message in the log file.
+* When the player is running, the monitor extracts the currently playing media information from the player.
+* This media file path is parsed using `guessit` (or regexes, if specified) to recognize the metadata such as "Title", "Season", etc.
+* This info, along with the playing state (`playing`, `stopped` or `paused`) and progress are then sent to trakt.tv using their API to update their side and mark the media as "Currently Watching", "Finished", etc and you get a notification of the same.
+* Once the player is closed, the monitor goes back to "dormant" state, where it waits for the player to start again.
+
+### Other details
+* The checking for media info from player happens at a set interval (`poll_interval` in config, 10 secs by default), which is the maximum delay between you starting/stopping/pausing the player, and the monitor recognizing that activity.
+* Generally, this app provides "live" updates to trakt regarding your playing status. However, in cases where the internet is down, when you finish playback, the app remembers the media that you have finished watching (progress > 90%) and will try to sync that information with trakt the next time internet becomes available.
 
 ## TODO
 
