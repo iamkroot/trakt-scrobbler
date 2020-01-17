@@ -101,7 +101,18 @@ def copy_files(source_dir: Path, install_dir: Path):
         shutil.copyfile(source_dir / file, install_dir / file)
 
 
+def default_python_ver():
+    cmd = "import sys; print(sys.version_info.major)"
+    ver = sp.check_output(["python", "-c", cmd], text=True)
+    return int(ver)
+
+
 def get_venv_python(install_dir: Path) -> Path:
+    try:
+        if default_python_ver() == 2:  # fix for poetry not using python3 as default
+            sp.check_call(["poetry", "env", "use", "python3"], cwd=str(install_dir), shell=platform == "win32")
+    except Exception as e:
+        print_quit("Unable to use Python 3 for environment.", str(e))
     try:
         venv_path = Path(
             sp.check_output(
@@ -223,7 +234,8 @@ def main():
     if not source_dir:
         print_quit(
             "Couldn't find the install files.",
-            "Please ensure the entire repo is downloaded properly.",
+            "Please ensure the entire repo is downloaded properly",
+            "and that your current directory has the 'trakt_scrobbler' folder."
         )
     print("Installing to", install_dir)
     copy_files(source_dir, install_dir)
