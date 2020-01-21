@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess as sp
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 from textwrap import dedent
 
@@ -15,8 +16,9 @@ def print_quit(*msg, status=1):
     exit(status)
 
 
-def get_default_paths():
-    source_dir = Path(__file__).parent.absolute()
+def get_default_paths(source_dir=None):
+    if not source_dir:
+        source_dir = Path(__file__).parent.absolute()
     if source_dir.name == "tools":
         source_dir = source_dir.parent
     # check that actual code is present
@@ -110,7 +112,11 @@ def default_python_ver():
 def get_venv_python(install_dir: Path) -> Path:
     try:
         if default_python_ver() == 2:  # fix for poetry not using python3 as default
-            sp.check_call(["poetry", "env", "use", "python3"], cwd=str(install_dir), shell=platform == "win32")
+            sp.check_call(
+                ["poetry", "env", "use", "python3"],
+                cwd=str(install_dir),
+                shell=platform == "win32",
+            )
     except Exception as e:
         print_quit("Unable to use Python 3 for environment.", str(e))
     try:
@@ -228,14 +234,14 @@ def perform_trakt_auth(install_dir: Path):
     )
 
 
-def main():
+def install(args):
     print("Starting installation for trakt-scrobbler")
-    source_dir, install_dir, cfg_dir = get_default_paths()
+    source_dir, install_dir, cfg_dir = get_default_paths(args.source_dir)
     if not source_dir:
         print_quit(
             "Couldn't find the install files.",
             "Please ensure the entire repo is downloaded properly",
-            "and that your current directory has the 'trakt_scrobbler' folder."
+            "and that your current directory has the 'trakt_scrobbler' folder.",
         )
     print("Installing to", install_dir)
     copy_files(source_dir, install_dir)
@@ -249,6 +255,13 @@ def main():
     enable_autostart(install_dir)
     print("Setup complete")
     print("Please reboot your system to start the scrobbler")
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument("-s", "--source-dir", type=Path)
+    args = parser.parse_args()
+    install(args)
 
 
 if __name__ == "__main__":
