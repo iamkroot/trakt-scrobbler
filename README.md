@@ -81,7 +81,7 @@ First, look through the [log file](#where-is-the-log-fileother-data-stored) to s
 #### How to stop the running app?
 
 * **Linux:** `systemctl --user stop trakt-srobbler`
-* **Mac:** `launchctl unload ~/Library/LaunchAgents/trakt_scrobbler.plist`
+* **Mac:** `launchctl unload ~/Library/LaunchAgents/trakt-scrobbler.plist`
 * **Windows:** Terminate `pythonw.exe` from task manager
 
 #### How to update?
