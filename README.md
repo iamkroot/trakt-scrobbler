@@ -62,10 +62,13 @@ The config is stored in [TOML](https://github.com/toml-lang/toml) format. After 
 1. Clone the repo to a directory of your choice/click "[Download as zip](https://github.com/iamkroot/trakt-scrobbler/archive/master.zip)" and extract it.
 2. Rename the `sample_config.toml` to `config.toml` and set the required values (See [Configuration](#Configuration) section).
 3. Ensure you have [Python 3.6](https://www.python.org/downloads/) or higher installed, and in your system `PATH`.
-4. Open a terminal/command prompt.
-5. Navigate to the directory from Step 1. (Using `cd` command)
-6. Run `cd tools`
-7. Run `python3 install.py` (or `python install.py` if that fails). This will complete all the steps for installation. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for human intervention.
+4. Open a terminal/powershell.
+5. Install [poetry](https://python-poetry.org/docs/#installation)
+    * **osx / linux / bashonwindows**: `curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3` (replace `python3` with `python` if that gives error)
+    * **windows powershell**: `(Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python`
+6. Navigate to the directory from Step 1. (Using `cd` command)
+7. Run `cd tools`
+8. Run `python3 install.py` (or `python install.py` if that fails). This will complete all the steps for installation. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process. In the future, the script will run on computer boot, without any need for intervention.
 
 **For Linux:**
 To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
