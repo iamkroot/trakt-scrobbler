@@ -48,12 +48,12 @@ def get_default_paths(source_dir=None):
 
 def run_poetry_install(install_dir: Path):
     try:
-        sp.run(
+        sp.check_call(
             ["poetry", "install", "--no-dev"],
             cwd=str(install_dir),
             shell=platform == "win32",
         )
-    except FileNotFoundError:
+    except (FileNotFoundError, sp.CalledProcessError):
         print_quit(
             "poetry is required for installation. Visit",
             "https://python-poetry.org/docs/#installation",
@@ -227,11 +227,14 @@ def enable_autostart(work_dir: Path):
 
 def perform_trakt_auth(install_dir: Path):
     trakt_cmd = "import trakt_interface; trakt_interface.get_access_token()"
-    sp.run(
-        ["poetry", "run", "python", "-c", trakt_cmd],
-        cwd=str(install_dir),
-        shell=platform == "win32",
-    )
+    try:
+        sp.check_call(
+            ["poetry", "run", "python", "-c", trakt_cmd],
+            cwd=str(install_dir),
+            shell=platform == "win32",
+        )
+    except sp.CalledProcessError:
+        print_quit("Error during trakt_auth.")
 
 
 def install(args):
