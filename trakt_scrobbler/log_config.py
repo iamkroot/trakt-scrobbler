@@ -1,5 +1,4 @@
 import logging.config
-from player_monitors import player_names
 from app_dirs import DATA_DIR
 
 
@@ -10,13 +9,14 @@ class StoppedPlayersFilter(logging.Filter):
         self.log_count = set()
 
     def filter(self, record: logging.LogRecord):
-        if record.threadName in player_names:
-            if 'Unable to connect' in record.msg:
-                val = record.thread not in self.log_count
-                self.log_count.add(record.thread)
-                return val
-            else:  # some other message is sent from the thread
-                self.log_count.discard(record.thread)
+        if not isinstance(record.msg, str):
+            return True
+        if 'Unable to connect' in record.msg:
+            val = record.thread not in self.log_count
+            self.log_count.add(record.thread)
+            return val
+        else:  # some other message is sent from the thread
+            self.log_count.discard(record.thread)
         return True
 
 

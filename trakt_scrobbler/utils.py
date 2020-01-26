@@ -7,8 +7,6 @@ import requests
 from pathlib import Path
 from urllib.parse import urlparse, unquote
 
-from log_config import LOGGING_CONF
-logging.config.dictConfig(LOGGING_CONF)
 logger = logging.getLogger('trakt_scrobbler')
 
 

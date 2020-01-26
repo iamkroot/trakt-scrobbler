@@ -1,34 +1,14 @@
-import inspect
 import logging
 import sys
 import threading
 
-from importlib import import_module
-from pathlib import Path
 from queue import Queue
 
 from config import config
-from player_monitors.monitor import Monitor
+from player_monitors import collect_monitors
 from scrobbler import Scrobbler
 from trakt_interface import get_access_token
 logger = logging.getLogger('trakt_scrobbler')
-
-
-def get_monitors():
-    """Collect the monitors from 'player_monitors' subdirectory."""
-    modules = Path('player_monitors').glob('*.py')
-    allowed_monitors = config['players']['monitored']
-
-    for module_path in modules:
-        if module_path.stem == '__init__' or module_path.stem == 'monitor':
-            continue  # exclude __init__ and base module
-
-        monitor_module = import_module('player_monitors.' + module_path.stem)
-        # get the required Monitor subclasses
-        for _, mon in inspect.getmembers(monitor_module, inspect.isclass):
-            if issubclass(mon, Monitor) and mon.name in allowed_monitors \
-               and not getattr(mon, 'exclude_import', False):
-                yield mon
 
 
 def register_exception_handler():
@@ -69,7 +49,11 @@ def main():
     scrobble_queue = Queue()
     scrobbler = Scrobbler(scrobble_queue)
     scrobbler.start()
-    for Mon in get_monitors():
+
+    allowed_monitors = config['players']['monitored']
+    for Mon in collect_monitors():
+        if Mon.name not in allowed_monitors:
+            continue
         mon = Mon(scrobble_queue)
         if not mon or not mon._initialized:
             logger.warning(f"Could not start monitor for {Mon.name}")
