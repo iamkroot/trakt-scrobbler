@@ -6,7 +6,7 @@ import toml
 import requests
 from pathlib import Path
 from urllib.parse import urlparse, unquote
-from app_dirs import CFG_DIR
+
 from log_config import LOGGING_CONF
 logging.config.dictConfig(LOGGING_CONF)
 logger = logging.getLogger('trakt_scrobbler')
@@ -78,12 +78,6 @@ def cleanup_encoding(file_path: Path):
             else:
                 logger.warning(f"Ignoring encoding error {e!s}")
     return file_path
-
-
-config = read_toml(CFG_DIR / 'config.toml')
-if config is None:
-    logger.critical("Error while reading config file. Quitting.")
-    exit(1)
 
 
 class AutoloadError(Exception):

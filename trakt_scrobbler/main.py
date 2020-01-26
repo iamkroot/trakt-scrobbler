@@ -7,10 +7,10 @@ from importlib import import_module
 from pathlib import Path
 from queue import Queue
 
+from config import config
 from player_monitors.monitor import Monitor
 from scrobbler import Scrobbler
 from trakt_interface import get_access_token
-from utils import config
 logger = logging.getLogger('trakt_scrobbler')
 
 

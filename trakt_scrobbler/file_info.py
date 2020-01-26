@@ -3,7 +3,8 @@ import re
 import guessit
 from functools import lru_cache
 from pathlib import Path
-from utils import cleanup_encoding, config
+from config import config
+from utils import cleanup_encoding
 
 logger = logging.getLogger('trakt_scrobbler')
 config = config.get('fileinfo', {})

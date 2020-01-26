@@ -1,6 +1,6 @@
 import logging
 import sys
-from utils import config
+from config import config
 
 logger = logging.getLogger('trakt_scrobbler')
 
