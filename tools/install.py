@@ -105,7 +105,7 @@ def copy_files(source_dir: Path, install_dir: Path):
 
 def default_python_ver():
     cmd = "import sys; print(sys.version_info.major)"
-    ver = sp.check_output(["python", "-c", cmd], text=True)
+    ver = sp.check_output(["python", "-c", cmd], universal_newlines=True)
     return int(ver)
 
 
@@ -124,7 +124,7 @@ def get_venv_python(install_dir: Path) -> Path:
             sp.check_output(
                 ["poetry", "env", "info", "-p"],
                 cwd=str(install_dir),
-                text=True,
+                universal_newlines=True,
                 shell=platform == "win32",
             )
         )
