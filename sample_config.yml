@@ -1,0 +1,50 @@
+version: '1.0'
+
+general:
+  enable_notifs: true
+
+fileinfo:
+
+  # if defined, only files from these directories will be scrobbled
+  whitelist:  # Keep as [] to allow all
+  - /path/to/Movies  # linux/mac os folders
+  - D:\path\to\windows\folder  # windows folders
+  - E:\TV Shows\
+
+  # custom regex to identify media information, should be posix path
+  include_regexes:
+    movie: []
+    episode: []
+
+players:
+  monitored: []  # players to be monitored. Allowed: mpcbe, mpchc, mpv, plex, vlc
+
+  skip_interval: 5  # min percent jump to consider for scrobbling to trakt
+
+  # player specific parameters
+  mpcbe:  # enable web interface from options
+    ip: localhost
+    port: '13579'  # from Options -> Player -> Web Interface -> Listen on port (ensure it is ticked)
+    poll_interval: 10  # in seconds. How frequently the monitor should check for player update.
+
+  mpchc:  # enable web interface from options
+    ip: localhost
+    port: '13579'  # if both mpchc and mpcbe are to be monitored, then ensure that their ports are different
+    poll_interval: 10  # in seconds
+
+  vlc:  # enable web interface from options
+    ip: localhost
+    port: '8080'  # from Preferences -> All -> Input/Codecs -> HTTP Server Port
+    password: ''  # from Preferences -> All -> Interface -> Main Interfaces -> Lua -> Lua HTTP Password
+    poll_interval: 10  # in seconds. How frequently the monitor should check for player update.
+
+  mpv:  # enable the JSON IPC server. Either via cmd line arg (eg: --input-ipc-server=\\.\pipe\mpvpipe), or in mpv.conf file
+    ipc_path: \\.\pipe\mpvpipe  # windows
+    # ipc_path: /tmp/mpvsocket  # unix
+
+  plex:
+    ip: localhost  # IP of the plex server
+    port: '32400'
+    login: ''
+    password: ''
+    poll_interval: 10  # in seconds. How frequently the monitor should check for player update.

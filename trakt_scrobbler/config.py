@@ -1,10 +1,24 @@
 import logging
+import confuse
 from app_dirs import CFG_DIR
-from utils import read_toml
 
-logger = logging.getLogger("trakt-scrobbler")
+logger = logging.getLogger("trakt_scrobbler")
 
-config = read_toml(CFG_DIR / 'config.toml')
-if config is None:
-    logger.critical("Error while reading config file. Quitting.")
-    exit(1)
+cfg_template = {
+    "version": str,
+    "general": {
+        "enable_notifs": confuse.Choice([True, False]),
+    },
+    "fileinfo": {
+        "whitelist": confuse.StrSeq(),
+        "include_regexes": {
+            "movie": confuse.StrSeq(),
+            "episode": confuse.StrSeq()
+        }
+    },
+    "players": dict
+}
+
+config = confuse.Configuration("trakt-scrobbler")
+config.set_file(CFG_DIR / "config.yml")
+config = config.get(cfg_template)
