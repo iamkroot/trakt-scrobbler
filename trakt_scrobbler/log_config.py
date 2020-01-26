@@ -68,3 +68,6 @@ LOGGING_CONF = {
         }
     }
 }
+
+logging.config.dictConfig(LOGGING_CONF)
+logger = logging.getLogger("trakt_scrobbler")

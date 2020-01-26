@@ -1,10 +1,6 @@
-import logging
 import confuse
 from app_dirs import CFG_DIR
-from log_config import LOGGING_CONF
-logging.config.dictConfig(LOGGING_CONF)
-
-logger = logging.getLogger("trakt_scrobbler")
+from log_config import logger
 
 cfg_template = {
     "version": str,
