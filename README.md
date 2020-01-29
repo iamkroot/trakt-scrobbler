@@ -54,14 +54,14 @@ The config is stored in [TOML](https://github.com/toml-lang/toml) format. After 
     * The minimum required information is the title of the file, and episode number in the case of TV Shows. If season is not found, it defaults to 1.
     * Mainly useful for Anime since they don't follow the season convention.
 * `players.monitored`: (List of player names)
-  Specify players which are to be monitored for scrobbling. (Ensure that if both MPCHC and MPCBE are to be monitored, then their ports should be different)
-* Other player specific parameters: See sample config for the required attributes.
+  Specify players which are to be monitored for scrobbling.
+* Other player specific parameters: See sample config for the required attributes. For most installations, you won't have to fiddle with these as the app can automatically read the settings of the players and extract the necessary values.
 
 ### Installation
 
 1. Clone the repo to a directory of your choice/click "[Download as zip](https://github.com/iamkroot/trakt-scrobbler/archive/master.zip)" and extract it.
 2. Rename the `sample_config.toml` to `config.toml` and set the required values (See [Configuration](#Configuration) section).
-3. Ensure you have [Python 3.6](https://www.python.org/downloads/) or higher installed, and in your system `PATH`.
+3. Ensure you have [Python 3.7](https://www.python.org/downloads/) or higher installed, and in your system `PATH`.
 4. Open a terminal/powershell.
 5. Install [poetry](https://python-poetry.org/docs/#installation)
     * **osx / linux / bashonwindows**: `curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3` (replace `python3` with `python` if that gives error)
@@ -130,7 +130,7 @@ This is an application written in the Python programming language, designed for 
 
 * [x] Switch to poetry for dependency management
 * [x] Make a unified installer script for all OSes
-* [ ] Proper configuration management module with autodetection for players
+* [x] Proper configuration management module with autodetection for players
 * [ ] A CLI command for controlling the app (start, stop, list recents, config, etc.)
 
 ## Contributing
