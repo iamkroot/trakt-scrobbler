@@ -54,7 +54,7 @@ def register_exception_handler():
         def run_with_except_hook(*args2, **kwargs2):
             try:
                 run_original(*args2, **kwargs2)
-            except Exception as e:
+            except Exception:
                 sys.excepthook(*sys.exc_info())
                 return
 
@@ -71,6 +71,8 @@ def main():
     scrobbler.start()
     for Mon in get_monitors():
         mon = Mon(scrobble_queue)
+        if not mon:
+            continue
         mon.start()
 
 

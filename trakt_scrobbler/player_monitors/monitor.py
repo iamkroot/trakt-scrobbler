@@ -2,7 +2,7 @@ import time
 import logging
 import requests
 from threading import Thread
-from utils import config
+from utils import config, AutoloadError
 from file_info import get_media_info
 
 logger = logging.getLogger('trakt_scrobbler')
@@ -13,6 +13,45 @@ class Monitor(Thread):
     """Generic base class that polls the player for state changes,
      and sends the info to scrobble queue."""
 
+    config = config["players"]
+
+    def __new__(cls, *args, **kwargs):
+        try:
+            cls.config = cls.autoload_cfg()
+        except AutoloadError as e:
+            logger.debug(str(e))
+            logger.error(f"Config value autoload failed for {cls.name}.")
+        except Exception:
+            logger.exception(f"Config value autoload failed for {cls.name}.")
+        else:
+            return super().__new__(cls)
+
+    @classmethod
+    def autoload_cfg(cls):
+        monitor_cfg = config['players'][cls.name]
+        auto_keys = {k for k, v in monitor_cfg.items() if v == "auto-detect"}
+        if not auto_keys:
+            return monitor_cfg
+        try:
+            loaders = getattr(cls, "read_player_cfg")(auto_keys)
+        except AttributeError:
+            logger.debug(f"Auto val not found for {', '.join(auto_keys)}")
+            logger.error(f"Autoload not supported for {cls.name}.")
+            raise AutoloadError
+        while auto_keys:
+            param = auto_keys.pop()
+            try:
+                param_loader = loaders[param]
+            except KeyError:
+                logger.error(f"Autoload not supported for '{param}'.")
+                raise AutoloadError(param)
+            try:
+                monitor_cfg[param] = param_loader()
+            except FileNotFoundError as e:
+                logger.error(f"File not found: {e.filename}")
+                raise AutoloadError(src=e.filename)
+        return monitor_cfg
+
     def __init__(self, scrobble_queue):
         super().__init__()
         logger.info('Started monitor for ' + self.name)
@@ -20,7 +59,7 @@ class Monitor(Thread):
         self.is_running = False
         self.status = {}
         self.prev_state = {}
-        self.skip_interval = config['players'].get('skip_interval', 5)
+        self.skip_interval = self.config.get('skip_interval', 5)
 
     def parse_status(self):
         if (
@@ -83,7 +122,7 @@ class WebInterfaceMon(Monitor):
     def __init__(self, scrobble_queue):
         super().__init__(scrobble_queue)
         self.sess = requests.Session()
-        self.poll_interval = config['players'][self.name]['poll_interval']
+        self.poll_interval = self.config['poll_interval']
 
     def update_status(self):
         raise NotImplementedError

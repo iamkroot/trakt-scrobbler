@@ -79,3 +79,17 @@ config = read_toml(CFG_DIR / 'config.toml')
 if config is None:
     logger.critical("Error while reading config file. Quitting.")
     exit(1)
+
+
+class AutoloadError(Exception):
+    def __init__(self, param=None, src=None):
+        self.param = param
+        self.src = src
+
+    def __str__(self):
+        msg = "Failed to autoload value"
+        if self.param:
+            msg += f" for '{self.param}'"
+        if self.src:
+            msg += f" from '{self.src}'"
+        return msg
