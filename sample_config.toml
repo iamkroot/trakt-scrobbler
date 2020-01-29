@@ -34,8 +34,8 @@ poll_interval = 10  # in seconds
 
 [players.vlc]  # enable web interface from options
 ip = "localhost"
-port = "8080"  # from Preferences -> All -> Input/Codecs -> HTTP Server Port
-password = "password"  # from Preferences -> All -> Interface -> Main Interfaces -> Lua -> Lua HTTP Password
+port = "auto-detect"  # set from Preferences -> All -> Input/Codecs -> HTTP Server Port
+password = "auto-detect"  # set from Preferences -> All -> Interface -> Main Interfaces -> Lua -> Lua HTTP Password
 poll_interval = 10  # in seconds. How frequently the monitor should check for player update.
 
 [players.mpv]  # enable the JSON IPC server. Either via cmd line arg (eg: --input-ipc-server=\\.\pipe\mpvpipe), or in mpv.conf file

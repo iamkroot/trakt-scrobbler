@@ -1,8 +1,11 @@
 import json
 import requests
 import logging
+import appdirs
+from configparser import ConfigParser
+from pathlib import Path
 from player_monitors.monitor import WebInterfaceMon
-from utils import config, file_uri_to_path
+from utils import file_uri_to_path
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -27,9 +30,8 @@ class VLCMon(WebInterfaceMon):
 
     def __init__(self, scrobble_queue):
         try:
-            vlc_conf = config['players']['vlc']
-            web_pwd = vlc_conf['password']
-            self.URL = self.URL.format(**vlc_conf)
+            web_pwd = self.config['password']
+            self.URL = self.URL.format(**self.config)
         except KeyError:
             logger.exception('Check config for correct VLC params.')
             return
@@ -37,6 +39,18 @@ class VLCMon(WebInterfaceMon):
         self.sess.auth = ('', web_pwd)
         self.status_url = self.URL + '/requests/status.json'
         self.playlist_url = self.URL + '/requests/playlist.json'
+
+    @classmethod
+    def read_player_cfg(cls, auto_keys=None):
+        vlcrc_path = Path(appdirs.user_config_dir("vlc", roaming=True)) / "vlcrc"
+        vlcrc = ConfigParser(strict=False)
+        vlcrc.optionxform = lambda option: option
+        if not vlcrc.read(vlcrc_path, encoding="utf-8-sig"):
+            raise FileNotFoundError(vlcrc_path)
+        return {
+            "port": lambda: vlcrc.get("core", "http-port", fallback=8080),
+            "password": lambda: vlcrc.get("lua", "http-password")
+        }
 
     def update_status(self):
         try:
