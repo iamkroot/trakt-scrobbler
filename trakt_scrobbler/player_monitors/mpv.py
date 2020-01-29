@@ -3,10 +3,11 @@ import logging
 import os
 import threading
 import time
+import appdirs
+from configparser import ConfigParser
 from pathlib import Path
 from queue import Queue
 from player_monitors.monitor import Monitor
-from utils import config
 
 if os.name == 'posix':
     import select
@@ -25,8 +26,7 @@ class MPVMon(Monitor):
 
     def __init__(self, scrobble_queue):
         try:
-            mpv_config = config['players']['mpv']
-            self.ipc_path = mpv_config['ipc_path']
+            self.ipc_path = self.config['ipc_path']
         except KeyError:
             logger.exception('Check config for correct MPV params.')
             return
@@ -38,6 +38,16 @@ class MPVMon(Monitor):
         self.sent_commands = {}
         self.command_counter = 1
         self.vars = {}
+
+    @classmethod
+    def read_player_cfg(cls, auto_keys=None):
+        conf_path = Path(appdirs.user_config_dir("mpv", roaming=True)) / "mpv.conf"
+        mpv_conf = ConfigParser(allow_no_value=True, strict=False)
+        mpv_conf.optionxform = lambda option: option
+        mpv_conf.read_string("[root]\n" + conf_path.read_text())
+        return {
+            "ipc_path": lambda: mpv_conf.get("root", "input-ipc-server")
+        }
 
     def run(self):
         while True:

@@ -39,8 +39,7 @@ password = "auto-detect"  # set from Preferences -> All -> Interface -> Main Int
 poll_interval = 10  # in seconds. How frequently the monitor should check for player update.
 
 [players.mpv]  # enable the JSON IPC server. Either via cmd line arg (eg: --input-ipc-server=\\.\pipe\mpvpipe), or in mpv.conf file
-ipc_path = '\\.\pipe\mpvpipe'  # windows (single quotes are important)
-# ipc_path = "/tmp/mpvsocket"  # unix
+ipc_path = 'auto-detect'  # if auto-detect enabled, ensure it is set in mpv.conf file
 
 [players.plex]
 ip = "localhost"  # IP of the plex server. Only supports http for now.
