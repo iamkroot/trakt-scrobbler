@@ -19,17 +19,17 @@ episode = [
 ]
 
 [players]
-monitored = ['mpchc', 'mpv']  # players to be monitored. Allowed: 'mpcbe', 'mpchc', 'mpv', 'plex', 'vlc'
+monitored = ['mpc-hc', 'mpv']  # players to be monitored. Allowed: 'mpc-be', 'mpc-hc', 'mpv', 'plex', 'vlc'
 skip_interval = 5  # min percent jump to consider for scrobbling to trakt
 
-[players.mpcbe]  # enable web interface from options
+[players.mpc-be]  # enable web interface from options
 ip = "localhost"
-port = "13579"  # from Options -> Player -> Web Interface -> Listen on port  (ensure it is ticked) 
+port = "auto-detect"  # set from Options -> Player -> Web Interface -> Listen on port  (ensure it is ticked)
 poll_interval = 10  # in seconds. How frequently the monitor should check for player update.
 
-[players.mpchc]  # enable web interface from options
+[players.mpc-hc]  # enable web interface from options
 ip = "localhost"
-port = "13579"  # if both mpchc and mpcbe are to be monitored, then ensure that their ports are different
+port = "auto-detect"  # if both mpchc and mpcbe are to be monitored, then ensure that their ports are different
 poll_interval = 10  # in seconds
 
 [players.vlc]  # enable web interface from options

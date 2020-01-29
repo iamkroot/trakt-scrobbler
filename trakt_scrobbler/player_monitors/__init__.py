@@ -1,1 +1,1 @@
-player_names = ["mpcbe", "mpchc", "mpv", "plex", "vlc"]
+player_names = ["mpc-be", "mpc-hc", "mpv", "plex", "vlc"]

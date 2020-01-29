@@ -1,7 +1,6 @@
 import re
 import logging
 from player_monitors.monitor import WebInterfaceMon
-from utils import config
 
 logger = logging.getLogger('trakt_scrobbler')
 
@@ -13,11 +12,18 @@ class MPCMon(WebInterfaceMon):
 
     def __init__(self, scrobble_queue):
         try:
-            self.URL = self.URL.format(**config['players'][self.name])
+            self.URL = self.URL.format(**self.config)
         except KeyError:
             logger.exception(f'Check config for correct {self.name} params.')
             return
         super().__init__(scrobble_queue)
+
+    @classmethod
+    def read_player_cfg(cls, auto_keys=None):
+        import winreg
+        subkey = f"Software\\{cls.name.upper()}\\Settings"
+        hkey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, subkey)
+        return {"port": lambda: winreg.QueryValueEx(hkey, "WebServerPort")[0]}
 
     def get_vars(self):
         response = self.sess.get(self.URL)
@@ -40,9 +46,9 @@ class MPCMon(WebInterfaceMon):
 
 class MPCHCMon(MPCMon):
     exclude_import = False
-    name = 'mpchc'
+    name = 'mpc-hc'
 
 
 class MPCBEMon(MPCHCMon):
     exclude_import = False
-    name = 'mpcbe'
+    name = 'mpc-be'
