@@ -1,4 +1,5 @@
 import json
+import locale
 import logging.config
 import sys
 import toml
@@ -60,7 +61,7 @@ def file_uri_to_path(file_uri):
 
 def cleanup_encoding(file_path: Path):
     if sys.platform == "win32":
-        enc = sys.stdout.encoding
+        enc = locale.getpreferredencoding()
         try:
             file_path = Path(str(file_path).encode(enc).decode())
         except (UnicodeEncodeError, UnicodeDecodeError) as e:
