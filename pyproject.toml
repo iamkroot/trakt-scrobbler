@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trakt-scrobbler"
-version = "0.2.0"
+version = "0.2.1"
 description = "Scrobbler for trakt.tv that supports VLC, Plex, MPC-HC, and MPV"
 authors = ["iamkroot <kroot.patel@gmail.com>"]
 
