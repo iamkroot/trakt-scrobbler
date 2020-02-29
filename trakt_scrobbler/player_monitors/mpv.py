@@ -41,7 +41,10 @@ class MPVMon(Monitor):
 
     @classmethod
     def read_player_cfg(cls, auto_keys=None):
-        conf_path = Path(appdirs.user_config_dir("mpv", roaming=True)) / "mpv.conf"
+        conf_path = (
+            Path(appdirs.user_config_dir("mpv", roaming=True, appauthor=False))
+            / "mpv.conf"
+        )
         mpv_conf = ConfigParser(allow_no_value=True, strict=False)
         mpv_conf.optionxform = lambda option: option
         mpv_conf.read_string("[root]\n" + conf_path.read_text())

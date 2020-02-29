@@ -42,7 +42,10 @@ class VLCMon(WebInterfaceMon):
 
     @classmethod
     def read_player_cfg(cls, auto_keys=None):
-        vlcrc_path = Path(appdirs.user_config_dir("vlc", roaming=True)) / "vlcrc"
+        vlcrc_path = (
+            Path(appdirs.user_config_dir("vlc", appauthor=False, roaming=True))
+            / "vlcrc"
+        )
         vlcrc = ConfigParser(strict=False)
         vlcrc.optionxform = lambda option: option
         if not vlcrc.read(vlcrc_path, encoding="utf-8-sig"):
