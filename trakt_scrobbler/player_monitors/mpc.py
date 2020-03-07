@@ -18,11 +18,14 @@ class MPCMon(WebInterfaceMon):
             return
         super().__init__(scrobble_queue)
 
-    @classmethod
-    def read_player_cfg(cls, auto_keys=None):
+    @staticmethod
+    def _read_registry_cfg(path):
         import winreg
-        subkey = f"Software\\{cls.name.upper()}\\Settings"
-        hkey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, subkey)
+        try:
+            hkey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, path)
+        except FileNotFoundError as e:
+            e.filename = path
+            raise
         return {"port": lambda: winreg.QueryValueEx(hkey, "WebServerPort")[0]}
 
     def get_vars(self):
@@ -48,7 +51,17 @@ class MPCHCMon(MPCMon):
     exclude_import = False
     name = 'mpc-hc'
 
+    @classmethod
+    def read_player_cfg(cls, auto_keys=None):
+        path = "Software\\MPC-HC\\MPC-HC\\Settings"
+        return cls._read_registry_cfg(path)
+
 
 class MPCBEMon(MPCHCMon):
     exclude_import = False
     name = 'mpc-be'
+
+    @classmethod
+    def read_player_cfg(cls, auto_keys=None):
+        path = "Software\\MPC-BE\\Settings"
+        return cls._read_registry_cfg(path)
