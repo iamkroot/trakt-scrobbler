@@ -30,7 +30,6 @@ def custom_regex(file_path):
                 guess = m.groupdict()
                 guess['type'] = item_type
                 return guess
-    logger.debug('No regex matches for ' + path_posix)
 
 
 def use_guessit(file_path):
@@ -60,7 +59,12 @@ def get_media_info(file_path):
 
     req_keys = ['type', 'title']
     if guess['type'] == 'episode':
-        guess['season'] = int(guess.get('season', 1))
+        season = guess.get('season', 1)
+        if isinstance(season, list):
+            logger.warning(f"Multiple probable seasons found: ({','.join(season)}). "
+                           "Consider renaming the folder.")
+            return None
+        guess['season'] = int(season)
         req_keys += ['season', 'episode']
 
     return {key: guess[key] for key in req_keys}
