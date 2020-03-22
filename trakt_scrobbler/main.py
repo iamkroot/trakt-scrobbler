@@ -71,7 +71,8 @@ def main():
     scrobbler.start()
     for Mon in get_monitors():
         mon = Mon(scrobble_queue)
-        if not mon:
+        if not mon or not mon._initialized:
+            logger.warning(f"Could not start monitor for {Mon.name}")
             continue
         mon.start()
 
