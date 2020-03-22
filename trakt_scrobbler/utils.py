@@ -45,6 +45,10 @@ def safe_request(verb, params):
         logger.exception('Failed to connect.')
         logger.debug(f'Request: {verb} {params}')
         return None
+    if not resp.ok:
+        logger.warning("Request failed")
+        logger.debug(f'Request: {verb} {params}')
+        logger.debug(f'Response: {resp} {resp.text}')
     else:
         return resp
 
