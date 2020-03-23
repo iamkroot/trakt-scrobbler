@@ -39,3 +39,4 @@
 ##########################
 !pyproject.toml
 !sample_config.toml
+dist/
