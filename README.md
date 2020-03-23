@@ -131,7 +131,9 @@ This is an application written in the Python programming language, designed for 
 * [x] Switch to poetry for dependency management
 * [x] Make a unified installer script for all OSes
 * [x] Proper configuration management module with autodetection for players
-* [ ] A CLI command for controlling the app (start, stop, list recents, config, etc.)
+* [ ] A CLI for controlling the app (start, stop, list recents, config, etc.)
+* [ ] Use a real [Windows Service](http://thepythoncorner.com/dev/how-to-create-a-windows-service-in-python/) instead of an autostart script
+* [ ] Create executable setup using PyInstaller
 
 ## Contributing
 
