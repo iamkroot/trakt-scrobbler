@@ -2,6 +2,7 @@
 from cleo import Command, Application
 import sys
 import subprocess as sp
+from pathlib import Path
 
 APP_NAME = "trakt-scrobbler"
 platform = sys.platform
@@ -60,11 +61,29 @@ class StatusCommand(Command):
         print(status)
 
 
+class RunCommand(Command):
+    """
+    Run the scrobbler in the foreground.
+
+    run
+    """
+
+    def handle(self):
+        # TODO: Find a better way to run the packages
+        import os
+        p = Path(__file__).parent
+        sys.path.append(str(p))
+        os.chdir(p)
+        from trakt_scrobbler.main import main
+        main()
+
+
 def main():
     application = Application("trakts")
     application.add(StartCommand())
     application.add(StopCommand())
     application.add(StatusCommand())
+    application.add(RunCommand())
     application.run()
 
 
