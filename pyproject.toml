@@ -16,6 +16,9 @@ cleo = "^0.7.6"
 
 [tool.poetry.dev-dependencies]
 
+[tool.poetry.scripts]
+trakts = "trakt_scrobbler.commands:main"
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"

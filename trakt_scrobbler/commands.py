@@ -60,10 +60,13 @@ class StatusCommand(Command):
         print(status)
 
 
-application = Application("trakts")
-application.add(StartCommand())
-application.add(StopCommand())
-application.add(StatusCommand())
+def main():
+    application = Application("trakts")
+    application.add(StartCommand())
+    application.add(StopCommand())
+    application.add(StatusCommand())
+    application.run()
+
 
 if __name__ == '__main__':
-    application.run()
+    main()
