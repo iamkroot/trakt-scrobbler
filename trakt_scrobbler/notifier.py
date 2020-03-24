@@ -1,15 +1,19 @@
 import logging
 import sys
+import confuse
 from config import config
 
 logger = logging.getLogger('trakt_scrobbler')
 
 APP_NAME = 'Trakt Scrobbler'
-enable_notifs = config['general']['enable_notifs']
+enable_notifs = config['general']['enable_notifs'].get(
+    confuse.Choice([True, False], default=True)
+)
 
 if enable_notifs:
     if sys.platform == 'win32':
         from win10toast import ToastNotifier
+
         toaster = ToastNotifier()
     else:
         import subprocess as sp

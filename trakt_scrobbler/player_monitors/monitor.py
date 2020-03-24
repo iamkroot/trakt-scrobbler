@@ -14,8 +14,6 @@ class Monitor(Thread):
     """Generic base class that polls the player for state changes,
      and sends the info to scrobble queue."""
 
-    config = config["players"]
-
     def __new__(cls, *args, **kwargs):
         try:
             cls.config = cls.autoload_cfg()
@@ -29,7 +27,7 @@ class Monitor(Thread):
 
     @classmethod
     def autoload_cfg(cls):
-        monitor_cfg = config['players'][cls.name]
+        monitor_cfg = config['players'][cls.name].get()
         auto_keys = {k for k, v in monitor_cfg.items() if v == "auto-detect"}
         if not auto_keys:
             return monitor_cfg

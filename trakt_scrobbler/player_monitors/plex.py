@@ -1,6 +1,5 @@
 import logging
 from app_dirs import DATA_DIR
-from config import config
 from player_monitors.monitor import WebInterfaceMon
 from utils import read_json, write_json, safe_request
 
@@ -42,9 +41,8 @@ class PlexMon(WebInterfaceMon):
 
     def __init__(self, scrobble_queue):
         try:
-            plex_conf = config["players"]["plex"]
-            self.token = get_token(**plex_conf)
-            self.URL = self.URL.format(**plex_conf)
+            self.token = get_token(**self.config)
+            self.URL = self.URL.format(**self.config)
         except KeyError:
             logger.exception("Check config for correct Plex params.")
             return

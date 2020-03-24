@@ -3,7 +3,7 @@ import sys
 import threading
 
 from queue import Queue
-
+import confuse
 from config import config
 from player_monitors import collect_monitors
 from scrobbler import Scrobbler
@@ -50,8 +50,10 @@ def main():
     scrobbler = Scrobbler(scrobble_queue)
     scrobbler.start()
 
-    allowed_monitors = config['players']['monitored']
-    for Mon in collect_monitors():
+    allowed_monitors = config['players']['monitored'].get(confuse.StrSeq(default=[]))
+    all_monitors = collect_monitors()
+
+    for Mon in all_monitors:
         if Mon.name not in allowed_monitors:
             continue
         mon = Mon(scrobble_queue)

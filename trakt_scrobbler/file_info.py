@@ -1,5 +1,6 @@
 import logging
 import re
+import confuse
 import guessit
 from functools import lru_cache
 from pathlib import Path
@@ -7,9 +8,8 @@ from config import config
 from utils import cleanup_encoding
 
 logger = logging.getLogger('trakt_scrobbler')
-config = config.get('fileinfo', {})
-whitelist = config.get('whitelist')
-regexes = config.get('include_regexes', {})
+whitelist = config["fileinfo"]["whitelist"].get(confuse.StrSeq(default=[]))
+regexes = config["fileinfo"]['include_regexes'].get()
 
 
 def whitelist_file(file_path):
