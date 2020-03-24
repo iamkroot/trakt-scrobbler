@@ -1,11 +1,10 @@
-import confuse
-from app_dirs import CFG_DIR
 import logging
+import confuse
 
 logger = logging.getLogger('trakt_scrobbler')
 
 cfg_template = {
-    "version": confuse.String(),
+    "version": confuse.String(default="1.0"),
     "general": {"enable_notifs": confuse.Choice([True, False], default=True),},
     "fileinfo": {
         "whitelist": confuse.StrSeq(default=[]),
@@ -47,10 +46,11 @@ cfg_template = {
     },
 }
 
-config = confuse.Configuration("trakt-scrobbler")
+config = confuse.Configuration("trakt-scrobbler", "trakt_scrobbler")
+
 try:
-    config.set_file(CFG_DIR / "config.yml")
     config = config.get(cfg_template)
-except confuse.ConfigError:
+except confuse.ConfigError as e:
     logger.exception("Invalid configuration")
+    print(e)
     exit(1)
