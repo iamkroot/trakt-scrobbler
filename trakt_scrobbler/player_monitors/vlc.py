@@ -1,13 +1,11 @@
 import json
 import requests
-import logging
 import appdirs
 from configparser import ConfigParser
 from pathlib import Path
-from player_monitors.monitor import WebInterfaceMon
-from utils import file_uri_to_path
-
-logger = logging.getLogger('trakt_scrobbler')
+from trakt_scrobbler import logger
+from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
+from trakt_scrobbler.utils import file_uri_to_path
 
 
 def search_dict_for_current(dict_):

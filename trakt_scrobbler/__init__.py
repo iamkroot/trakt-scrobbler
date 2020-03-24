@@ -1,7 +1,7 @@
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
-
-from .log_config import LOGGING_CONF
 import logging.config
+import confuse
+from trakt_scrobbler.log_config import LOGGING_CONF
+
 logging.config.dictConfig(LOGGING_CONF)
+logger = logging.getLogger("trakt_scrobbler")
+config = confuse.Configuration("trakt-scrobbler", "trakt_scrobbler")

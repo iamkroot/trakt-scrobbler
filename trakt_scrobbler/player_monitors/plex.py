@@ -1,9 +1,8 @@
-import logging
-from app_dirs import DATA_DIR
-from player_monitors.monitor import WebInterfaceMon
-from utils import read_json, write_json, safe_request
+from trakt_scrobbler import logger
+from trakt_scrobbler.app_dirs import DATA_DIR
+from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
+from trakt_scrobbler.utils import read_json, write_json, safe_request
 
-logger = logging.getLogger('trakt_scrobbler')
 PLEX_TOKEN_PATH = DATA_DIR / "plex_token.json"
 
 

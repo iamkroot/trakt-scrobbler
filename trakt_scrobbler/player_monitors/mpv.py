@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import threading
 import time
@@ -7,15 +6,14 @@ import appdirs
 from configparser import ConfigParser
 from pathlib import Path
 from queue import Queue
-from player_monitors.monitor import Monitor
+from trakt_scrobbler import logger
+from trakt_scrobbler.player_monitors.monitor import Monitor
 
 if os.name == 'posix':
     import select
     import socket
 elif os.name == 'nt':
     import win32file
-
-logger = logging.getLogger('trakt_scrobbler')
 
 
 class MPVMon(Monitor):

@@ -1,5 +1,5 @@
 import logging.config
-from app_dirs import DATA_DIR
+from trakt_scrobbler.app_dirs import DATA_DIR
 
 
 class StoppedPlayersFilter(logging.Filter):

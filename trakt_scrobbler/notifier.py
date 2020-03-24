@@ -1,9 +1,6 @@
-import logging
 import sys
 import confuse
-from config import config
-
-logger = logging.getLogger('trakt_scrobbler')
+from trakt_scrobbler import config, logger
 
 APP_NAME = 'Trakt Scrobbler'
 enable_notifs = config['general']['enable_notifs'].get(

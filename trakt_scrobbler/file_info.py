@@ -1,13 +1,11 @@
-import logging
 import re
 import confuse
 import guessit
 from functools import lru_cache
 from pathlib import Path
-from config import config
-from utils import cleanup_encoding
+from trakt_scrobbler import config, logger
+from trakt_scrobbler.utils import cleanup_encoding
 
-logger = logging.getLogger('trakt_scrobbler')
 whitelist = config["fileinfo"]["whitelist"].get(confuse.StrSeq(default=[]))
 regexes = config["fileinfo"]['include_regexes'].get()
 

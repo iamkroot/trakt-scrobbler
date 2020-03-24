@@ -1,12 +1,10 @@
 import time
-import logging
 import requests
 from threading import Thread
-from config import config
-from file_info import get_media_info
-from utils import AutoloadError
+from trakt_scrobbler import config, logger
+from trakt_scrobbler.file_info import get_media_info
+from trakt_scrobbler.utils import AutoloadError
 
-logger = logging.getLogger('trakt_scrobbler')
 SCROBBLE_VERBS = ('stop', 'pause', 'start')
 
 

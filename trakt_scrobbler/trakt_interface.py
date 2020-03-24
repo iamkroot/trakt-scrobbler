@@ -1,14 +1,11 @@
-import logging
 import time
 import sys
 import webbrowser
-import trakt_key_holder
 from datetime import datetime as dt
-from app_dirs import DATA_DIR
-from notifier import notify
-from utils import safe_request, read_json, write_json
-
-logger = logging.getLogger('trakt_scrobbler')
+from trakt_scrobbler import logger, trakt_key_holder
+from trakt_scrobbler.app_dirs import DATA_DIR
+from trakt_scrobbler.notifier import notify
+from trakt_scrobbler.utils import safe_request, read_json, write_json
 
 CLIENT_ID = trakt_key_holder.get_id()
 CLIENT_SECRET = trakt_key_holder.get_secret()

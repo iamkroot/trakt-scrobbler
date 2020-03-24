@@ -1,8 +1,6 @@
 import re
-import logging
-from player_monitors.monitor import WebInterfaceMon
-
-logger = logging.getLogger('trakt_scrobbler')
+from trakt_scrobbler import logger
+from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
 
 
 class MPCMon(WebInterfaceMon):
