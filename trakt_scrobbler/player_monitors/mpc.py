@@ -1,4 +1,5 @@
 import re
+import confuse
 from trakt_scrobbler import logger
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
 
@@ -7,6 +8,11 @@ class MPCMon(WebInterfaceMon):
     exclude_import = True
     URL = "http://{ip}:{port}/variables.html"
     PATTERN = re.compile(r'\<p id=\"([a-z]+)\"\>(.*?)\<', re.MULTILINE)
+    CONFIG_TEMPLATE = {
+        "ip": confuse.String(default="localhost"),
+        "port": confuse.String(default="auto-detect"),
+        "poll_interval": confuse.Number(default=10),
+    }
 
     def __init__(self, scrobble_queue):
         try:

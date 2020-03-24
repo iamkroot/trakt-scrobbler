@@ -1,6 +1,7 @@
 import json
-import requests
 import appdirs
+import confuse
+import requests
 from configparser import ConfigParser
 from pathlib import Path
 from trakt_scrobbler import logger
@@ -25,6 +26,12 @@ class VLCMon(WebInterfaceMon):
     name = 'vlc'
     URL = "http://{ip}:{port}"
     STATES = ['stopped', 'paused', 'playing']
+    CONFIG_TEMPLATE = {
+        "ip": confuse.String(default="localhost"),
+        "port": confuse.String(default="auto-detect"),
+        "password": confuse.String(default="auto-detect"),
+        "poll_interval": confuse.Number(default=10),
+    }
 
     def __init__(self, scrobble_queue):
         try:

@@ -1,3 +1,4 @@
+import confuse
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
@@ -37,6 +38,13 @@ class PlexMon(WebInterfaceMon):
     exclude_import = False
     URL = "http://{ip}:{port}"
     STATES = {"stopped": 0, "paused": 1, "buffering": 1, "playing": 2}
+    CONFIG_TEMPLATE = {
+        "ip": confuse.String(default="localhost"),
+        "port": confuse.String(default="32400"),
+        "login": confuse.String(),
+        "password": confuse.String(),
+        "poll_interval": confuse.Number(default=10),
+    }
 
     def __init__(self, scrobble_queue):
         try:

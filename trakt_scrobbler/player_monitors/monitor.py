@@ -25,7 +25,8 @@ class Monitor(Thread):
 
     @classmethod
     def autoload_cfg(cls):
-        monitor_cfg = config['players'][cls.name].get()
+        template = getattr(cls, "CONFIG_TEMPLATE", None)
+        monitor_cfg = config['players'][cls.name].get(template)
         auto_keys = {k for k, v in monitor_cfg.items() if v == "auto-detect"}
         if not auto_keys:
             return monitor_cfg

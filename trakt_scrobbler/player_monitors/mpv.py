@@ -3,6 +3,7 @@ import os
 import threading
 import time
 import appdirs
+import confuse
 from configparser import ConfigParser
 from pathlib import Path
 from queue import Queue
@@ -21,6 +22,10 @@ class MPVMon(Monitor):
     exclude_import = True
     WATCHED_PROPS = ['pause', 'path', 'working-directory',
                      'duration', 'time-pos']
+    CONFIG_TEMPLATE = {
+        "ipc_path": confuse.String(default="auto-detect"),
+        "poll_interval": confuse.Number(default=10),
+    }
 
     def __init__(self, scrobble_queue):
         try:

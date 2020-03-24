@@ -42,6 +42,4 @@ players:
   plex:
     ip: localhost  # IP of the plex server
     port: '32400'
-    login: ''
-    password: ''
     poll_interval: 10  # in seconds. How frequently the monitor should check for player update.
