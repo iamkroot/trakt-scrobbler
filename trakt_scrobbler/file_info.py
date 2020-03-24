@@ -6,16 +6,30 @@ from pathlib import Path
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.utils import cleanup_encoding
 
-whitelist = config["fileinfo"]["whitelist"].get(confuse.StrSeq(default=[]))
+
+class PathSeq(confuse.Template):
+    def convert(self, value, view):
+        if not isinstance(value, list):
+            self.fail("must be sequence.", view, True)
+        paths = []
+        for i, path in enumerate(value):
+            try:
+                paths.append(Path(path).resolve())
+            except TypeError:
+                self.fail(f'must be a valid path: "{path}", index: {i}', view, True)
+        return paths
+
+
+whitelist = config["fileinfo"]["whitelist"].get(PathSeq(default=[]))
 regexes = config["fileinfo"]['include_regexes'].get()
 
 
-def whitelist_file(file_path):
+def whitelist_file(file_path) -> bool:
     if not whitelist:
         return True
     file_path = cleanup_encoding(file_path)
     parents = tuple(file_path.absolute().resolve().parents)
-    return any(Path(path).resolve() in parents for path in whitelist)
+    return any(path in parents for path in whitelist)
 
 
 def custom_regex(file_path):
