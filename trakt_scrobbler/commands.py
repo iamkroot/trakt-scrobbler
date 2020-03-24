@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from cleo import Command, Application
+from clikit.io import NullIO
+from clikit.args import StringArgs
 import sys
 import subprocess as sp
 from pathlib import Path
@@ -354,6 +356,38 @@ ConfigCommand.commands.append(ConfigListCommand())
 ConfigCommand.commands.append(ConfigSetCommand())
 
 
+class InitCommand(Command):
+    """
+    Runs the initial setup of the scrobbler.
+
+    init
+    """
+
+    def call_sub(self, name, args="", silent=False):
+        names = name.split(" ")
+        command = self.application.get_command(names[0])
+        for name in names[1:]:
+            command = command.get_sub_command(name)
+        args = StringArgs(args)
+
+        return command.run(args, silent and NullIO() or self.io)
+
+    def handle(self):
+        self.comment("This will guide you through the setup of the scrobbler.")
+        self.info("If you wish to quit at any point, press Ctrl+C or Cmd+C")
+        from trakt_scrobbler.player_monitors import collect_monitors
+
+        names = [Mon.name for Mon in collect_monitors() if isinstance(Mon.name, str)]
+        players = self.choice(
+            "Select the players that should be monitored (separate using comma)",
+            sorted(names),
+            None,
+            multiple=True,
+        )
+        self.line(f"Selected: {', '.join(players)}")
+        self.call_sub("config set", f"players.monitored {' '.join(players)}", True)
+
+
 def main():
     application = Application(CMD_NAME)
     application.add(StartCommand())
@@ -363,6 +397,7 @@ def main():
     application.add(TraktAuthCommand())
     application.add(AutostartCommand())
     application.add(ConfigCommand())
+    application.add(InitCommand())
     application.run()
 
 
