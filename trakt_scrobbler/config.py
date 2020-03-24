@@ -5,18 +5,46 @@ import logging
 logger = logging.getLogger('trakt_scrobbler')
 
 cfg_template = {
-    "version": str,
-    "general": {
-        "enable_notifs": confuse.Choice([True, False]),
-    },
+    "version": confuse.String(),
+    "general": {"enable_notifs": confuse.Choice([True, False], default=True),},
     "fileinfo": {
-        "whitelist": confuse.StrSeq(),
+        "whitelist": confuse.StrSeq(default=[]),
         "include_regexes": {
-            "movie": confuse.StrSeq(),
-            "episode": confuse.StrSeq()
+            "movie": confuse.StrSeq(default=[]),
+            "episode": confuse.StrSeq(default=[]),
+        },
+    },
+    "players": {
+        "monitored": confuse.StrSeq(default=[]),
+        "skip_interval": confuse.Number(default=5),
+        "vlc": {
+            "ip": confuse.String(default="localhost"),
+            "port": confuse.String(default="auto-detect"),
+            "password": confuse.String(default="auto-detect"),
+            "poll_interval": confuse.Number(default=10),
+        },
+        "mpv": {
+            "ipc_path": confuse.String(default="auto-detect"),
+            "poll_interval": confuse.Number(default=10),
+        },
+        "mpc-hc": {
+            "ip": confuse.String(default="localhost"),
+            "port": confuse.String(default="auto-detect"),
+            "poll_interval": confuse.Number(default=10),
+        },
+        "mpc-be": {
+            "ip": confuse.String(default="localhost"),
+            "port": confuse.String(default="auto-detect"),
+            "poll_interval": confuse.Number(default=10),
+        },
+        "plex": {
+            "ip": confuse.String(default="localhost"),
+            "port": confuse.String(default="32400"),
+            "login": confuse.String(default=""),
+            "password": confuse.String(default=""),
+            "poll_interval": confuse.Number(default=10),
         }
     },
-    "players": dict
 }
 
 config = confuse.Configuration("trakt-scrobbler")
