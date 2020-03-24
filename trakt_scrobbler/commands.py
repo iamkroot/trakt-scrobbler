@@ -319,6 +319,7 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']
 
         view = config
         key = self.argument("key")
+        values = self.argument("value")
         for name in key.split("."):
             view = view[name]
 
@@ -328,20 +329,21 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']
                 raise confuse.ConfigTypeError
         except confuse.ConfigTypeError:
             raise KeyError(f"{key} is not a valid parameter name.")
-
-        values = self.argument("value")
-        if not isinstance(orig_val, list):
-            if len(values) > 1:
-                raise ValueError("Given parameter only accepts a single value")
-            else:
-                value = orig_val.__class__(values[0])
+        except confuse.NotFoundError:
+            value = values[0] if len(values) == 1 else values
+            view.add(value)
         else:
-            if self.option("add"):
-                value = orig_val + values
+            if not isinstance(orig_val, list):
+                if len(values) > 1:
+                    raise ValueError("Given parameter only accepts a single value")
+                else:
+                    value = orig_val.__class__(values[0])
             else:
-                value = values
-
-        view.set(value)
+                if self.option("add"):
+                    value = orig_val + values
+                else:
+                    value = values
+            view.set(value)
         with open(config.user_config_path(), "w") as f:
             f.write(config.dump(full=False))
         self.line(f"User config updated with '{key} = {value}'")
