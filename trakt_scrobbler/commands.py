@@ -10,7 +10,6 @@ import os
 APP_NAME = "trakt-scrobbler"
 CMD_NAME = "trakts"
 platform = sys.platform
-install_dir = Path(__file__).parent
 
 
 class StartCommand(Command):
@@ -90,10 +89,6 @@ class RunCommand(Command):
     """
 
     def handle(self):
-        # TODO: Find a better way to run the packages
-
-        sys.path.insert(0, str(install_dir))
-        os.chdir(install_dir)
         from trakt_scrobbler.main import main
 
         main()
@@ -242,7 +237,6 @@ class TraktAuthCommand(Command):
     """
 
     def handle(self):
-        sys.path.insert(0, str(install_dir))
         from trakt_scrobbler import trakt_interface as ti
         from datetime import date
 
@@ -256,6 +250,108 @@ class TraktAuthCommand(Command):
         self.line(f"Token valid until: {expiry}")
 
 
+class ConfigCommand(Command):
+    """
+    Edits the scrobbler config settings.
+
+    config
+    """
+
+    commands = []
+
+    def handle(self):
+        return self.call("help", self._config.name)
+
+
+class ConfigListCommand(Command):
+    """
+    Lists configuration settings. By default, only overriden values are shown.
+
+    list
+        {--all : Include default values too}
+    """
+
+    def _print_cfg(self, cfg: dict, prefix=""):
+        for k, v in cfg.items():
+            key = prefix + k
+            if isinstance(v, dict):
+                self._print_cfg(v, key + ".")
+            else:
+                self.line(f"{key} = {v}")
+
+    def handle(self):
+        import confuse
+        from trakt_scrobbler import config
+
+        if self.option("all"):
+            self._print_cfg(config.flatten())
+        else:
+            sources = [s for s in config.sources if not s.default]
+            temp_root = confuse.RootView(sources)
+            self._print_cfg(temp_root.flatten())
+
+
+class ConfigSetCommand(Command):
+    """
+    Set the value for a config parameter.
+
+    set
+        {key : Config parameter}
+        {value* : Setting value}
+        {--add : In case of list values, add them to the end instead of overwriting}
+    """
+
+    help = """Separate multiple values with spaces. Eg:
+    <comment>trakts config set players.monitored mpv vlc mpc-be</comment>
+
+For values containing space(s), surround them with double-quotes. Eg:
+    <comment>trakts config set fileinfo.whitelist D:\\Media\\Movies "C:\\Users\\My Name\\Shows"</comment>
+
+Use --add to avoid overwriting the previous list values (whitelist, monitored, etc.):
+    <comment>trakts config set players.monitored mpv vlc</comment>
+    <comment>trakts config set --add players.monitored plex mpc-hc</comment>
+will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']
+"""
+
+    def handle(self):
+        import confuse
+        from trakt_scrobbler import config
+
+        view = config
+        key = self.argument("key")
+        for name in key.split("."):
+            view = view[name]
+
+        try:
+            orig_val = view.get()
+            if isinstance(orig_val, dict):
+                raise confuse.ConfigTypeError
+        except confuse.ConfigTypeError:
+            raise KeyError(f"{key} is not a valid parameter name.")
+
+        values = self.argument("value")
+        if not isinstance(orig_val, list):
+            if len(values) > 1:
+                raise ValueError("Given parameter only accepts a single value")
+            else:
+                value = orig_val.__class__(values[0])
+        else:
+            if self.option("add"):
+                value = orig_val + values
+            else:
+                value = values
+
+        view.set(value)
+        with open(config.user_config_path(), "w") as f:
+            f.write(config.dump(full=False))
+        self.line(f"User config updated with '{key} = {value}'")
+        self.line("Don't forget to restart the service for the changes to take effect.")
+
+
+ConfigCommand.commands.append(ConfigListCommand())
+ConfigCommand.commands.append(ConfigSetCommand())
+
+
 def main():
     application = Application(CMD_NAME)
     application.add(StartCommand())
@@ -264,6 +360,7 @@ def main():
     application.add(RunCommand())
     application.add(TraktAuthCommand())
     application.add(AutostartCommand())
+    application.add(ConfigCommand())
     application.run()
 
 
