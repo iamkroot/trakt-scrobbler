@@ -20,11 +20,18 @@ class StartCommand(Command):
 
     def handle(self):
         restart = self.option("restart")
+        if platform == "darwin":
+            if restart:
+                sp.check_call(
+                    ["launchctl", "kickstart", "-k", "com.iamkroot.trakt-scrobbler"]
+                )
+            else:
+                sp.check_call(["launchctl", "start", "com.iamkroot.trakt-scrobbler"])
         if platform == "linux":
             cmd = "restart" if restart else "start"
-            sp.run(["systemctl", "--user", cmd, "trakt-scrobbler"])
+            sp.check_call(["systemctl", "--user", cmd, "trakt-scrobbler"])
         else:
-            raise NotImplementedError("Only linux is supported currently")
+            raise NotImplementedError("Windows not supported")
         print("The monitors have started.")
 
 
@@ -36,10 +43,12 @@ class StopCommand(Command):
     """
 
     def handle(self):
-        if platform == "linux":
+        if platform == "darwin":
+            sp.check_call(["launchctl", "stop", "com.iamkroot.trakt-scrobbler"])
+        elif platform == "linux":
             sp.check_call(["systemctl", "--user", "stop", "trakt-scrobbler"])
         else:
-            raise NotImplementedError("Only linux is supported currently")
+            raise NotImplementedError("Windows not supported")
         print("The monitors are stopped.")
 
 
@@ -51,7 +60,14 @@ class StatusCommand(Command):
     """
 
     def handle(self):
-        if platform == "linux":
+        if platform == "darwin":
+            proc = sp.run(
+                ["launchctl", "list", "com.iamkroot.trakt-scrobbler"],
+                text=True,
+                capture_output=True,
+            )
+            status = proc.stdout
+        elif platform == "linux":
             proc = sp.run(
                 ["systemctl", "--user", "status", "trakt-scrobbler"],
                 text=True,
@@ -59,7 +75,7 @@ class StatusCommand(Command):
             )
             status = proc.stdout
         else:
-            raise NotImplementedError("Only linux is supported currently")
+            raise NotImplementedError("Windows not supported")
         print(status)
 
 
@@ -129,7 +145,7 @@ class AutostartEnableCommand(Command):
             <plist version="1.0">
             <dict>
                 <key>Label</key>
-                <string>com.github.iamkroot.trakt-scrobbler</string>
+                <string>com.iamkroot.trakt-scrobbler</string>
                 <key>ProgramArguments</key>
                 <array>
                     <string>trakts</string>
