@@ -4,10 +4,13 @@ import sys
 import subprocess as sp
 from pathlib import Path
 from textwrap import dedent
+import shutil
 import os
 
 APP_NAME = "trakt-scrobbler"
+CMD_NAME = "trakts"
 platform = sys.platform
+install_dir = Path(__file__).parent
 
 
 class StartCommand(Command):
@@ -88,11 +91,9 @@ class RunCommand(Command):
 
     def handle(self):
         # TODO: Find a better way to run the packages
-        import os
 
-        p = Path(__file__).parent
-        sys.path.append(str(p))
-        os.chdir(p)
+        sys.path.insert(0, str(install_dir))
+        os.chdir(install_dir)
         from trakt_scrobbler.main import main
 
         main()
@@ -108,9 +109,9 @@ class AutostartCommand(Command):
     @staticmethod
     def get_autostart_serv_path() -> Path:
         if platform == "darwin":
-            return Path("~/Library/LaunchAgents/trakt-scrobbler.plist").expanduser()
+            return Path(f"~/Library/LaunchAgents/{APP_NAME}.plist").expanduser()
         elif platform == "linux":
-            return Path("~/.config/systemd/user/trakt-scrobbler.service").expanduser()
+            return Path(f"~/.config/systemd/user/{APP_NAME}.service").expanduser()
         else:
             return (
                 Path(os.getenv("APPDATA"))
@@ -138,7 +139,7 @@ class AutostartEnableCommand(Command):
     def create_mac_plist(self):
         self.PLIST_LOC = AutostartCommand.get_autostart_serv_path()
         plist = dedent(
-            """
+            f"""
             <?xml version="1.0" encoding="UTF-8"?>
             <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
                 "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -148,7 +149,7 @@ class AutostartEnableCommand(Command):
                 <string>com.iamkroot.trakt-scrobbler</string>
                 <key>ProgramArguments</key>
                 <array>
-                    <string>trakts</string>
+                    <string>{self.cmd_path}</string>
                     <string>run</string>
                 </array>
                 <key>RunAtLoad</key>
@@ -167,12 +168,12 @@ class AutostartEnableCommand(Command):
     def create_systemd_service(self):
         self.SYSTEMD_SERV = AutostartCommand.get_autostart_serv_path()
         contents = dedent(
-            """
+            f"""
             [Unit]
             Description=Trakt Scrobbler Service
 
             [Service]
-            ExecStart=trakts run
+            ExecStart="{self.cmd_path}" run
 
             [Install]
             WantedBy=default.target
@@ -184,15 +185,17 @@ class AutostartEnableCommand(Command):
     def create_win_startup(self):
         self.WIN_STARTUP_SCRIPT = AutostartCommand.get_autostart_serv_path()
         contents = dedent(
-            """
+            f"""
             @echo off
-            start "trakt-scrobbler" /B trakts run
+            start "trakt-scrobbler" /B "{self.cmd_path}" run
             """
         )
 
         self.WIN_STARTUP_SCRIPT.write_text(contents.strip())
 
     def handle(self):
+        self.cmd_path = shutil.which(CMD_NAME)
+
         if platform == "darwin":
             self.create_mac_plist()
             sp.check_call(["launchctl", "load", "-w", str(self.PLIST_LOC)])
@@ -230,12 +233,36 @@ AutostartCommand.commands.append(AutostartEnableCommand())
 AutostartCommand.commands.append(AutostartDisableCommand())
 
 
+class TraktAuthCommand(Command):
+    """
+    Runs the authetication flow for trakt.tv
+
+    auth
+        {--f|force : Force run the flow, ignoring already existing credentials.}
+    """
+
+    def handle(self):
+        sys.path.insert(0, str(install_dir))
+        from trakt_scrobbler import trakt_interface as ti
+        from datetime import date
+
+        if self.option("force"):
+            ti.token_data = None
+            self.line("Forcing trakt authentication")
+        ti.get_access_token()
+        expiry = date.fromtimestamp(
+            ti.token_data["created_at"] + ti.token_data["expires_in"]
+        )
+        self.line(f"Token valid until: {expiry}")
+
+
 def main():
-    application = Application("trakts")
+    application = Application(CMD_NAME)
     application.add(StartCommand())
     application.add(StopCommand())
     application.add(StatusCommand())
     application.add(RunCommand())
+    application.add(TraktAuthCommand())
     application.add(AutostartCommand())
     application.run()
 
