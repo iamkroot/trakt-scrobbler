@@ -1,6 +1,8 @@
 import confuse
 from app_dirs import CFG_DIR
-from log_config import logger
+import logging
+
+logger = logging.getLogger('trakt_scrobbler')
 
 cfg_template = {
     "version": str,

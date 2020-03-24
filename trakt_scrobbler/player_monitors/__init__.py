@@ -6,7 +6,7 @@ from .monitor import Monitor
 
 def collect_monitors():
     """Collect the monitors from 'player_monitors' package."""
-    modules = Path(__name__).glob("*.py")
+    modules = Path(__file__).parent.glob("*.py")
     monitors = set()
 
     for module_path in modules:
