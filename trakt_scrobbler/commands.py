@@ -19,6 +19,7 @@ platform = sys.platform
 
 class Command(BaseCommand):
     def call_sub(self, name, args="", silent=False):
+        """call() equivalent which supports subcommands"""
         names = name.split(" ")
         command = self.application.get_command(names[0])
         for name in names[1:]:
@@ -109,24 +110,61 @@ class StatusCommand(Command):
     status
     """
 
-    def handle(self):
+    def check_running(self):
+        is_inactive = False
         if platform == "darwin":
-            proc = sp.run(
-                ["launchctl", "list", "com.iamkroot.trakt-scrobbler"],
-                text=True,
-                capture_output=True,
-            )
-            status = proc.stdout
+            output = sp.check_output(
+                ["launchctl", "list", "com.iamkroot.trakt-scrobbler"], text=True,
+            ).split("\n")
+            for line in output:
+                if "trakt-scrobbler" in line:
+                    is_inactive = line.strip().startswith("-")
+                    break
         elif platform == "linux":
-            proc = sp.run(
-                ["systemctl", "--user", "status", "trakt-scrobbler"],
-                text=True,
-                capture_output=True,
+            is_inactive = bool(
+                sp.call(
+                    ["systemctl", "--user", "is-active", "--quiet", "trakt-scrobbler"]
+                )
             )
-            status = proc.stdout
         else:
-            raise NotImplementedError("Windows not supported")
-        print(status)
+            is_inactive = _get_win_pid() is None
+        self.line(f"The scrobbler is {'not ' * is_inactive}running")
+
+    def get_last_action(self):
+        PAT = re.compile(r"(?P<asctime>.*?) -.*Scrobble (?P<verb>\w+) successful")
+
+        def search_file(file):
+            for line in reversed(file.read_text().split("\n")):
+                match = PAT.match(line)
+                if not match:
+                    continue
+                self.line(
+                    "Last action at {asctime}: {verb}".format(**match.groupdict())
+                )
+                return True
+
+        from trakt_scrobbler.app_dirs import DATA_DIR
+
+        log_file = DATA_DIR / "trakt_scrobbler.log"
+        if not log_file.exists():
+            self.line("No activity yet.")
+            return
+        if search_file(log_file):
+            return
+        for i in range(1, 6):
+            log_file = log_file.with_suffix(f".log.{i}")
+            if search_file(log_file):
+                return
+
+    def handle(self):
+        self.check_running()
+
+        from trakt_scrobbler import config
+
+        monitored = config['players']['monitored'].get()
+        self.line(f"Monitored players: {', '.join(monitored)}")
+
+        self.get_last_action()
 
 
 class RunCommand(Command):
@@ -142,34 +180,21 @@ class RunCommand(Command):
         main()
 
 
-class AutostartCommand(Command):
-    """
-    Controls the autostart behaviour of the scrobbler
-
-    autostart
-    """
-
-    @staticmethod
-    def get_autostart_serv_path() -> Path:
-        if platform == "darwin":
-            return Path(f"~/Library/LaunchAgents/{APP_NAME}.plist").expanduser()
-        elif platform == "linux":
-            return Path(f"~/.config/systemd/user/{APP_NAME}.service").expanduser()
-        else:
-            return (
-                Path(os.getenv("APPDATA"))
-                / "Microsoft"
-                / "Windows"
-                / "Start Menu"
-                / "Programs"
-                / "Startup"
-                / (APP_NAME + ".vbs")
-            )
-
-    commands = []
-
-    def handle(self):
-        return self.call("help", self._config.name)
+def get_autostart_serv_path() -> Path:
+    if platform == "darwin":
+        return Path(f"~/Library/LaunchAgents/{APP_NAME}.plist").expanduser()
+    elif platform == "linux":
+        return Path(f"~/.config/systemd/user/{APP_NAME}.service").expanduser()
+    else:
+        return (
+            Path(os.getenv("APPDATA"))
+            / "Microsoft"
+            / "Windows"
+            / "Start Menu"
+            / "Programs"
+            / "Startup"
+            / (APP_NAME + ".vbs")
+        )
 
 
 class AutostartEnableCommand(Command):
@@ -180,7 +205,7 @@ class AutostartEnableCommand(Command):
     """
 
     def create_mac_plist(self):
-        self.PLIST_LOC = AutostartCommand.get_autostart_serv_path()
+        self.PLIST_LOC = get_autostart_serv_path()
         plist = dedent(
             f"""
             <?xml version="1.0" encoding="UTF-8"?>
@@ -209,7 +234,7 @@ class AutostartEnableCommand(Command):
         self.PLIST_LOC.write_text(plist.strip())
 
     def create_systemd_service(self):
-        self.SYSTEMD_SERV = AutostartCommand.get_autostart_serv_path()
+        self.SYSTEMD_SERV = get_autostart_serv_path()
         contents = dedent(
             f"""
             [Unit]
@@ -226,7 +251,7 @@ class AutostartEnableCommand(Command):
         self.SYSTEMD_SERV.write_text(contents.strip())
 
     def create_win_startup(self):
-        self.WIN_STARTUP_SCRIPT = AutostartCommand.get_autostart_serv_path()
+        self.WIN_STARTUP_SCRIPT = get_autostart_serv_path()
         contents = f'CreateObject("Wscript.Shell").Run "{CMD_NAME} run", 0, False'
         self.WIN_STARTUP_SCRIPT.write_text(contents.strip())
 
@@ -257,17 +282,26 @@ class AutostartDisableCommand(Command):
 
     def handle(self):
         if platform == "darwin":
-            self.PLIST_LOC = AutostartCommand.get_autostart_serv_path()
+            self.PLIST_LOC = get_autostart_serv_path()
             sp.check_call(["launchctl", "unload", "-w", str(self.PLIST_LOC)])
         elif platform == "linux":
             sp.check_call(["systemctl", "--user", "disable", "trakt-scrobbler"])
         else:
-            self.WIN_STARTUP_SCRIPT = AutostartCommand.get_autostart_serv_path()
-            self.WIN_STARTUP_SCRIPT.unlink()
+            get_autostart_serv_path().unlink()
+        self.line("Autostart disabled.")
 
 
-AutostartCommand.commands.append(AutostartEnableCommand())
-AutostartCommand.commands.append(AutostartDisableCommand())
+class AutostartCommand(Command):
+    """
+    Controls the autostart behaviour of the scrobbler
+
+    autostart
+    """
+
+    commands = [AutostartEnableCommand(), AutostartDisableCommand()]
+
+    def handle(self):
+        return self.call("help", self._config.name)
 
 
 class TraktAuthCommand(Command):
@@ -290,19 +324,6 @@ class TraktAuthCommand(Command):
             ti.token_data["created_at"] + ti.token_data["expires_in"]
         )
         self.line(f"Token valid until: {expiry}")
-
-
-class ConfigCommand(Command):
-    """
-    Edits the scrobbler config settings.
-
-    config
-    """
-
-    commands = []
-
-    def handle(self):
-        return self.call("help", self._config.name)
 
 
 class ConfigListCommand(Command):
@@ -392,8 +413,17 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']
         self.line("Don't forget to restart the service for the changes to take effect.")
 
 
-ConfigCommand.commands.append(ConfigListCommand())
-ConfigCommand.commands.append(ConfigSetCommand())
+class ConfigCommand(Command):
+    """
+    Edits the scrobbler config settings.
+
+    config
+    """
+
+    commands = [ConfigListCommand(), ConfigSetCommand()]
+
+    def handle(self):
+        return self.call("help", self._config.name)
 
 
 class InitCommand(Command):
@@ -502,14 +532,14 @@ class WhitelistCommand(Command):
 
 def main():
     application = Application(CMD_NAME)
-    application.add(StartCommand())
-    application.add(StopCommand())
-    application.add(StatusCommand())
-    application.add(RunCommand())
-    application.add(TraktAuthCommand())
     application.add(AutostartCommand())
     application.add(ConfigCommand())
     application.add(InitCommand())
+    application.add(RunCommand())
+    application.add(StartCommand())
+    application.add(StatusCommand())
+    application.add(StopCommand())
+    application.add(TraktAuthCommand())
     application.add(WhitelistCommand())
     application.run()
 
