@@ -40,3 +40,4 @@
 !pyproject.toml
 !sample_config.toml
 dist/
+trakt_scrobbler.egg-info/
