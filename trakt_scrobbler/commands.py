@@ -1,13 +1,16 @@
 #!/usr/bin/env python
-from cleo import Command as BaseCommand, Application
-from clikit.io import NullIO
-from clikit.args import StringArgs
-import sys
+import os
+import re
+import shutil
 import subprocess as sp
+import sys
 from pathlib import Path
 from textwrap import dedent
-import shutil
-import os
+
+from cleo import Application
+from cleo import Command as BaseCommand
+from clikit.args import StringArgs
+from clikit.io import NullIO
 
 APP_NAME = "trakt-scrobbler"
 CMD_NAME = "trakts"
@@ -23,6 +26,28 @@ class Command(BaseCommand):
         args = StringArgs(args)
 
         return command.run(args, silent and NullIO() or self.io)
+
+
+def _get_win_pid():
+    op = sp.check_output(
+        [
+            "wmic",
+            "process",
+            "where",
+            f"name='{CMD_NAME}.exe'",
+            "get",
+            "CommandLine,ProcessID",
+        ],
+        text=True,
+    )
+    for line in op.split("\n"):
+        match = re.search(r" run.*?(?P<pid>\d+)", line)
+        if match:
+            return match["pid"]
+
+
+def _kill_task_win(pid):
+    sp.check_call(["taskkill", "/pid", pid, "/f"])
 
 
 class StartCommand(Command):
@@ -42,12 +67,20 @@ class StartCommand(Command):
                 )
             else:
                 sp.check_call(["launchctl", "start", "com.iamkroot.trakt-scrobbler"])
-        if platform == "linux":
+        elif platform == "linux":
             cmd = "restart" if restart else "start"
             sp.check_call(["systemctl", "--user", cmd, "trakt-scrobbler"])
         else:
-            raise NotImplementedError("Windows not supported")
-        print("The monitors have started.")
+            pid = _get_win_pid()
+            if pid and restart:
+                _kill_task_win(pid)
+                pid = None
+            if not pid:
+                sp.check_call(
+                    f'start "trakt-scrobbler" /B "{shutil.which(CMD_NAME)}" run',
+                    shell=True,
+                )
+        self.line("The monitors are running.")
 
 
 class StopCommand(Command):
@@ -63,8 +96,10 @@ class StopCommand(Command):
         elif platform == "linux":
             sp.check_call(["systemctl", "--user", "stop", "trakt-scrobbler"])
         else:
-            raise NotImplementedError("Windows not supported")
-        print("The monitors are stopped.")
+            pid = _get_win_pid()
+            if pid:
+                _kill_task_win(pid)
+        self.line("The monitors are stopped.")
 
 
 class StatusCommand(Command):
@@ -128,7 +163,7 @@ class AutostartCommand(Command):
                 / "Start Menu"
                 / "Programs"
                 / "Startup"
-                / (APP_NAME + ".bat")
+                / (APP_NAME + ".vbs")
             )
 
     commands = []
@@ -192,13 +227,7 @@ class AutostartEnableCommand(Command):
 
     def create_win_startup(self):
         self.WIN_STARTUP_SCRIPT = AutostartCommand.get_autostart_serv_path()
-        contents = dedent(
-            f"""
-            @echo off
-            start "trakt-scrobbler" /B "{self.cmd_path}" run
-            """
-        )
-
+        contents = f'CreateObject("Wscript.Shell").Run "{CMD_NAME} run", 0, False'
         self.WIN_STARTUP_SCRIPT.write_text(contents.strip())
 
     def handle(self):
@@ -418,7 +447,7 @@ class InitCommand(Command):
 
         if self.confirm(
             "Do you wish to set the whitelist of folders to be monitored? "
-            "(recommended to be set to the roots of your media directories, ",
+            "(recommended to be set to the roots of your media directories, "
             "such as Movies folder, TV Shows folder, etc.)",
             True,
         ):
