@@ -372,20 +372,53 @@ class InitCommand(Command):
 
         return command.run(args, silent and NullIO() or self.io)
 
+    def get_reqd_params(self, monitors, selected):
+        import confuse
+
+        for Mon in monitors:
+            if Mon.name not in selected:
+                continue
+            for key, val in Mon.CONFIG_TEMPLATE.items():
+                if val.default is confuse.REQUIRED:
+                    yield Mon, key, val
+
     def handle(self):
         self.comment("This will guide you through the setup of the scrobbler.")
         self.info("If you wish to quit at any point, press Ctrl+C or Cmd+C")
         from trakt_scrobbler.player_monitors import collect_monitors
 
-        names = [Mon.name for Mon in collect_monitors() if isinstance(Mon.name, str)]
+        monitors = {Mon for Mon in collect_monitors() if isinstance(Mon.name, str)}
         players = self.choice(
             "Select the players that should be monitored (separate using comma)",
-            sorted(names),
+            sorted(Mon.name for Mon in monitors),
             None,
             multiple=True,
         )
         self.line(f"Selected: {', '.join(players)}")
         self.call_sub("config set", f"players.monitored {' '.join(players)}", True)
+
+        for Mon, name, val in self.get_reqd_params(monitors, players):
+            msg = f"Enter '{name}' for {Mon.name}"
+            if name == "password":
+                val = self.secret(
+                    msg + " (keep typing, password won't be displayed on screen)"
+                )
+            else:
+                val = self.ask(msg)
+            self.call_sub("config set", f'players.{Mon.name}.{name} "{val}"', True)
+
+        self.info(
+            "Remember to configure your player(s) as outlined at "
+            "<comment>https://github.com/iamkroot/trakt-scrobbler#players</comment>"
+        )
+
+        self.call("auth")
+
+        if self.confirm("Enable autostart service for scrobbler?", True):
+            self.call_sub("autostart enable")
+
+        if self.confirm("Start scrobbler service now?", True):
+            self.call("start")
 
 
 def main():
