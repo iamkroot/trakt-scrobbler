@@ -14,7 +14,7 @@ fileinfo:
     episode: []
 
 players:
-  monitored: []  # players to be monitored. Allowed: mpcbe, mpchc, mpv, plex, vlc
+  monitored: []  # players to be monitored. Allowed: mpc-be, mpc-hc, mpv, plex, vlc
 
   skip_interval: 5  # min percent jump to consider for scrobbling to trakt
 
