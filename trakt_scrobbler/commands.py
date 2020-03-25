@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from cleo import Command, Application
+from cleo import Command as BaseCommand, Application
 from clikit.io import NullIO
 from clikit.args import StringArgs
 import sys
@@ -12,6 +12,17 @@ import os
 APP_NAME = "trakt-scrobbler"
 CMD_NAME = "trakts"
 platform = sys.platform
+
+
+class Command(BaseCommand):
+    def call_sub(self, name, args="", silent=False):
+        names = name.split(" ")
+        command = self.application.get_command(names[0])
+        for name in names[1:]:
+            command = command.get_sub_command(name)
+        args = StringArgs(args)
+
+        return command.run(args, silent and NullIO() or self.io)
 
 
 class StartCommand(Command):
@@ -342,7 +353,7 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']
                     value = orig_val.__class__(values[0])
             else:
                 if self.option("add"):
-                    value = orig_val + values
+                    value = list(set(orig_val).union(values))
                 else:
                     value = values
             view.set(value)
@@ -362,15 +373,6 @@ class InitCommand(Command):
 
     init
     """
-
-    def call_sub(self, name, args="", silent=False):
-        names = name.split(" ")
-        command = self.application.get_command(names[0])
-        for name in names[1:]:
-            command = command.get_sub_command(name)
-        args = StringArgs(args)
-
-        return command.run(args, silent and NullIO() or self.io)
 
     def get_reqd_params(self, monitors, selected):
         import confuse
@@ -414,11 +416,59 @@ class InitCommand(Command):
 
         self.call("auth")
 
+        if self.confirm(
+            "Do you wish to set the whitelist of folders to be monitored? "
+            "(recommended to be set to the roots of your media directories, ",
+            "such as Movies folder, TV Shows folder, etc.)",
+            True,
+        ):
+            msg = "Enter path to directory (or leave blank to continue):"
+            folder = self.ask(msg)
+            while folder:
+                self.call_sub("whitelist", f'"{folder}"')
+                folder = self.ask(msg)
+
         if self.confirm("Enable autostart service for scrobbler?", True):
             self.call_sub("autostart enable")
 
         if self.confirm("Start scrobbler service now?", True):
             self.call("start")
+
+
+class WhitelistCommand(Command):
+    """
+    Adds the given folder(s) to whitelist.
+
+    whitelist
+        {folder?* : Folder to be whitelisted}
+        {--show : Show the current whitelist}
+    """
+
+    def _add_single(self, folder: str):
+        try:
+            fold = Path(folder)
+        except ValueError:
+            self.error(f"Invalid folder {folder}")
+            return
+        if not fold.exists():
+            if not self.confirm(
+                f"Folder {fold} does not exist. Are you sure you want to add it?"
+            ):
+                return
+        else:
+            folder = str(fold.absolute().resolve())
+        self.call_sub("config set", f'--add fileinfo.whitelist "{folder}"', True)
+        self.line(f"'{folder}' added to whitelist.")
+
+    def handle(self):
+        if self.option("show"):
+            from trakt_scrobbler import config
+
+            wl = config["fileinfo"]["whitelist"].get()
+            self.render_table(["Whitelist:"], list(map(lambda f: [f], wl)), "compact")
+            return
+        for folder in self.argument("folder"):
+            self._add_single(folder)
 
 
 def main():
@@ -431,6 +481,7 @@ def main():
     application.add(AutostartCommand())
     application.add(ConfigCommand())
     application.add(InitCommand())
+    application.add(WhitelistCommand())
     application.run()
 
 
