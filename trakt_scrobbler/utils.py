@@ -47,8 +47,7 @@ def safe_request(verb, params):
         logger.warning("Request failed")
         logger.debug(f'Request: {verb} {params}')
         logger.debug(f'Response: {resp} {resp.text}')
-    else:
-        return resp
+    return resp
 
 
 def file_uri_to_path(file_uri):

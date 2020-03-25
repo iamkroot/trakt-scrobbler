@@ -21,15 +21,17 @@ def plex_token_auth(login, password):
         }
     }
     resp = safe_request("post", auth_params)
-    return resp and resp.json()["user"]["authToken"]
+    return resp and resp.ok and resp.json()["user"]["authToken"]
 
 
 def get_token(**kwargs):
     token = kwargs.get("token") or read_json(PLEX_TOKEN_PATH).get("token")
-    if token:
-        return token
-    token = plex_token_auth(kwargs["login"], kwargs["password"])
-    write_json({"token": token}, PLEX_TOKEN_PATH)
+    if not token:
+        logger.info("Retrieving plex token")
+        token = plex_token_auth(kwargs["login"], kwargs["password"])
+        if token:
+            write_json({"token": token}, PLEX_TOKEN_PATH)
+            logger.info(f"Saved plex token to {PLEX_TOKEN_PATH}")
     return token
 
 
