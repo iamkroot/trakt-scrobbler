@@ -51,6 +51,10 @@ def main():
     allowed_monitors = config['players']['monitored'].get(confuse.StrSeq(default=[]))
     all_monitors = collect_monitors()
 
+    unknown = set(allowed_monitors).difference(Mon.name for Mon in all_monitors)
+    if unknown:
+        logger.warning(f"Unknown player(s): {', '.join(unknown)}")
+
     for Mon in all_monitors:
         if Mon.name not in allowed_monitors:
             continue
