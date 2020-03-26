@@ -11,7 +11,7 @@ BACKLOG_PATH = DATA_DIR / "watched_backlog.json"
 
 class BacklogCleaner:
     def __init__(self, manual=False):
-        self.backlog = []
+        self.backlog = read_json(BACKLOG_PATH) or []
         self.clear_interval = config["backlog"]["clear_interval"].get(confuse.Number())
         self.expiry = config["backlog"]["expiry"].get(confuse.Number())
         self.timer_enabled = not manual
@@ -24,6 +24,8 @@ class BacklogCleaner:
         for item in self.backlog:
             if item["updated_at"] + self.expiry > time.time():
                 not_expired.append(item)
+            else:
+                logger.warning(f"Item expired: {item}")
         self.backlog = not_expired
         write_json(self.backlog, BACKLOG_PATH)
 

@@ -538,10 +538,10 @@ class BacklogListCommand(Command):
     """
 
     def handle(self):
-        from trakt_scrobbler.backlog_cleaner import BACKLOG_PATH, read_json
+        from trakt_scrobbler.backlog_cleaner import BacklogCleaner
         from datetime import datetime
 
-        backlog = read_json(BACKLOG_PATH)
+        backlog = BacklogCleaner(manual=True).backlog
         if not backlog:
             self.line("No items in backlog!")
             return
@@ -589,7 +589,9 @@ class BacklogClearCommand(Command):
             old = len(cleaner.backlog)
             cleaner.clear()
             if cleaner.backlog:
-                self.line("Failed to clear backlog! Check log file for information.", "error")
+                self.line(
+                    "Failed to clear backlog! Check log file for information.", "error"
+                )
             else:
                 self.info(f"Cleared {old} items.")
         else:
