@@ -43,3 +43,7 @@ players:
     ip: localhost  # IP of the plex server
     port: '32400'
     poll_interval: 10  # in seconds. How frequently the monitor should check for player update.
+
+backlog:
+  clear_interval: 1800  # 30 minutes
+  expiry: 2592000  # 30 days

@@ -189,7 +189,7 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
         "json": scrobble_data
     }
     scrobble_resp = safe_request('post', scrobble_params)
-    return scrobble_resp.json() if scrobble_resp else None
+    return scrobble_resp.json() if scrobble_resp else False
 
 
 def prepare_history_data(watched_at, title, type, *args, **kwargs):
