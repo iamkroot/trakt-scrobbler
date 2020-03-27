@@ -13,8 +13,7 @@ Trakt.tv has a lot of [plugins](https://trakt.tv/apps) to automatically scrobble
 ## Features
 
 *   Full featured command line interface to control the service. Just run `trakts`.
-*   Automatic media metadata extraction using [guessit](https://github.com/guessit-io/guessit).
-*   For cases when it misidentifies the files, you can specify a regex to manually extract the necessary details.
+*   Automatic media info extraction using [guessit](https://github.com/guessit-io/guessit).
 *   Scrobbling is independent of the player(s) where the media is played. Support for new players can thus be easily added.
 *   Currently supports:
     *   [VLC](https://www.videolan.org/vlc/) (via web interface)
@@ -22,6 +21,8 @@ Trakt.tv has a lot of [plugins](https://trakt.tv/apps) to automatically scrobble
     *   [MPV](https://mpv.io) (via IPC server)
     *   [MPC-BE](https://sourceforge.net/projects/mpcbe/)/[MPC-HC](https://mpc-hc.org) (via web interface).
 *   **Folder whitelisting:** Only media files from subdirectories of these folders are synced with trakt.
+*   Optionally, you can receive a quick notification that the media start/pause/stop activity has been scrobbled.
+*   For cases when it misidentifies the files, you can specify a regex to manually extract the necessary details.
 
 For more information, see the [`How it works`](#how-it-works) section.
 
@@ -44,7 +45,7 @@ For more information, see the [`How it works`](#how-it-works) section.
 1.  Ensure you have [Python 3.7](https://www.python.org/downloads/) or higher installed, and in your system `PATH`. (Check by running `python --version`)
 2.  Ensure `pip` is installed. (Check: `pip --version`)
 3.  Open a terminal/powershell.
-4.  Install [`pipx`](https://pipxproject.github.io/pipx/):
+4.  Install [`pipx`](https://pipxproject.github.io/pipx/):  
     MacOS:
     ```bash
     brew install pipx
@@ -55,8 +56,9 @@ For more information, see the [`How it works`](#how-it-works) section.
     python3 -m pip install --user pipx
     python3 -m pipx ensurepath
     ```
+    (Windows users may require a reboot after this step)
 5.  Run `pipx install trakt-scrobbler`. You will now have the `trakts` command available.
-6.  Run `trakts init`. You will be prompted to authorize the program to access the Trakt.tv API. Follow the steps on screen to finish the process.
+6.  Run `trakts init`. You will be prompted to select the players to be monitored, and authorize the app to access the Trakt.tv API on your behalf. Follow the steps on screen to finish the process.
 
 **For Linux:**
 To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
@@ -64,18 +66,20 @@ To enable notification support on Linux, `libnotify` needs to be installed (Rebo
 *   Arch/Manjaro: `pacman -S libnotify`
 *   Ubuntu: `apt install libnotify-bin`
 
-## FAQs
-
-#### It doesn't work. What do I do?
-
-First, look through the [log file](#where-is-the-log-fileother-data-stored) to see what went wrong. If you are unable to fix the problem, feel free to create an [Issue](https://github.com/iamkroot/trakt-scrobbler/issues).
-
-#### `trakts` usage:
+## `trakts` command usage:
 
 The various commands available are:
 
-*   `auth`: Runs the authetication flow for trakt.tv
+*   `auth`: Shows the status of the trakt authentication. If no token is found, or if the token in expired, it runs the authetication flow for trakt.tv  
+    You can pass `--force` option to make it ignore the existing token, and force the authentication again.
+
 *   `autostart`: Controls the autostart behaviour of the scrobbler
+*   `backlog`: Manage the backlog of watched media yet to be synced with trakt servers (mostly due to internet connectivity issues)
+
+    *   `list`: Lists all the files in the backlog
+
+    *   `clear`: Try to add the unsynced files to trakt history
+
 *   `config`: Edits the scrobbler config settings
 
     *   `list`: This command will list the parameters in the config, along with their current values.
@@ -100,9 +104,9 @@ The various commands available are:
 
                 User config updated with 'fileinfo.whitelist = ['D:MediaMovies', 'C:\\Users\\My Name\\Shows']'
 
-        *   Use `--add` to avoid overwriting the previous list values (whitelist, monitored, etc.):
-              `trakts config set players.monitored mpv vlc`
-              `trakts config set --add players.monitored plex mpc-hc`
+        *   Use `--add` to avoid overwriting the previous list values (whitelist, monitored, etc.):  
+              `trakts config set players.monitored mpv vlc`  
+              `trakts config set --add players.monitored plex mpc-hc`  
               will have final value: 
 
                 User config updated with 'players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']'
@@ -118,6 +122,12 @@ The various commands available are:
           `trakts whitelist D:\Media\Movies "C:\Users\My Name\Shows"`
     *   Run `trakts whitelist --show` to list the current folders in whitelist.
 
+## FAQs
+
+#### It doesn't work. What do I do?
+
+First, look through the [log file](#where-is-the-log-fileother-data-stored) to see what went wrong. If you are unable to fix the problem, feel free to create an [Issue](https://github.com/iamkroot/trakt-scrobbler/issues).
+
 #### How to update?
 
 1.  Stop the app using `trakts stop`
@@ -126,8 +136,8 @@ The various commands available are:
 #### Where is the log file/other data stored?
 
 *   **Linux:** `~/.local/share/trakt-scrobbler/`
-*   **Mac:** Same as config file (see above)
-*   **Windows:** Same as config file (see above)
+*   **Mac:** `~/Library/Application Support/trakt-scrobbler/`
+*   **Windows:** `%APPDATA%\trakt-scrobbler\`
 
 The latest log is stored in a file named `trakt_scrobbler.log`; older logs can be found in the files `...log.1`, `...log.2`, and so on.
 Everything is in human readable form, so that you can figure out what data is used by the app. While submitting a bug report, be sure to include the log file contents.
@@ -152,19 +162,25 @@ This is an application written in the Python programming language, designed for 
 
 The config is stored in [YAML](https://yaml.org) format. Most parameters have default values, stored in [`config_default.yaml`](trakt_scrobbler/config_default.yaml). You can use the `config` command to override the alues.
 
-*   `fileinfo.whitelist`: (List of folder path strings | Default: `[]` aka Allow all)
-    *   List of directories you want to be scanned for shows or movies.
-    *   If empty, all files played in the player are scanned.
-    *   You can prevent the program from scanning all played files if your shows and movies are located in fixed directories.
-    *   If possible you should use this option to minimize traffic on the Trakt API.
-*   `fileinfo.include_regexes`: (Default: `{movie = [], episode = []}`)
-    *   If you find that the default module for identifying media info ([guessit](https://github.com/guessit-io/guessit)) is misidentifying some titles, you can specify the regex for that file path.
-    *   The regex should have posix-like path, and not Windows' `\` to separate directories.
-    *   The minimum required information is the title of the file, and episode number in the case of TV Shows. If season is not found, it defaults to 1.
-    *   Mainly useful for Anime since they don't follow the season convention.
-*   `players.monitored`: (List of player names)
-    Specify players which are to be monitored for scrobbling.
-*   Other player specific parameters: For most installations, you won't have to fiddle with these as the app can automatically read the settings of the players and extract the necessary values.
+*   `general.enable_notifs`: (Default: `true`) Enable notifications after successful scrobbles.
+*   `fileinfo`:
+    * `whitelist`: (List of folder path strings | Default: `[]` aka Allow all)
+        *   List of directories you want to be scanned for shows or movies.
+        *   If empty, all files played in the player are scanned.
+        *   You can prevent the program from scanning all played files if your shows and movies are located in fixed directories.
+        *   If possible you should use this option to minimize traffic on the Trakt API.
+    *   `include_regexes`: (Default: `{movie = [], episode = []}`)
+        *   If you find that the default module for identifying media info ([guessit](https://github.com/guessit-io/guessit)) is misidentifying some titles, you can specify the regex for that file path.
+        *   The regex should have posix-like path, and not Windows' `\` to separate directories.
+        *   The minimum required information is the title of the file, and episode number in the case of TV Shows. If season is not found, it defaults to 1.
+        *   Mainly useful for Anime since they don't follow the season convention.
+*   `players`:
+    *   `monitored`: (List of player names | Default: `[]`) Specify players which are to be monitored for scrobbling.
+    *   `skip_interval`: (Default: `5`) Min percent jump to consider for scrobbling to trakt. Useful when you skip ahead a few seconds, and don't want to spam the trakt API.
+    *   Other player specific parameters: For most installations, you won't have to fiddle with these as the app can automatically read the settings of the players and extract the necessary values.
+*   `backlog`:
+    *   `clear_interval`: (Default: `1800` i.e., 30 minutes) How often the app should try to sync previously failed scrobbles with trakt.
+    *   `expiry`: (Default: `2592000` i.e., 30 days) The maximum time an item can remain in the backlog.
 
 ## TODO
 
