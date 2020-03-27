@@ -1,4 +1,5 @@
 import json
+import sys
 import appdirs
 import confuse
 import requests
@@ -47,17 +48,18 @@ class VLCMon(WebInterfaceMon):
 
     @classmethod
     def read_player_cfg(cls, auto_keys=None):
-        vlcrc_path = (
-            Path(appdirs.user_config_dir("vlc", appauthor=False, roaming=True))
-            / "vlcrc"
-        )
+        if sys.platform == "darwin":
+            prefs_dir = Path("~/Library/Preferences/org.videolan.vlc").expanduser()
+        else:
+            prefs_dir = Path(appdirs.user_config_dir("vlc", False, roaming=True))
+        vlcrc_path = prefs_dir / "vlcrc"
         vlcrc = ConfigParser(strict=False)
         vlcrc.optionxform = lambda option: option
         if not vlcrc.read(vlcrc_path, encoding="utf-8-sig"):
             raise FileNotFoundError(vlcrc_path)
         return {
             "port": lambda: vlcrc.get("core", "http-port", fallback=8080),
-            "password": lambda: vlcrc.get("lua", "http-password")
+            "password": lambda: vlcrc.get("lua", "http-password"),
         }
 
     def update_status(self):
