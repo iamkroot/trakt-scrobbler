@@ -257,7 +257,9 @@ class AutostartEnableCommand(Command):
 
     def handle(self):
         self.cmd_path = shutil.which(CMD_NAME)
-
+        if not self.cmd_path:
+            self.line("Cannot find path to trakts command. Check your PATH.", "error")
+            return 1
         if platform == "darwin":
             self.create_mac_plist()
             sp.check_call(["launchctl", "load", "-w", str(self.PLIST_LOC)])
@@ -319,7 +321,9 @@ class TraktAuthCommand(Command):
         if self.option("force"):
             ti.token_data = None
             self.line("Forcing trakt authentication")
-        ti.get_access_token()
+        if not ti.get_access_token():
+            self.line("Failed to retrieve trakt token.", "error")
+            return 1
         expiry = date.fromtimestamp(
             ti.token_data["created_at"] + ti.token_data["expires_in"]
         )
@@ -468,12 +472,19 @@ class InitCommand(Command):
                 val = self.ask(msg)
             self.call_sub("config set", f'players.{Mon.name}.{name} "{val}"', True)
 
+        if "plex" in players:
+            val = self.call("plex")
+            if val:
+                return val
+
         self.info(
             "Remember to configure your player(s) as outlined at "
             "<comment>https://github.com/iamkroot/trakt-scrobbler#players</comment>"
         )
 
-        self.call("auth")
+        val = self.call("auth")
+        if val:
+            return val
 
         if self.confirm(
             "Do you wish to set the whitelist of folders to be monitored? "
@@ -488,7 +499,9 @@ class InitCommand(Command):
                 folder = self.ask(msg)
 
         if self.confirm("Enable autostart service for scrobbler?", True):
-            self.call_sub("autostart enable")
+            val = self.call_sub("autostart enable")
+            if val:
+                return val
 
         if self.confirm("Start scrobbler service now?", True):
             self.call("start")
@@ -611,12 +624,35 @@ class BacklogCommand(Command):
         return self.call("help", self._config.name)
 
 
+class PlexAuthCommand(Command):
+    """
+    Runs the authetication flow for trakt.tv
+
+    plex
+        {--f|force : Force run the flow, ignoring already existing credentials.}
+    """
+
+    def handle(self):
+        from trakt_scrobbler.player_monitors import plex
+
+        if self.option("force"):
+            plex.token_data = None
+            self.line("Forcing plex authentication")
+        token = plex.get_token()
+        if token:
+            self.line("Plex token is saved.")
+        else:
+            self.line("Failed to retrieve plex token.", "error")
+            return 1
+
+
 def main():
     application = Application(CMD_NAME)
     application.add(AutostartCommand())
     application.add(BacklogCommand())
     application.add(ConfigCommand())
     application.add(InitCommand())
+    application.add(PlexAuthCommand())
     application.add(RunCommand())
     application.add(StartCommand())
     application.add(StatusCommand())
