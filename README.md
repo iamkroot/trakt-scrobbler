@@ -102,7 +102,7 @@ The various commands available are:
         *   For values containing space(s), surround them with double-quotes. 
               Eg: `trakts config set fileinfo.whitelist D:\Media\Movies "C:\Users\My Name\Shows"`
 
-                User config updated with 'fileinfo.whitelist = ['D:MediaMovies', 'C:\\Users\\My Name\\Shows']'
+                User config updated with 'fileinfo.whitelist = ['D:\\Media\\Movies', 'C:\\Users\\My Name\\Shows']'
 
         *   Use `--add` to avoid overwriting the previous list values (whitelist, monitored, etc.):  
               `trakts config set players.monitored mpv vlc`  
@@ -112,6 +112,8 @@ The various commands available are:
                 User config updated with 'players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']'
 
 *   `init`: Runs the initial setup of the scrobbler.
+*   `plex`: Command to run the auth flow for Plex.
+    You can pass `--force` option to make it ignore the existing token, and force the authentication again.
 *   `run`: Run the scrobbler in the foreground. Mainly needed in case you have disabled the autostart service, and want to run the app manually.
 *   `start`: Starts the trakt-scrobbler service. If already running, does nothing.
     *   Use `--restart` to force restart the service.
@@ -120,7 +122,7 @@ The various commands available are:
 *   `whitelist`: Shortcut command to add folder(s) to whitelist in config.
     *   For folders containing spaces, use double quotes:
           `trakts whitelist D:\Media\Movies "C:\Users\My Name\Shows"`
-    *   Run `trakts whitelist --show` to list the current folders in whitelist.
+    *   Run `trakts whitelist show` to list the current folders in whitelist.
 
 ## FAQs
 

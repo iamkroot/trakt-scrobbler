@@ -507,14 +507,29 @@ class InitCommand(Command):
             self.call("start")
 
 
+class WhitelistShowCommand(Command):
+    """
+    Show the current whitelist.
+
+    show
+    """
+
+    def handle(self):
+        from trakt_scrobbler import config
+
+        wl = config["fileinfo"]["whitelist"].get()
+        self.render_table(["Whitelist:"], list(map(lambda f: [f], wl)), "compact")
+
+
 class WhitelistCommand(Command):
     """
     Adds the given folder(s) to whitelist.
 
     whitelist
         {folder?* : Folder to be whitelisted}
-        {--show : Show the current whitelist}
     """
+
+    commands = [WhitelistShowCommand()]
 
     def _add_single(self, folder: str):
         try:
@@ -533,12 +548,6 @@ class WhitelistCommand(Command):
         self.line(f"'{folder}' added to whitelist.")
 
     def handle(self):
-        if self.option("show"):
-            from trakt_scrobbler import config
-
-            wl = config["fileinfo"]["whitelist"].get()
-            self.render_table(["Whitelist:"], list(map(lambda f: [f], wl)), "compact")
-            return
         for folder in self.argument("folder"):
             self._add_single(folder)
 
