@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess as sp
 import sys
+from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
@@ -131,30 +132,36 @@ class StatusCommand(Command):
         self.line(f"The scrobbler is {'not ' * is_inactive}running")
 
     def get_last_action(self):
-        PAT = re.compile(r"(?P<asctime>.*?) -.*Scrobble (?P<verb>\w+) successful")
+        def read_log_files():
+            """Returns all lines in log files, most recent first"""
+            from trakt_scrobbler.app_dirs import DATA_DIR
 
-        def search_file(file):
-            for line in reversed(file.read_text().split("\n")):
-                match = PAT.match(line)
-                if not match:
-                    continue
+            log_file = DATA_DIR / "trakt_scrobbler.log"
+            for file in (
+                log_file,
+                *(log_file.with_suffix(f".log.{i}") for i in range(1, 6)),
+            ):
+                if not file.exists():
+                    return
+                for line in reversed(file.read_text().split("\n")):
+                    yield line
+
+        PAT = re.compile(
+            r"(?P<asctime>.*?) -.*Scrobble (?P<verb>\w+) successful for (?P<name>.*)"
+        )
+
+        for line in read_log_files():
+            match = PAT.match(line)
+            if match:
+                time = datetime.strptime(match["asctime"], "%Y-%m-%d %H:%M:%S,%f")
                 self.line(
-                    "Last action at {asctime}: {verb}".format(**match.groupdict())
+                    "Last successful scrobble: {verb} {name}, at {time:%c}".format(
+                        time=time, verb=match["verb"].title(), name=match["name"]
+                    )
                 )
-                return True
-
-        from trakt_scrobbler.app_dirs import DATA_DIR
-
-        log_file = DATA_DIR / "trakt_scrobbler.log"
-        if not log_file.exists():
+                break
+        else:
             self.line("No activity yet.")
-            return
-        if search_file(log_file):
-            return
-        for i in range(1, 6):
-            log_file = log_file.with_suffix(f".log.{i}")
-            if search_file(log_file):
-                return
 
     def handle(self):
         self.check_running()
