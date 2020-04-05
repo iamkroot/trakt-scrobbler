@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trakt-scrobbler"
-version = "1.0.0-beta.0"
+version = "1.0.0-beta.1"
 description = "Scrobbler for trakt.tv that supports VLC, Plex, MPC-HC, and MPV"
 authors = ["iamkroot <kroot.patel@gmail.com>"]
 readme = "README.md"
@@ -8,7 +8,7 @@ repository = "https://github.com/iamkroot/trakt-scrobbler"
 license = "GPL-2.0-only"
 keywords = ["trakt", "scrobbler"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
 ]
