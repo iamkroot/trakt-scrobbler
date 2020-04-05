@@ -24,15 +24,11 @@ Steps to reproduce the behavior:
 4. See error in log file
 
 **Log file**
-<details><summary>Click to see log contents</summary>
+<details><summary>Click to see log contents</summary> <!--DO NOT REMOVE THIS LINE-->
 <p>
 
 ```
-*PASTE LOG FILE CONTENTS HERE* (Remove everything between the "```")
-Location: "trakt_scrobbler.log" file in the following folder, as per your OS 
-Linux: ~/.local/share/trakt-scrobbler
-Mac: ~/Library/Application Support/trakt-scrobbler
-Windows: %APPDATA%\trakt-scrobbler (paste this in Run Dialog, Win+R)
+(delete this line) *PASTE LOG FILE CONTENTS HERE* Command: "trakts log open"
 ```
 </p>
 </details>

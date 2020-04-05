@@ -112,6 +112,10 @@ The various commands available are:
                 User config updated with 'players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']'
 
 *   `init`: Runs the initial setup of the scrobbler.
+*   `log`: Access the log file, mainly for debugging purposes.  
+    Subcommands: (Run as `trakts log <subcommand>`)
+    *   `open`: Opens the latest log file in your default editor.
+    *   `path`: Prints the location of the log file.
 *   `plex`: Command to run the auth flow for Plex.
     You can pass `--force` option to make it ignore the existing token, and force the authentication again.
 *   `run`: Run the scrobbler in the foreground. Mainly needed in case you have disabled the autostart service, and want to run the app manually.
@@ -128,7 +132,7 @@ The various commands available are:
 
 #### It doesn't work. What do I do?
 
-First, look through the [log file](#where-is-the-log-fileother-data-stored) to see what went wrong. If you are unable to fix the problem, feel free to create an [Issue](https://github.com/iamkroot/trakt-scrobbler/issues).
+First, look through the log file (using the `trakts log` command) to see what went wrong. If you are unable to fix the problem, feel free to create an [Issue](https://github.com/iamkroot/trakt-scrobbler/issues).
 
 #### How to update?
 
