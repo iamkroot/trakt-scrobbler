@@ -4,6 +4,7 @@ import logging.config
 import sys
 import toml
 import requests
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlparse, unquote
 
@@ -50,17 +51,25 @@ def safe_request(verb, params):
     return resp
 
 
-def file_uri_to_path(file_uri):
-    if not file_uri.startswith('file://'):
+@lru_cache
+def file_uri_to_path(file_uri: str) -> str:
+    if "://" not in file_uri:
         logger.warning(f"Invalid file uri '{file_uri}'")
         return None
-    path = urlparse(unquote(file_uri)).path
-    if sys.platform == 'win32' and path.startswith('/'):
+
+    try:
+        path = urlparse(unquote(file_uri)).path
+    except ValueError:
+        logger.warning(f"Invalid file uri '{file_uri}'")
+        return None
+
+    if sys.platform == 'win32' and path.startswith('/'):  # remove leading '/'
         path = path[1:]
     return path
 
 
-def cleanup_encoding(file_path: Path):
+@lru_cache
+def cleanup_encoding(file_path: Path) -> Path:
     if sys.platform == "win32":
         enc = locale.getpreferredencoding()
         try:
