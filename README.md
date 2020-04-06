@@ -138,6 +138,7 @@ First, look through the log file (using the `trakts log` command) to see what we
 
 1.  Stop the app using `trakts stop`
 2.  Run `pipx upgrade trakt-scrobbler`
+3.  Start the app again using `trakts start`
 
 #### Where is the log file/other data stored?
 
@@ -147,6 +148,34 @@ First, look through the log file (using the `trakts log` command) to see what we
 
 The latest log is stored in a file named `trakt_scrobbler.log`; older logs can be found in the files `...log.1`, `...log.2`, and so on.
 Everything is in human readable form, so that you can figure out what data is used by the app. While submitting a bug report, be sure to include the log file contents.
+
+#### How to update from pre 1.0.0 versions?
+
+There has been a major UX overhaul with v1.0.0, due to the introduction of the `trakts` command, changes in how config is stored and a much simpler way of installation. So long story short, you will have to remove the older version and install the new one using the [new method](#installation) In some cases, you may also have to set some configuration parameters again, if you have custom overrides - use `trakts config` command for that.
+
+**Old version uninstall steps:**  
+In a terminal/command prompt, run the following commands:
+*   **Linux**
+    1.  `systemctl --user stop trakt-scrobbler` to stop the background service.
+    2.  `cd ~/.local/trakt-scrobbler/ && poetry env remove python3` to remove python environment.
+    3.  `cd ~ && rm -rf ~/.local/trakt-scrobbler` to remove installed code files.
+*   **MacOS**
+    1.  `launchctl stop com.github.iamkroot.trakt-scrobbler` to stop the background service.
+    2.  `cd ~/Library/trakt-scrobbler && poetry env remove python3` to remove python environment.
+    3.  `cd ~ && rm -rf ~/Library/trakt-scrobbler` to remove installed code files.
+*   **Windows**
+    1.  `taskkill /im pythonw.exe` to stop the background service.
+    2.  `del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\trakt-scrobbler.bat"` to delete the autostart script.
+    3.  `cd "%LOCALAPPDATA%\trakt-scrobbler"`
+    4.  `poetry env remove python3` to remove python environment.
+    5.  `cd %LOCALAPPDATA%`
+    5.  `rd /S /Q "%LOCALAPPDATA%\trakt-scrobbler"` to remove installed code files.
+
+You should also uninstall poetry if you don't require it:
+*   `osx / linux / bashonwindows`: `POETRY_UNINSTALL=1 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python`
+*   `windows powershell`: `$env:POETRY_UNINSTALL = 1; (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python`
+
+After this, you can install the new version using steps in [Installation](#installation) section.
 
 ## How it works
 
