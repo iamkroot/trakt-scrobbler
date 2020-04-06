@@ -41,10 +41,10 @@ For more information, see the [`How it works`](#how-it-works) section.
 *   **MPC-BE/MPC-HC:** Enable the web interface from Options.
 
 ### Installation
-
-1.  Ensure you have [Python 3.7](https://www.python.org/downloads/) or higher installed, and in your system `PATH`. (Check by running `python --version`)
-2.  Ensure `pip` is installed. (Check: `pip --version`)
-3.  Open a terminal/powershell.
+(For updating, see [FAQ section](#how-to-update))
+1.  Open a terminal/powershell.
+2.  Ensure you have [Python 3.7](https://www.python.org/downloads/) or higher installed, and in your system `PATH`. (Check by running `python --version`)
+3.  Ensure `pip` is installed. (Check: `pip --version`)
 4.  Install [`pipx`](https://pipxproject.github.io/pipx/):  
     MacOS:
     ```bash
@@ -68,13 +68,14 @@ To enable notification support on Linux, `libnotify` needs to be installed (Rebo
 
 ## `trakts` command usage:
 
-The various commands available are:
+All commands have descriptive help messages available. So in case of doubt, simply add `--help` to the (sub)command to see the help docs (Example: `trakts autostart --help` and `trakts --help`). For reference, the various available commands are:
 
 *   `auth`: Shows the status of the trakt authentication. If no token is found, or if the token in expired, it runs the authetication flow for trakt.tv  
     You can pass `--force` option to make it ignore the existing token, and force the authentication again.
 
 *   `autostart`: Controls the autostart behaviour of the scrobbler
-*   `backlog`: Manage the backlog of watched media yet to be synced with trakt servers (mostly due to internet connectivity issues)
+
+*   `backlog`: Manage the backlog of watched media yet to be synced with trakt servers (mostly due to internet connectivity issues). Read [this](#backlog-cleaner) for more info
 
     *   `list`: Lists all the files in the backlog
 
@@ -140,18 +141,9 @@ First, look through the log file (using the `trakts log` command) to see what we
 2.  Run `pipx upgrade trakt-scrobbler`
 3.  Start the app again using `trakts start`
 
-#### Where is the log file/other data stored?
-
-*   **Linux:** `~/.local/share/trakt-scrobbler/`
-*   **Mac:** `~/Library/Application Support/trakt-scrobbler/`
-*   **Windows:** `%APPDATA%\trakt-scrobbler\`
-
-The latest log is stored in a file named `trakt_scrobbler.log`; older logs can be found in the files `...log.1`, `...log.2`, and so on.
-Everything is in human readable form, so that you can figure out what data is used by the app. While submitting a bug report, be sure to include the log file contents.
-
 #### How to update from pre 1.0.0 versions?
 
-There has been a major UX overhaul with v1.0.0, due to the introduction of the `trakts` command, changes in how config is stored and a much simpler way of installation. So long story short, you will have to remove the older version and install the new one using the [new method](#installation) In some cases, you may also have to set some configuration parameters again, if you have custom overrides - use `trakts config` command for that.
+There has been a major UX overhaul with v1.0.0, due to the introduction of the `trakts` command, changes in how config is stored and a much simpler way of installation. So long story short, you will have to remove the older version and re-install using the [new method](#installation). In some cases, you may also have to set some configuration parameters again, if you have custom overrides - use `trakts config` command for that.
 
 **Old version uninstall steps:**  
 In a terminal/command prompt, run the following commands:
@@ -177,6 +169,15 @@ You should also uninstall poetry if you don't require it:
 
 After this, you can install the new version using steps in [Installation](#installation) section.
 
+#### Where is the log file/other data stored?
+
+*   **Linux:** `~/.local/share/trakt-scrobbler/`
+*   **Mac:** `~/Library/Application Support/trakt-scrobbler/`
+*   **Windows:** `%APPDATA%\trakt-scrobbler\`
+
+The latest log is stored in a file named `trakt_scrobbler.log`; older logs can be found in the files `...log.1`, `...log.2`, and so on.
+Everything is in human readable form, so that you can figure out what data is used by the app. While submitting a bug report, be sure to include the log file contents.
+
 ## How it works
 
 This is an application written in the Python programming language, designed for hassle-free integration of your media players with Trakt. Once set up, you can forget that it exists.
@@ -189,9 +190,10 @@ This is an application written in the Python programming language, designed for 
 *   Once the player is closed, the monitor goes back to "dormant" state, where it waits for the player to start again.
 
 ### Other details
-
-*   The checking for media info from player happens at a set interval (`poll_interval` in config, 10 secs by default), which is the maximum delay between you starting/stopping/pausing the player, and the monitor recognizing that activity.
-*   Generally, this app provides "live" updates to trakt regarding your playing status. However, in cases where the internet is down, when you finish playback, the app remembers the media that you have finished watching (progress > 90%) and will try to sync that information with trakt the next time internet becomes available.
+#### Polling for activity
+The checking for media info from player happens at a set interval (`poll_interval` in config, 10 secs by default), which is the maximum delay between you starting/stopping/pausing the player, and the monitor recognizing that activity.
+#### Backlog Cleaner
+Generally, this app provides "live" updates to trakt regarding your playing status. However, it may happen that the app is unable to communicate with trakt servers (probably due to connection issues), and thus scrobbling updates won't be meaningful. For such cases, the app maintains a "backlog cleaner" which remembers the media that you have finished watching (progress > 80%) and will try to sync that information with trakt the next time its servers are reachable.
 
 ## Configuration
 
