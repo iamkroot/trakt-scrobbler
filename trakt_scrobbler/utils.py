@@ -51,7 +51,7 @@ def safe_request(verb, params):
     return resp
 
 
-@lru_cache
+@lru_cache()
 def file_uri_to_path(file_uri: str) -> str:
     if "://" not in file_uri:
         logger.warning(f"Invalid file uri '{file_uri}'")
@@ -68,7 +68,7 @@ def file_uri_to_path(file_uri: str) -> str:
     return path
 
 
-@lru_cache
+@lru_cache()
 def cleanup_encoding(file_path: Path) -> Path:
     if sys.platform == "win32":
         enc = locale.getpreferredencoding()
