@@ -15,8 +15,8 @@ class PathSeq(confuse.Template):
         for i, path in enumerate(value):
             try:
                 paths.append(Path(path).resolve())
-            except TypeError:
-                self.fail(f'must be a valid path: "{path}", index: {i}', view, True)
+            except (TypeError, OSError):
+                logger.warning(f'Invalid path in whitelist: {path}')
         return paths
 
 
