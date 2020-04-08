@@ -394,6 +394,10 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']
         view = config
         key = self.argument("key")
         values = self.argument("value")
+
+        # fix path escaping due to trailing backslash for windows
+        values = [val[:-1] if val.endswith(r"\\") else val for val in values]
+
         for name in key.split("."):
             view = view[name]
 
@@ -502,6 +506,8 @@ class InitCommand(Command):
             msg = "Enter path to directory (or leave blank to continue):"
             folder = self.ask(msg)
             while folder:
+                if folder.endswith("\\"):  # fix escaping
+                    folder += "\\"
                 self.call_sub("whitelist", f'"{folder}"')
                 folder = self.ask(msg)
 
@@ -544,13 +550,13 @@ class WhitelistCommand(Command):
         except ValueError:
             self.error(f"Invalid folder {folder}")
             return
-        if not fold.exists():
-            if not self.confirm(
+        if not fold.exists() and not self.confirm(
                 f"Folder {fold} does not exist. Are you sure you want to add it?"
             ):
                 return
-        else:
-            folder = str(fold.absolute().resolve())
+        folder = str(fold.absolute().resolve())
+        if folder.endswith("\\"):  # fix string escaping
+            folder += "\\"
         self.call_sub("config set", f'--add fileinfo.whitelist "{folder}"', True)
         self.line(f"'{folder}' added to whitelist.")
 
