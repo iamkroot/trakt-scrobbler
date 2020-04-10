@@ -36,7 +36,10 @@ For more information, see the [`How it works`](#how-it-works) section.
 
 *   **Plex:** No server side set up is required, as the app uses the existing API. Do note that since this is a polling based approach, it will be inferior to Webhooks. So if you are a premium user of Plex, it is recommended to use that directly. This app is mainly useful for those users who don't need most of the features of Plex Pass.
 
-*   **MPV:** Enable the [JSON IPC](https://mpv.io/manual/master/#json-ipc), either via the mpv.conf file, or by passing it as a command line option.
+*   **MPV:** Enable the [JSON IPC](https://mpv.io/manual/master/#json-ipc), **either** via .conf file or as a command line option:
+    *   **mpv.conf**: Adding `input-ipc-server=/tmp/mpvsocket` to the end of the mpv.conf file at `/home/%USER%/.config/mpv/mpv.conf`  
+    **OR**    
+    *   **Command line**: `mpv file.mkv --input-ipc-server=/tmp/mpvsocket`
 
 *   **MPC-BE/MPC-HC:** Enable the web interface from Options.
 
