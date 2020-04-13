@@ -6,21 +6,7 @@ from pathlib import Path
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.utils import cleanup_encoding
 
-
-class PathSeq(confuse.Template):
-    def convert(self, value, view):
-        if not isinstance(value, list):
-            self.fail("must be sequence.", view, True)
-        paths = []
-        for i, path in enumerate(value):
-            try:
-                paths.append(Path(path).resolve())
-            except (TypeError, OSError):
-                logger.warning(f'Invalid path in whitelist: {path}')
-        return paths
-
-
-whitelist = config["fileinfo"]["whitelist"].get(PathSeq(default=[]))
+whitelist = config["fileinfo"]["whitelist"].get(confuse.Sequence(confuse.Path()))
 regexes = config["fileinfo"]['include_regexes'].get()
 
 
