@@ -7,7 +7,7 @@ from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
 from trakt_scrobbler.utils import read_json, safe_request, write_json
 
 PLEX_TOKEN_PATH = DATA_DIR / "plex_token.json"
-token_data = read_json(PLEX_TOKEN_PATH) or {}
+token_data = {}
 
 
 def plex_token_auth(login, password):
@@ -25,6 +25,8 @@ def plex_token_auth(login, password):
 
 def get_token():
     global token_data
+    token_data = read_json(PLEX_TOKEN_PATH) or {}
+
     if not token_data:
         logger.info("Retrieving plex token")
         login = input("Plex login ID: ")

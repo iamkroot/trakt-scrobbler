@@ -12,8 +12,8 @@ CLIENT_SECRET = trakt_key_holder.get_secret()
 API_URL = "https://api.trakt.tv"
 TRAKT_CACHE_PATH = DATA_DIR / 'trakt_cache.json'
 TRAKT_TOKEN_PATH = DATA_DIR / 'trakt_token.json'
-trakt_cache = read_json(TRAKT_CACHE_PATH) or {'movie': {}, 'show': {}}
-token_data = read_json(TRAKT_TOKEN_PATH)
+trakt_cache = {}
+token_data = {}
 
 
 def get_device_code():
@@ -97,6 +97,7 @@ def refresh_token(token_data):
 
 def get_access_token():
     global token_data
+    token_data = read_json(TRAKT_TOKEN_PATH)
     if not token_data:
         logger.info("Access token not found in config. "
                     "Initiating device authentication.")
@@ -138,6 +139,10 @@ def search(query, types=None, extended=False):
 
 def get_trakt_id(title, item_type):
     required_type = 'show' if item_type == 'episode' else 'movie'
+
+    global trakt_cache
+    if not trakt_cache:
+        trakt_cache = read_json(TRAKT_CACHE_PATH) or {'movie': {}, 'show': {}}
 
     logger.debug('Searching cache.')
     trakt_id = trakt_cache[required_type].get(title)
