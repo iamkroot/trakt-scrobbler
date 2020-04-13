@@ -111,6 +111,7 @@ All commands have descriptive help messages available. So in case of doubt, simp
               will have final value: 
 
                 User config updated with 'players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']'
+    *   `unset`: Reset a config value to its default.
 
 *   `init`: Runs the initial setup of the scrobbler.
 *   `log`: Access the log file, mainly for debugging purposes.  
@@ -125,9 +126,12 @@ All commands have descriptive help messages available. So in case of doubt, simp
 *   `status`: Shows the status trakt-scrobbler service.
 *   `stop`: Stops the trakt-scrobbler service.
 *   `whitelist`: Shortcut command to add folder(s) to whitelist in config.
-    *   For folders containing spaces, use double quotes:
-          `trakts whitelist D:\Media\Movies "C:\Users\My Name\Shows"`
-    *   Run `trakts whitelist show` to list the current folders in whitelist.
+    *   `add`: Add folder(s) to whitelist.  
+           Eg: `trakts whitelist add D:\Media\Movies "C:\Users\My Name\Shows"`  
+        *For folders containing spaces, use double quotes*
+
+    *   `show`: List the current folders in whitelist.
+    *   `remove`: Interactively remove folder(s) from whitelist.
 
 ## FAQs
 

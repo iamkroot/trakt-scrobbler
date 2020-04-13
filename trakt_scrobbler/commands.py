@@ -422,10 +422,48 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']
                 else:
                     value = values
             view.set(value)
-        with open(config.user_config_path(), "w") as f:
-            f.write(config.dump(full=False))
+
+        ConfigCommand.save_config(config)
         self.line(f"User config updated with '{key} = {value}'")
         self.line("Don't forget to restart the service for the changes to take effect.")
+
+
+class ConfigUnsetCommand(Command):
+    """
+    Reset a config value to its default.
+
+    unset
+        {key : Config parameter}
+    """
+
+    def handle(self):
+        import confuse
+        from trakt_scrobbler import config
+
+        key = self.argument("key")
+        *parts, name = key.split(".")
+        sources = [s for s in config.sources if not s.default]
+        temp_root = confuse.RootView(sources)
+        view = temp_root
+        for part in parts:
+            view = view[part]
+        view = view[name]
+        try:
+            view.get()
+        except confuse.NotFoundError:
+            self.line(f"{key} not found in user config.", "error")
+            self.line(f"Run '{CMD_NAME} config list' to see all user-defined values.")
+            return 1
+
+        for src in temp_root.sources:
+            for part in parts:
+                src = src[part]
+            if name in src:
+                del src[name]
+
+        ConfigCommand.save_config(config)
+
+        self.line(f"Successfully unset {key}")
 
 
 class ConfigCommand(Command):
@@ -435,7 +473,12 @@ class ConfigCommand(Command):
     config
     """
 
-    commands = [ConfigListCommand(), ConfigSetCommand()]
+    commands = [ConfigListCommand(), ConfigSetCommand(), ConfigUnsetCommand()]
+
+    @staticmethod
+    def save_config(config):
+        with open(config.user_config_path(), "w") as f:
+            f.write(config.dump(full=False))
 
     def handle(self):
         return self.call("help", self._config.name)
@@ -508,7 +551,7 @@ class InitCommand(Command):
             while folder:
                 if folder.endswith("\\"):  # fix escaping
                     folder += "\\"
-                self.call_sub("whitelist", f'"{folder}"')
+                self.call_sub("whitelist add", f'"{folder}"')
                 folder = self.ask(msg)
 
         if self.confirm("Enable autostart service for scrobbler?", True):
@@ -518,6 +561,35 @@ class InitCommand(Command):
 
         if self.confirm("Start scrobbler service now?", True):
             self.call("start")
+
+
+class WhitelistAddCommand(Command):
+    """
+    Add folder(s) to whitelist.
+
+    add
+        {folder* : Folder to be whitelisted}
+    """
+
+    def _add_single(self, folder: str):
+        try:
+            fold = Path(folder)
+        except ValueError:
+            self.error(f"Invalid folder {folder}")
+            return
+        if not fold.exists() and not self.confirm(
+            f"Folder {fold} does not exist. Are you sure you want to add it?"
+        ):
+            return
+        folder = str(fold.absolute().resolve())
+        if folder.endswith("\\"):  # fix string escaping
+            folder += "\\"
+        self.call_sub("config set", f'--add fileinfo.whitelist "{folder}"', True)
+        self.line(f"'{folder}' added to whitelist.")
+
+    def handle(self):
+        for folder in self.argument("folder"):
+            self._add_single(folder)
 
 
 class WhitelistShowCommand(Command):
@@ -534,35 +606,51 @@ class WhitelistShowCommand(Command):
         self.render_table(["Whitelist:"], list(map(lambda f: [f], wl)), "compact")
 
 
+class WhitelistRemoveCommand(Command):
+    """
+    Remove folder(s) from whitelist (interactive).
+
+    remove
+    """
+
+    def handle(self):
+        from trakt_scrobbler import config
+        import confuse
+
+        whitelist = config["fileinfo"]["whitelist"].get(confuse.StrSeq(default=[]))
+        if not whitelist:
+            self.line("Whitelist empty!")
+            return
+
+        choices = self.choice(
+            "Select the folders to be removed from whitelist", whitelist, multiple=True
+        )
+        if not self.confirm(
+            f"This will remove {', '.join(choices)} from whitelist. Continue?",
+            default=True
+        ):
+            self.line("Aborted", "error")
+            return
+        for choice in choices:
+            whitelist.remove(choice)
+        config["fileinfo"]["whitelist"] = whitelist
+
+        ConfigCommand.save_config(config)
+
+        self.call_sub("whitelist show")
+
+
 class WhitelistCommand(Command):
     """
     Adds the given folder(s) to whitelist.
 
     whitelist
-        {folder?* : Folder to be whitelisted}
     """
 
-    commands = [WhitelistShowCommand()]
-
-    def _add_single(self, folder: str):
-        try:
-            fold = Path(folder)
-        except ValueError:
-            self.error(f"Invalid folder {folder}")
-            return
-        if not fold.exists() and not self.confirm(
-                f"Folder {fold} does not exist. Are you sure you want to add it?"
-            ):
-                return
-        folder = str(fold.absolute().resolve())
-        if folder.endswith("\\"):  # fix string escaping
-            folder += "\\"
-        self.call_sub("config set", f'--add fileinfo.whitelist "{folder}"', True)
-        self.line(f"'{folder}' added to whitelist.")
+    commands = [WhitelistAddCommand(), WhitelistShowCommand(), WhitelistRemoveCommand()]
 
     def handle(self):
-        for folder in self.argument("folder"):
-            self._add_single(folder)
+        return self.call("help", self._config.name)
 
 
 class BacklogListCommand(Command):
@@ -677,6 +765,7 @@ class OpenLogCommand(Command):
 
     def handle(self):
         from trakt_scrobbler.app_dirs import DATA_DIR
+
         file_path = DATA_DIR / "trakt_scrobbler.log"
 
         if not file_path.exists():
@@ -699,6 +788,7 @@ class LogLocationCommand(Command):
 
     def handle(self):
         from trakt_scrobbler.app_dirs import DATA_DIR
+
         file_path = DATA_DIR / "trakt_scrobbler.log"
         self.line(f'"{file_path}"')
 
@@ -709,6 +799,7 @@ class LogCommand(Command):
 
     log
     """
+
     commands = [LogLocationCommand(), OpenLogCommand()]
 
     def handle(self):
