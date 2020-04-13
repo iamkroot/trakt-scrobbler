@@ -37,9 +37,8 @@ For more information, see the [`How it works`](#how-it-works) section.
 *   **Plex:** No server side set up is required, as the app uses the existing API. Do note that since this is a polling based approach, it will be inferior to Webhooks. So if you are a premium user of Plex, it is recommended to use that directly. This app is mainly useful for those users who don't need most of the features of Plex Pass.
 
 *   **MPV:** Enable the [JSON IPC](https://mpv.io/manual/master/#json-ipc), **either** via .conf file or as a command line option:
-    *   **mpv.conf**: Adding `input-ipc-server=/tmp/mpvsocket` to the end of the mpv.conf file at `/home/%USER%/.config/mpv/mpv.conf`  
-    **OR**    
-    *   **Command line**: `mpv file.mkv --input-ipc-server=/tmp/mpvsocket`
+    *   **mpv.conf** (Recommended): Add `input-ipc-server=<path>` to the end of the [`mpv.conf` file](https://mpv.io/manual/master/#configuration-files). (Linux: `~/.config/mpv/mpv.conf`, Windows: `C:\users\<USERNAME>\AppData\Roaming\mpv\mpv.conf`)
+    *   **Command line** (If you are using a wrapper over mpv): `mpv file.mkv --input-ipc-server=/tmp/mpvsocket` (linux) and `mpv file.mkv --input-ipc-server=\\.\pipe\mpvsocket` (windows). Note that in this case, the scrobbler won't be able to autodetect the path, so you need to manually add that using `trakts config set players.mpv.ipc_path <PATH>`
 
 *   **MPC-BE/MPC-HC:** Enable the web interface from Options.
 
