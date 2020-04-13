@@ -3,7 +3,9 @@ import logging.config
 import confuse
 import yaml
 from trakt_scrobbler.log_config import LOGGING_CONF
+from trakt_scrobbler.utils import register_exception_handler
 
+register_exception_handler()
 confuse.OrderedDict = dict
 logging.config.dictConfig(LOGGING_CONF)
 logger = logging.getLogger("trakt_scrobbler")
