@@ -97,7 +97,8 @@ def refresh_token(token_data):
 
 def get_access_token():
     global token_data
-    token_data = read_json(TRAKT_TOKEN_PATH)
+    if not token_data:
+        token_data = read_json(TRAKT_TOKEN_PATH)
     if not token_data:
         logger.info("Access token not found in config. "
                     "Initiating device authentication.")
