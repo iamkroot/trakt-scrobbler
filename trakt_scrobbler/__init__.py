@@ -4,6 +4,7 @@ import confuse
 import yaml
 from trakt_scrobbler.log_config import LOGGING_CONF
 from trakt_scrobbler.utils import register_exception_handler
+from trakt_scrobbler.__version__ import __version__  # noqa
 
 register_exception_handler()
 confuse.OrderedDict = dict
