@@ -56,6 +56,9 @@ def get_media_info(file_path):
     if isinstance(guess['title'], list):
         guess['title'] = " ".join(guess['title'])
 
+    if 'year' in guess:
+        guess['title'] += f" {guess['year']}"
+
     req_keys = ['type', 'title']
     if guess['type'] == 'episode':
         season = guess.get('season', 1)
