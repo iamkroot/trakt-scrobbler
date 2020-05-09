@@ -23,6 +23,7 @@ Trakt.tv has a lot of [plugins](https://trakt.tv/apps) to automatically scrobble
 *   **Folder whitelisting:** Only media files from subdirectories of these folders are synced with trakt.
 *   Optionally, you can receive a quick notification that the media start/pause/stop activity has been scrobbled.
 *   For cases when it misidentifies the files, you can specify a regex to manually extract the necessary details.
+*   Proxy support: Optionally specify a proxy server to handle all communication with trakt servers!
 
 For more information, see the [`How it works`](#how-it-works) section.
 
@@ -59,7 +60,8 @@ For more information, see the [`How it works`](#how-it-works) section.
     python3 -m pipx ensurepath
     ```
     (Windows users may require a reboot after this step)
-5.  Run `pipx install trakt-scrobbler`. You will now have the `trakts` command available.
+5.  Run `pipx install trakt-scrobbler`. You will now have the `trakts` command available.  
+For SOCKS proxy support, use `pipx install trakt-scrobbler --extras socks`.
 6.  Run `trakts init`. You will be prompted to select the players to be monitored, and authorize the app to access the Trakt.tv API on your behalf. Follow the steps on screen to finish the process.
 
 **For Linux:**
@@ -83,7 +85,7 @@ All commands have descriptive help messages available. So in case of doubt, simp
 
     *   `clear`: Try to add the unsynced files to trakt history
 
-*   `config`: Edits the scrobbler config settings
+*   `config`: Edits the scrobbler config settings. See [Configuration](#configuration) section for more details
 
     *   `list`: This command will list the parameters in the config, along with their current values.
           Eg: `trakts config list`
@@ -203,11 +205,34 @@ Generally, this app provides "live" updates to trakt regarding your playing stat
 
 ## Configuration
 
-The config is stored in [YAML](https://yaml.org) format. Most parameters have default values, stored in [`config_default.yaml`](trakt_scrobbler/config_default.yaml). You can use the `config` command to override the alues.
+*   The config is stored in [YAML](https://yaml.org) format.
 
-*   `general.enable_notifs`: (Default: `true`) Enable notifications after successful scrobbles.
+*   Most parameters have default values, stored in [`config_default.yaml`](trakt_scrobbler/config_default.yaml). 
+
+*   The file is hierarchical, with multiple sections such as `general`, `players`, etc.
+
+*   Everything you see on the left hand side of a `:` is a *key*. This means `players` is a key, `vlc` is a key, and so is `poll_interval`.
+
+*   You can use the `config` command to override the values easily. (See [Commands Reference](#trakts-command-usage))
+
+*   To access a config parameter, use the dotted-notation - use a `.` to go down a hierarchy level.  
+    Example: `players.vlc.poll_interval` selects what you think it selects :P  
+    (The `_` is not special, it's just a way for programmers to represent spaces in names)
+
+### Reference
+*   `general`
+    *   `enable_notifs`: (Default: `true`) Enable notifications after successful scrobbles.
+    *   `proxies`: (Default: `{}`)
+        *   Defines the proxies to be used for external connections.
+        *   See [this](https://requests.readthedocs.io/en/latest/user/advanced/#proxies) for format.
+        *   Example command: `trakts config set general.proxies.https "socks5://my-proxy.example.com:1234"`  
+            This adds a `SOCKSv5` proxy for the `HTTPS` protocol, and is identical to setting `proxies = {'https': 'socks5://my-proxy.example.com:1234'}` in the Python `requests` library, or in `YML` form:
+            ```yml
+            proxies:
+                https: socks5://my-proxy.example.com:1234
+            ```
 *   `fileinfo`:
-    * `whitelist`: (List of folder path strings | Default: `[]` aka Allow all)
+    *   `whitelist`: (List of folder path strings | Default: `[]` aka Allow all)
         *   List of directories you want to be scanned for shows or movies.
         *   If empty, all files played in the player are scanned.
         *   You can prevent the program from scanning all played files if your shows and movies are located in fixed directories.
@@ -216,7 +241,9 @@ The config is stored in [YAML](https://yaml.org) format. Most parameters have de
         *   If you find that the default module for identifying media info ([guessit](https://github.com/guessit-io/guessit)) is misidentifying some titles, you can specify the regex for that file path.
         *   The regex should have posix-like path, and not Windows' `\` to separate directories.
         *   The minimum required information is the title of the file, and episode number in the case of TV Shows. If season is not found, it defaults to 1.
-        *   Mainly useful for Anime since they don't follow the season convention.
+        *   Example command: `trakts config set --add fileinfo.include_regexes.episode ".*/(?P<title>.+?)(\s\[[0-9]{3,4}p\])?/(?P<episode>\d+) - (?:.*)"`  
+            This adds a new regex string (everything between the `"`) to the list of episode regexes, which can be used to extract info from Anime episodes of the form `Name of anime [720p]/12 - episode name.mkv`
+        *   If season is not provided, it will default to `1`. This is mainly useful for anime since they don't follow the SxxExx format and fail to be recognized by the default parser. 
 *   `players`:
     *   `monitored`: (List of player names | Default: `[]`) Specify players which are to be monitored for scrobbling.
     *   `skip_interval`: (Default: `5`) Min percent jump to consider for scrobbling to trakt. Useful when you skip ahead a few seconds, and don't want to spam the trakt API.
