@@ -2,6 +2,7 @@ version: '1.0'
 
 general:
   enable_notifs: true
+  proxies: {}
 
 fileinfo:
 

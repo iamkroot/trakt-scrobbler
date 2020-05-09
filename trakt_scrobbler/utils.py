@@ -8,7 +8,9 @@ from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlparse, unquote
 
+from trakt_scrobbler import config
 logger = logging.getLogger('trakt_scrobbler')
+proxies = config['general']['proxies'].get()
 
 
 def read_toml(file_path: Path):
@@ -38,6 +40,7 @@ def write_json(data, file_path):
 
 def safe_request(verb, params):
     """ConnectionError handling for requests methods."""
+    params.setdefault('proxies', proxies)
     try:
         resp = requests.request(verb, **params)
     except requests.exceptions.ConnectionError:
