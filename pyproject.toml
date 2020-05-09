@@ -23,8 +23,12 @@ pywin32 = {version = "^227", platform = "win32"}
 win10toast = {version = "^0.9", platform = "win32"}
 cleo = "^0.7.6"
 confuse = "^1.1.0"
+pysocks = {version = "^1.7.1", optional = true}
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.extras]
+socks = ["pysocks"]
 
 [tool.poetry.scripts]
 trakts = "trakt_scrobbler.console:main"
