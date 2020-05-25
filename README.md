@@ -61,7 +61,7 @@ For more information, see the [`How it works`](#how-it-works) section.
     ```
     (Windows users may require a reboot after this step)
 5.  Run `pipx install trakt-scrobbler`. You will now have the `trakts` command available.  
-For SOCKS proxy support, use `pipx install trakt-scrobbler --extras socks`.
+For SOCKS proxy support, use `pipx install "trakt-scrobbler[socks]"`.
 6.  Run `trakts init`. You will be prompted to select the players to be monitored, and authorize the app to access the Trakt.tv API on your behalf. Follow the steps on screen to finish the process.
 
 **For Linux:**
