@@ -126,19 +126,20 @@ def get_headers():
     }
 
 
-def search(query, types=None, extended=False):
+def search(query, types=None, year=None, extended=False):
     if not types:
         types = ['movie', 'show', 'episode']
     search_params = {
         "url": API_URL + '/search/' + ",".join(types),
-        "params": {'query': query, 'extended': extended, 'field': 'title'},
+        "params": {'query': query, 'extended': extended,
+                   'field': 'title', 'years': year},
         "headers": get_headers()
     }
     r = safe_request('get', search_params)
     return r.json() if r else None
 
 
-def get_trakt_id(title, item_type):
+def get_trakt_id(title, item_type, year=None):
     required_type = 'show' if item_type == 'episode' else 'movie'
 
     global trakt_cache
@@ -151,7 +152,7 @@ def get_trakt_id(title, item_type):
         return trakt_id
 
     logger.debug('Searching trakt.')
-    results = search(title, [required_type])
+    results = search(title, [required_type], year)
     if results is None:  # Connection error
         return 0  # Dont store in cache
     elif results == [] or results[0]['score'] < 5:  # Weak or no match
@@ -167,8 +168,8 @@ def get_trakt_id(title, item_type):
     return trakt_id
 
 
-def prepare_scrobble_data(title, type, *args, **kwargs):
-    trakt_id = get_trakt_id(title, type)
+def prepare_scrobble_data(title, type, year=None, *args, **kwargs):
+    trakt_id = get_trakt_id(title, type, year)
     if trakt_id < 1:
         return None
     if type == 'movie':
@@ -198,8 +199,8 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     return scrobble_resp.json() if scrobble_resp else False
 
 
-def prepare_history_data(watched_at, title, type, *args, **kwargs):
-    trakt_id = get_trakt_id(title, type)
+def prepare_history_data(watched_at, title, type, year=None, *args, **kwargs):
+    trakt_id = get_trakt_id(title, type, year)
     if trakt_id < 1:
         return None
     if type == 'movie':
