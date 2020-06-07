@@ -11,12 +11,15 @@ regexes = config["fileinfo"]['include_regexes'].get()
 use_regex = any(regexes.values())
 
 
-def whitelist_file(file_path) -> bool:
+def whitelist_file(file_path) -> Path:
     if not whitelist:
         return True
     file_path = cleanup_encoding(file_path)
-    parents = tuple(file_path.absolute().resolve().parents)
-    return any(path in parents for path in whitelist)
+    parents = set(file_path.absolute().resolve().parents)
+    for path in whitelist:
+        if path in parents:
+            return path
+    return False
 
 
 def custom_regex(file_path):
