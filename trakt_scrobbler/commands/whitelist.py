@@ -42,9 +42,17 @@ class WhitelistShowCommand(Command):
 
     def handle(self):
         from trakt_scrobbler import config
+        import confuse
 
-        wl = config["fileinfo"]["whitelist"].get()
-        self.render_table(["Whitelist:"], list(map(lambda f: [f], wl)), "compact")
+        whitelist = config["fileinfo"]["whitelist"].get(confuse.StrSeq(default=[]))
+        if not whitelist:
+            self.line("Whitelist empty!")
+            return
+
+        self.info("Whitelist:")
+        for path in whitelist:
+            self.line(path)
+        self.line("Don't forget to restart the service for any changes to take effect.")
 
 
 class WhitelistRemoveCommand(Command):
