@@ -44,7 +44,9 @@ For more information, see the [`How it works`](#how-it-works) section.
 *   **MPC-BE/MPC-HC:** Enable the web interface from Options.
 
 ### Installation
-(For updating, see [FAQ section](#how-to-update))
+(For updating, see [FAQ section](#how-to-update))  
+For Arch (and its derivatives) users: An AUR package exists at [trakt-scrobbler](https://aur.archlinux.org/packages/trakt-scrobbler/), thanks to [@ahmubashshir](https://github.com/ahmubashshir).
+
 1.  Open a terminal/powershell.
 2.  Ensure you have [Python 3.7](https://www.python.org/downloads/) or higher installed, and in your system `PATH`. (Check by running `python --version`)
 3.  Ensure `pip` is installed. (Check: `pip --version`)
