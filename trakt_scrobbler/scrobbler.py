@@ -20,7 +20,8 @@ class Scrobbler(Thread):
             self.scrobble_queue.task_done()
 
     def scrobble(self, verb, data):
-        logger.debug(f"Scrobble {verb} at {data['progress']:.2f}% for {data['title']}")
+        logger.debug(f"Scrobbling {verb} at {data['progress']:.2f}% for "
+                     f"{data['media_info']['title']}")
         resp = trakt.scrobble(verb, **data)
         if resp:
             if 'movie' in resp:
