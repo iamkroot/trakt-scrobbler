@@ -133,12 +133,13 @@ All commands have descriptive help messages available. So in case of doubt, simp
 *   `status`: Shows the status trakt-scrobbler service.
 *   `stop`: Stops the trakt-scrobbler service.
 *   `whitelist`: Shortcut command to add folder(s) to whitelist in config.
-    *   `add`: Add folder(s) to whitelist.  
+    *   `add`: Add folder(s) to whitelist. Don't forget to restart the scrobbler (`trakts start --restart`) after this.  
            Eg: `trakts whitelist add D:\Media\Movies "C:\Users\My Name\Shows"`  
         *For folders containing spaces, use double quotes*
 
     *   `show`: List the current folders in whitelist.
     *   `remove`: Interactively remove folder(s) from whitelist.
+    *   `test`: Check whether the given file/folder is in the whitelist.
 
 ## FAQs
 

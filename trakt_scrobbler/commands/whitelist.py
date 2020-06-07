@@ -15,7 +15,7 @@ class WhitelistAddCommand(Command):
         try:
             fold = Path(folder)
         except ValueError:
-            self.error(f"Invalid folder {folder}")
+            self.line_error(f"Invalid folder {folder}")
             return
         if not fold.exists() and not self.confirm(
             f"Folder {fold} does not exist. Are you sure you want to add it?"
@@ -24,12 +24,13 @@ class WhitelistAddCommand(Command):
         folder = str(fold.absolute().resolve())
         if folder.endswith("\\"):  # fix string escaping
             folder += "\\"
-        self.call_sub("config set", f'--add fileinfo.whitelist "{folder}"', True)
-        self.line(f"'{folder}' added to whitelist.")
+        self.call_sub("config set", f'--add fileinfo.whitelist "{folder}"', silent=True)
+        self.line(f"<comment>{folder}</comment> added to whitelist.")
 
     def handle(self):
         for folder in self.argument("folder"):
             self._add_single(folder)
+        self.line("Don't forget to restart the service for the changes to take effect.")
 
 
 class WhitelistShowCommand(Command):
@@ -67,7 +68,7 @@ class WhitelistRemoveCommand(Command):
         )
         if not self.confirm(
             f"This will remove {', '.join(choices)} from whitelist. Continue?",
-            default=True
+            default=True,
         ):
             self.line("Aborted", "error")
             return
@@ -80,6 +81,36 @@ class WhitelistRemoveCommand(Command):
         self.call_sub("whitelist show")
 
 
+class WhitelistTestCommand(Command):
+    """
+    Check whether the given file/folder is whitelisted.
+
+    test
+        {path : File/folder to be tested}
+    """
+
+    def handle(self):
+        from trakt_scrobbler.file_info import whitelist_file
+
+        path = self.argument("path")
+        try:
+            path = Path(path)
+        except ValueError:
+            self.line_error(f"Invalid path '{path}'")
+            return 1
+        whitelist_path = whitelist_file(path)
+        if whitelist_path is True:
+            self.info(
+                "Whitelist is empty! Use <comment>whitelist add</comment> command"
+            )
+        elif whitelist_path:
+            self.info(
+                f"The path is whitelisted through <comment>{whitelist_path}</comment>"
+            )
+        else:
+            self.line_error(f"The path is not in whitelist!")
+
+
 class WhitelistCommand(Command):
     """
     Adds the given folder(s) to whitelist.
@@ -87,7 +118,12 @@ class WhitelistCommand(Command):
     whitelist
     """
 
-    commands = [WhitelistAddCommand(), WhitelistShowCommand(), WhitelistRemoveCommand()]
+    commands = [
+        WhitelistAddCommand(),
+        WhitelistShowCommand(),
+        WhitelistRemoveCommand(),
+        WhitelistTestCommand(),
+    ]
 
     def handle(self):
         return self.call("help", self._config.name)
