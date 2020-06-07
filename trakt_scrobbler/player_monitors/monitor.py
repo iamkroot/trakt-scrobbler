@@ -45,6 +45,7 @@ class Monitor(Thread):
                 raise AutoloadError(param)
             try:
                 monitor_cfg[param] = param_loader()
+                logger.debug(f"Autoloaded {cls.name} {param} = {monitor_cfg[param]}")
             except FileNotFoundError as e:
                 logger.error(f"File not found: {e.filename}")
                 raise AutoloadError(src=e.filename)
