@@ -15,11 +15,8 @@ class StartCommand(Command):
         restart = self.option("restart")
         if platform == "darwin":
             if restart:
-                sp.check_call(
-                    ["launchctl", "kickstart", "-k", "com.iamkroot.trakt-scrobbler"]
-                )
-            else:
-                sp.check_call(["launchctl", "start", "com.iamkroot.trakt-scrobbler"])
+                sp.check_call(["launchctl", "stop", "com.iamkroot.trakt-scrobbler"])
+            sp.check_call(["launchctl", "start", "com.iamkroot.trakt-scrobbler"])
         elif platform == "linux":
             cmd = "restart" if restart else "start"
             sp.check_call(["systemctl", "--user", cmd, "trakt-scrobbler"])
