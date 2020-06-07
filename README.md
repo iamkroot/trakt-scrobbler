@@ -38,7 +38,7 @@ For more information, see the [`How it works`](#how-it-works) section.
 *   **Plex:** No server side set up is required, as the app uses the existing API. Do note that since this is a polling based approach, it will be inferior to Webhooks. So if you are a premium user of Plex, it is recommended to use that directly. This app is mainly useful for those users who don't need most of the features of Plex Pass.
 
 *   **MPV:** Enable the [JSON IPC](https://mpv.io/manual/master/#json-ipc), **either** via .conf file or as a command line option:
-    *   **mpv.conf** (Recommended): Add `input-ipc-server=<path>` to the top of the [`mpv.conf` file](https://mpv.io/manual/master/#configuration-files). (Linux: `~/.config/mpv/mpv.conf`, Windows: `C:\users\<USERNAME>\AppData\Roaming\mpv\mpv.conf`)
+    *   **mpv.conf** (Recommended): Add `input-ipc-server=<path>` to the top of the [`mpv.conf` file](https://mpv.io/manual/master/#configuration-files). (Linux/Mac: `~/.config/mpv/mpv.conf`, Windows: `C:\users\<USERNAME>\AppData\Roaming\mpv\mpv.conf`)
     *   **Command line** (If you are using a wrapper over mpv): `mpv file.mkv --input-ipc-server=/tmp/mpvsocket` (linux) and `mpv file.mkv --input-ipc-server=\\.\pipe\mpvsocket` (windows). Note that in this case, the scrobbler won't be able to autodetect the path, so you need to manually add that using `trakts config set players.mpv.ipc_path <PATH>`
 
 *   **MPC-BE/MPC-HC:** Enable the web interface from Options.
@@ -47,7 +47,7 @@ For more information, see the [`How it works`](#how-it-works) section.
 (For updating, see [FAQ section](#how-to-update))  
 For Arch (and its derivatives) users: An AUR package exists at [trakt-scrobbler](https://aur.archlinux.org/packages/trakt-scrobbler/), thanks to [@ahmubashshir](https://github.com/ahmubashshir).
 
-**Windows/Mac/Linux installation steps:**
+**Linux/Mac/Windows installation steps:**
 1.  Open a terminal/powershell.
 2.  Ensure you have [Python 3.7](https://www.python.org/downloads/) or higher installed, and in your system `PATH`. (Check by running `python --version`)
 3.  Ensure `pip` is installed. (Check: `pip --version`)
@@ -164,6 +164,7 @@ In a terminal/command prompt, run the following commands:
     3.  `cd ~ && rm -rf ~/.local/trakt-scrobbler` to remove installed code files.
 *   **MacOS**
     1.  `launchctl stop com.github.iamkroot.trakt-scrobbler` to stop the background service.
+    2.  `launchctl unload com.github.iamkroot.trakt-scrobbler` to remove the service.
     2.  `cd ~/Library/trakt-scrobbler && poetry env remove python3` to remove python environment.
     3.  `cd ~ && rm -rf ~/Library/trakt-scrobbler` to remove installed code files.
 *   **Windows**
