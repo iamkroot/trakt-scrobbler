@@ -47,6 +47,7 @@ For more information, see the [`How it works`](#how-it-works) section.
 (For updating, see [FAQ section](#how-to-update))  
 For Arch (and its derivatives) users: An AUR package exists at [trakt-scrobbler](https://aur.archlinux.org/packages/trakt-scrobbler/), thanks to [@ahmubashshir](https://github.com/ahmubashshir).
 
+**Windows/Mac/Linux installation steps:**
 1.  Open a terminal/powershell.
 2.  Ensure you have [Python 3.7](https://www.python.org/downloads/) or higher installed, and in your system `PATH`. (Check by running `python --version`)
 3.  Ensure `pip` is installed. (Check: `pip --version`)
@@ -195,14 +196,25 @@ This is an application written in the Python programming language, designed for 
 *   The app is designed to start with your PC, and remain running in the backgroud.
 *   It has a "monitor" for each media player you specify. This monitor keeps checking if the media player is running or not. If not, you get the "Could not connect..." message in the log file.
 *   When the player is running, the monitor extracts the currently playing media information from the player.
-*   This media file path is parsed using `guessit` (or regexes, if specified) to recognize the metadata such as "Title", "Season", etc.
+*   This media file path is parsed using `guessit` (or regexes, if specified) to recognize the metadata such as "Title", "Season", etc. (See: [Identifying Media](#identifying-media))
 *   This info, along with the playing state (`playing`, `stopped` or `paused`) and progress are then sent to trakt.tv using their API to update their side and mark the media as "Currently Watching", "Finished", etc and you get a notification of the same.
 *   Once the player is closed, the monitor goes back to "dormant" state, where it waits for the player to start again.
 
 ### Other details
+
 #### Polling for activity
+
 The checking for media info from player happens at a set interval (`poll_interval` in config, 10 secs by default), which is the maximum delay between you starting/stopping/pausing the player, and the monitor recognizing that activity.
+
+#### Identifying media
+
+Here's a brief overview of how the scrobbler identifies the movie/show:
+1. It uses the file path of the media being played and extracts the title, season, ep, year, etc. using some heuristics. Note that this is very much prone to errors, so make sure your media directories are organized and named properly.
+2. Next, just like you would in real life, the app uses Trakt search to find the corresponding show/movie in the trakt servers. The search is mainly done on the info extracted from step 1: the title, the type (movie or show), and year (if available). It picks the topmost result that trakt gives, since that has the highest score and matches our given info the most. Again, this is prone to errors, since the trakt search result might not be the actual movie/show being played.
+3. This returned trakt result (as a numeric ID) is stored on your PC, and every time you play the same movie/show, this numeric id is used to identify the media on trakt servers. This means that the search happens only for the first time a movie/show is played.
+
 #### Backlog Cleaner
+
 Generally, this app provides "live" updates to trakt regarding your playing status. However, it may happen that the app is unable to communicate with trakt servers (probably due to connection issues), and thus scrobbling updates won't be meaningful. For such cases, the app maintains a "backlog cleaner" which remembers the media that you have finished watching (progress > 80%) and will try to sync that information with trakt the next time its servers are reachable.
 
 ## Configuration
