@@ -53,7 +53,7 @@ class VLCMon(WebInterfaceMon):
         else:
             prefs_dir = Path(appdirs.user_config_dir("vlc", False, roaming=True))
         vlcrc_path = prefs_dir / "vlcrc"
-        vlcrc = ConfigParser(strict=False)
+        vlcrc = ConfigParser(strict=False, inline_comment_prefixes="#")
         vlcrc.optionxform = lambda option: option
         if not vlcrc.read(vlcrc_path, encoding="utf-8-sig"):
             raise FileNotFoundError(vlcrc_path)

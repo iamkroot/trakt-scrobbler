@@ -52,7 +52,9 @@ class MPVMon(Monitor):
                 Path(appdirs.user_config_dir("mpv", roaming=True, appauthor=False))
                 / "mpv.conf"
             )
-        mpv_conf = ConfigParser(allow_no_value=True, strict=False)
+        mpv_conf = ConfigParser(
+            allow_no_value=True, strict=False, inline_comment_prefixes="#"
+        )
         mpv_conf.optionxform = lambda option: option
         mpv_conf.read_string("[root]\n" + conf_path.read_text())
         return {
