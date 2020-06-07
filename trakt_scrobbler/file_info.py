@@ -8,6 +8,7 @@ from trakt_scrobbler.utils import cleanup_encoding
 
 whitelist = config["fileinfo"]["whitelist"].get(confuse.Sequence(confuse.Path()))
 regexes = config["fileinfo"]['include_regexes'].get()
+use_regex = any(regexes.values())
 
 
 def whitelist_file(file_path) -> bool:
@@ -19,23 +20,19 @@ def whitelist_file(file_path) -> bool:
 
 
 def custom_regex(file_path):
-    logger.debug('Trying to match custom regex.')
     path_posix = str(file_path.as_posix())
     for item_type, patterns in regexes.items():
         for pattern in patterns:
             m = re.match(pattern, path_posix)
             if m:
-                logger.debug(f"Matched pattern '{pattern}' for '{path_posix}'")
+                logger.debug(f"Matched regex pattern '{pattern}' for '{path_posix}'")
                 guess = m.groupdict()
                 guess['type'] = item_type
                 return guess
 
 
 def use_guessit(file_path):
-    logger.debug('Using guessit module to match.')
-    guess = guessit.guessit(str(file_path))
-    logger.debug(guess)
-    return guess
+    return guessit.guessit(str(file_path))
 
 
 @lru_cache(maxsize=None)
@@ -45,7 +42,8 @@ def get_media_info(file_path):
     if not whitelist_file(file_path):
         logger.info("File path not in whitelist.")
         return None
-    guess = custom_regex(file_path) or use_guessit(file_path)
+    guess = use_regex and custom_regex(file_path) or use_guessit(file_path)
+    logger.debug(f"Guess: {guess}")
 
     if any(key not in guess for key in ('title', 'type')) or \
        (guess['type'] == 'episode' and 'episode' not in guess):

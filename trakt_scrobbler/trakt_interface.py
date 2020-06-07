@@ -146,18 +146,19 @@ def get_trakt_id(title, item_type, year=None):
     if not trakt_cache:
         trakt_cache = read_json(TRAKT_CACHE_PATH) or {'movie': {}, 'show': {}}
 
-    logger.debug('Searching cache.')
     trakt_id = trakt_cache[required_type].get(title)
     if trakt_id:
         return trakt_id
 
-    logger.debug('Searching trakt.')
+    logger.debug(f'Searching trakt: {title=}, {required_type=}, {year=}')
     results = search(title, [required_type], year)
     if results is None:  # Connection error
         return 0  # Dont store in cache
     elif results == [] or results[0]['score'] < 5:  # Weak or no match
-        logger.warning('Trakt search yielded no results.')
-        notify('Trakt search yielded no results for ' + title)
+        msg = f'Trakt search yielded no results for {title}'
+        msg += f", {year=}" * bool(year)
+        logger.warning(msg)
+        notify(msg)
         trakt_id = -1
     else:
         trakt_id = results[0][required_type]['ids']['trakt']
@@ -171,6 +172,7 @@ def get_trakt_id(title, item_type, year=None):
 def prepare_scrobble_data(title, type, year=None, *args, **kwargs):
     trakt_id = get_trakt_id(title, type, year)
     if trakt_id < 1:
+        logger.warning(f"Invalid trakt id for {title}")
         return None
     if type == 'movie':
         return {'movie': {'ids': {'trakt': trakt_id}}}
@@ -186,7 +188,6 @@ def prepare_scrobble_data(title, type, year=None, *args, **kwargs):
 
 def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_data = prepare_scrobble_data(**media_info)
-    logger.debug(scrobble_data)
     if not scrobble_data:
         return None
     scrobble_data['progress'] = progress
