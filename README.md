@@ -150,7 +150,7 @@ First, look through the log file (using the `trakts log` command) to see what we
 #### How to update?
 
 1.  Stop the app using `trakts stop`
-2.  Run `pipx upgrade trakt-scrobbler`
+2.  Run `python -m pipx upgrade trakt-scrobbler`
 3.  Start the app again using `trakts start`
 
 #### How to update from pre 1.0.0 versions?
