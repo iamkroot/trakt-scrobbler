@@ -150,13 +150,13 @@ def get_trakt_id(title, item_type, year=None):
     if trakt_id:
         return trakt_id
 
-    logger.debug(f'Searching trakt: {title=}, {required_type=}, {year=}')
+    logger.debug(f'Searching trakt: Title: "{title}", Year: {year}')
     results = search(title, [required_type], year)
     if results is None:  # Connection error
         return 0  # Dont store in cache
     elif results == [] or results[0]['score'] < 5:  # Weak or no match
         msg = f'Trakt search yielded no results for {title}'
-        msg += f", {year=}" * bool(year)
+        msg += f", Year: {year}" * bool(year)
         logger.warning(msg)
         notify(msg)
         trakt_id = -1
