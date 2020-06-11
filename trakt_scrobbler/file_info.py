@@ -59,7 +59,7 @@ def get_media_info(file_path):
 
     req_keys = ['type', 'title']
     if guess['type'] == 'episode':
-        season = guess.get('season', 1)
+        season = guess.get('season', 1) or 1
         if isinstance(season, list):
             logger.warning(f"Multiple probable seasons found: ({','.join(season)}). "
                            "Consider renaming the folder.")
