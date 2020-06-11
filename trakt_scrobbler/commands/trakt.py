@@ -14,8 +14,8 @@ class TraktAuthCommand(Command):
         from datetime import date
 
         if self.option("force"):
-            ti.token_data = None
             self.line("Forcing trakt authentication")
+            ti.TRAKT_TOKEN_PATH.unlink(missing_ok=True)
         if not ti.get_access_token():
             self.line("Failed to retrieve trakt token.", "error")
             return 1
