@@ -19,7 +19,7 @@ if enable_notifs:
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
     global enable_notifs
     if stdout or not enable_notifs:
-        print(title, body)
+        print(body)
     if not enable_notifs:
         return
     if sys.platform == 'win32':
