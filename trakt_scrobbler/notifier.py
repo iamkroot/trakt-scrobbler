@@ -7,6 +7,7 @@ enable_notifs = config['general']['enable_notifs'].get(
     confuse.Choice([True, False], default=True)
 )
 
+
 if enable_notifs:
     if sys.platform == 'win32':
         from win10toast import ToastNotifier
@@ -14,6 +15,14 @@ if enable_notifs:
         toaster = ToastNotifier()
     else:
         import subprocess as sp
+        try:
+            import gi
+            gi.require_version('Notify', '0.7')
+            from gi.repository import Notify
+            Notify.init("trakt-scrobbler")
+            notifier = Notify.Notification.new("trakt-scrobbler")
+        except:
+            notifier = None
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
@@ -29,7 +38,12 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
         sp.run(["osascript", "-e", osa_cmd])
     else:
         try:
-            sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
+            if notifier is not None:
+                notifier.set_timeout(timeout * 1000)
+                notifier.update(title, body, 'dialog-information')
+                notifier.show()
+            else:
+                sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
         except FileNotFoundError:
             logger.exception("Unable to send notification")
             enable_notifs = False  # disable all future notifications until app restart
