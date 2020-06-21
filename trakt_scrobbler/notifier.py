@@ -13,14 +13,17 @@ if enable_notifs:
         from win10toast import ToastNotifier
 
         toaster = ToastNotifier()
-    elif sys.platform == 'linux':
-        import gi
-        gi.require_version('Notify', '0.7')
-        from gi.repository import Notify
-        Notify.init("trakt-scrobbler")
-        notifier = Notify.Notification.new("trakt-scrobbler")
     else:
         import subprocess as sp
+        try:
+            import gi
+            gi.require_version('Notify', '0.7')
+            from gi.repository import Notify
+            Notify.init("trakt-scrobbler")
+            notifier = Notify.Notification.new("trakt-scrobbler")
+        except:
+            notifier = None
+
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
     global enable_notifs
@@ -30,19 +33,17 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
         return
     if sys.platform == 'win32':
         toaster.show_toast(title, body, duration=timeout, threaded=True)
-
-    elif sys.platform == 'linux':
-        notifier.set_timeout(timeout * 1000)
-        notifier.update(title, body, 'dialog-information')
-        notifier.show()
-
     elif sys.platform == 'darwin':
         osa_cmd = f'display notification "{body}" with title "{title}"'
         sp.run(["osascript", "-e", osa_cmd])
-
     else:
         try:
-            sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
+            if notifier is not None:
+                notifier.set_timeout(timeout * 1000)
+                notifier.update(title, body, 'dialog-information')
+                notifier.show()
+            else:
+                sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
         except FileNotFoundError:
             logger.exception("Unable to send notification")
             enable_notifs = False  # disable all future notifications until app restart
