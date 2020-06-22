@@ -252,10 +252,11 @@ pypiwin32 = "*"
 setuptools = "*"
 
 [extras]
+linux_gobject = ["pygobject"]
 socks = ["pysocks"]
 
 [metadata]
-content-hash = "db54533edfdf6b0069e9b77981734137e54ebd3f6389543697e94c6b7213a1d6"
+content-hash = "630ef56dbe745df31ecc4e142d6fcf852ed98ff8d04d2a935ae9871d94f620cb"
 python-versions = "^3.7"
 
 [metadata.files]

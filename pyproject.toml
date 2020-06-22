@@ -30,6 +30,7 @@ pygobject = { version = "^3.34", platform = "linux" , optional = true}
 
 [tool.poetry.extras]
 socks = ["pysocks"]
+linux_gobject = ["pygobject"]
 
 [tool.poetry.scripts]
 trakts = "trakt_scrobbler.console:main"
