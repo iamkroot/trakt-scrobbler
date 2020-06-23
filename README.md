@@ -68,13 +68,10 @@ For SOCKS proxy support, use `pipx install "trakt-scrobbler[socks]"`.
 6.  Run `trakts init`. You will be prompted to select the players to be monitored, and authorize the app to access the Trakt.tv API on your behalf. Follow the steps on screen to finish the process.
 
 **For Linux:**
-To enable notification support on Linux, `pygobject` and `libnotify` needs to be installed (Reboot after installation).
-* `pygobject`
-	* Arch/Manjaro: `pacman -S python-gobject`
-	* Ubuntu: `apt install python3-gi`
-* `libnotify`
-	* Arch/Manjaro: `pacman -S libnotify`
-	* Ubuntu: `apt install libnotify-bin`
+To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
+
+*   Arch/Manjaro: `pacman -S libnotify`
+*   Ubuntu: `apt install libnotify-bin`
 
 ## `trakts` command usage:
 
