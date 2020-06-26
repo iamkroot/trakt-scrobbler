@@ -19,7 +19,7 @@ if enable_notifs:
             gi.require_version('Notify', '0.7')
             from gi.repository import Notify
             Notify.init(APP_NAME)
-            notifier = Notify.Notification.new("trakt-scrobbler")
+            notifier = Notify.Notification.new(APP_NAME)
         except (ImportError, ModuleNotFoundError):
             notifier = None
 
