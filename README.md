@@ -65,7 +65,7 @@ For Arch (and its derivatives) users: An AUR package exists at [trakt-scrobbler]
     (Windows users may require a reboot after this step)
 5.  Run `pipx install trakt-scrobbler`. You will now have the `trakts` command available.  
 For SOCKS proxy support, use `pipx install "trakt-scrobbler[socks]"`.
-For updatable notification support in Linux, either install your distribution's package for `pygobject` or run `pipx install "trakt-scrobbler[linux_gobject]"`.
+For updatable notification support in Linux, either [install](https://pygobject.readthedocs.io/en/latest/getting_started.html) your distribution's package for `pygobject` and run `pipx install "trakt-scrobbler[linux_gobject]"`.
 6.  Run `trakts init`. You will be prompted to select the players to be monitored, and authorize the app to access the Trakt.tv API on your behalf. Follow the steps on screen to finish the process.
 
 **For Linux:**
