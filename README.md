@@ -160,7 +160,7 @@ First, look through the log file (using the `trakts log` command) to see what we
 
 There has been a major UX overhaul with v1.0.0, due to the introduction of the `trakts` command, changes in how config is stored and a much simpler way of installation. So long story short, you will have to remove the older version and re-install using the [new method](#installation). In some cases, you may also have to set some configuration parameters again, if you have custom overrides - use `trakts config` command for that.
 
-**Old version uninstall steps:**  
+##### Old version uninstall steps
 In a terminal/command prompt, run the following commands:
 *   **Linux**
     1.  `systemctl --user stop trakt-scrobbler` to stop the background service.
@@ -182,6 +182,9 @@ In a terminal/command prompt, run the following commands:
 You should also uninstall poetry if you don't require it:
 *   `osx / linux / bashonwindows`: `POETRY_UNINSTALL=1 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python`
 *   `windows powershell`: `$env:POETRY_UNINSTALL = 1; (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python`
+
+If poetry is not installed on your system, you must have used `pipenv`.
+*    For uninstallation, replace `poetry env remove python3` with `pipenv --rm` in the steps above. To remove `pipenv` itself, use `pip uninstall pipenv`.
 
 After this, you can install the new version using steps in [Installation](#installation) section.
 
