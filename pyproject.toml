@@ -17,14 +17,13 @@ classifiers = [
 python = "^3.7"
 requests = "^2.22.0"
 guessit = "^3.1.0"
-toml = "^0.10.0"
 appdirs = "^1.4.3"
 pywin32 = {version = "^227", platform = "win32"}
 win10toast = {version = "^0.9", platform = "win32"}
 cleo = "^0.7.6"
 confuse = "^1.1.0"
 pysocks = {version = "^1.7.1", optional = true}
-pygobject = { version = "^3.34", platform = "linux" , optional = true}
+pygobject = { version = "^3.34", platform = "linux",  optional = true}
 
 [tool.poetry.dev-dependencies]
 

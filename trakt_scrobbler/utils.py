@@ -2,7 +2,6 @@ import json
 import locale
 import logging.config
 import sys
-import toml
 import requests
 from functools import lru_cache
 from pathlib import Path
@@ -11,15 +10,6 @@ from urllib.parse import urlparse, unquote
 from trakt_scrobbler import config
 logger = logging.getLogger('trakt_scrobbler')
 proxies = config['general']['proxies'].get()
-
-
-def read_toml(file_path: Path):
-    try:
-        return toml.load(file_path)
-    except toml.TomlDecodeError:
-        logger.error(f'Invalid TOML in {file_path}.')
-    except FileNotFoundError:
-        logger.error(f"{file_path} doesn't exist.")
 
 
 def read_json(file_path):
