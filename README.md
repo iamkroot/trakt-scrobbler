@@ -64,15 +64,17 @@ For Arch (and its derivatives) users: An AUR package exists at [trakt-scrobbler]
     ```
     (Windows users may require a reboot after this step)
 5.  Run `pipx install trakt-scrobbler`. You will now have the `trakts` command available.  
-For SOCKS proxy support, use `pipx install "trakt-scrobbler[socks]"`.
-For updatable notification support in Linux, [install](https://pygobject.readthedocs.io/en/latest/getting_started.html) your distribution's package for `pygobject` and run `pipx install "trakt-scrobbler[linux_gobject]"`.
 6.  Run `trakts init`. You will be prompted to select the players to be monitored, and authorize the app to access the Trakt.tv API on your behalf. Follow the steps on screen to finish the process.
 
-**For Linux:**
-To enable notification support on Linux, `libnotify` needs to be installed (Reboot after installation).
-
-*   Arch/Manjaro: `pacman -S libnotify`
-*   Ubuntu: `apt install libnotify-bin`
+#### Variations
+*   **SOCKS Proxy support:** In step 5, use `pipx install "trakt-scrobbler[socks]"`. Replace `install` with `upgrade` if you have already installed the scrobbler. See [Configuration Reference](#reference) section to see how to set up the proxy.
+*   **Notification support in Linux:**
+    * For normal notifications, use `libnotify`. Nothing fancy, simple installation. 
+        *   Arch/Manjaro: `pacman -S libnotify`
+        *   Ubuntu: `apt install libnotify-bin`
+    *   For updatable notifications, use [`pygobject`](https://github.com/GNOME/pygobject). This allows a later notifications to replace a previous one, useful when multiple actions are done is a short span of time. Installation can be painful, and increases the dependencies a lot.
+        1.  [Install](https://pygobject.readthedocs.io/en/latest/getting_started.html) your distribution's package for `pygobject`
+        2.  Run `pipx install "trakt-scrobbler[linux_gobject]"`. Replace `install` with `upgrade` if you have already installed the scrobbler.
 
 ## `trakts` command usage:
 
