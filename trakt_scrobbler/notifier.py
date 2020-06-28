@@ -14,6 +14,14 @@ if enable_notifs:
         toaster = ToastNotifier()
     else:
         import subprocess as sp
+        try:
+            import gi
+            gi.require_version('Notify', '0.7')
+            from gi.repository import Notify
+            Notify.init(APP_NAME)
+            notifier = Notify.Notification.new(APP_NAME)
+        except (ImportError, ModuleNotFoundError):
+            notifier = None
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
@@ -27,6 +35,10 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
     elif sys.platform == 'darwin':
         osa_cmd = f'display notification "{body}" with title "{title}"'
         sp.run(["osascript", "-e", osa_cmd])
+    elif notifier is not None:
+        notifier.set_timeout(timeout * 1000)
+        notifier.update(title, body, 'dialog-information')
+        notifier.show()
     else:
         try:
             sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
