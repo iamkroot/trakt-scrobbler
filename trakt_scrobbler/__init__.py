@@ -44,7 +44,6 @@ logger = logging.getLogger("trakt_scrobbler")
 
 register_exception_handler()
 
-confuse.OrderedDict = dict
 config = confuse.Configuration("trakt-scrobbler", "trakt_scrobbler")
 
 # copy version from default config to user config if not present
@@ -52,7 +51,7 @@ temp_root = confuse.RootView(s for s in config.sources if not s.default)
 if "version" not in temp_root:
     temp_root["version"] = config["version"].get()
     with open(config.user_config_path(), "w") as f:
-        yaml.dump(temp_root.flatten(), f)
+        yaml.dump(temp_root.flatten(), f, Dumper=confuse.yaml_util.Dumper)
 elif temp_root["version"].get() != config.sources[-1]["version"]:
     logger.warning(
         "Config version mismatch! Check configs at "
