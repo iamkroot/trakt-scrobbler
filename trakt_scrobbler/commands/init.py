@@ -50,7 +50,7 @@ class InitCommand(Command):
 
         self.info(
             "Remember to configure your player(s) as outlined at "
-            "<comment>https://github.com/iamkroot/trakt-scrobbler#players</comment>"
+            "<comment>https://github.com/iamkroot/trakt-scrobbler/wiki/Players-Setup</comment>"
         )
 
         val = self.call("auth")
