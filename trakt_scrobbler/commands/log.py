@@ -10,19 +10,22 @@ class OpenLogCommand(Command):
     """
 
     def handle(self):
-        from trakt_scrobbler.app_dirs import DATA_DIR
-
-        file_path = DATA_DIR / "trakt_scrobbler.log"
+        from trakt_scrobbler.log_config import file_path
 
         if not file_path.exists():
             self.line(f'Log file not found at "{file_path}"', "error")
             return 1
+        self.info(f'Log file is located at: <comment>"{file_path}"</comment>')
         if platform == "darwin":
             sp.Popen(["open", file_path])
         elif platform == "linux":
             sp.Popen(["xdg-open", file_path])
         elif platform == "win32":
             sp.Popen(f'start "{file_path}"', shell=True)
+        self.line(
+            "In case this command doesn't work, "
+            "manually open the log file from the path."
+        )
 
 
 class LogLocationCommand(Command):
@@ -33,9 +36,8 @@ class LogLocationCommand(Command):
     """
 
     def handle(self):
-        from trakt_scrobbler.app_dirs import DATA_DIR
+        from trakt_scrobbler.log_config import file_path
 
-        file_path = DATA_DIR / "trakt_scrobbler.log"
         self.line(f'"{file_path}"')
 
 

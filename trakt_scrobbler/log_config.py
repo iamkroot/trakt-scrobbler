@@ -1,5 +1,6 @@
 import logging.config
 from trakt_scrobbler.app_dirs import DATA_DIR
+file_path = DATA_DIR / "trakt_scrobbler.log"
 
 
 class StoppedPlayersFilter(logging.Filter):
@@ -52,7 +53,7 @@ LOGGING_CONF = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': DATA_DIR / 'trakt_scrobbler.log',
+            'filename': file_path,
             'maxBytes': 131072,
             'backupCount': 5,
             'mode': 'a',
