@@ -17,7 +17,7 @@ if enable_notifs:
         try:
             import gi
             gi.require_version('Notify', '0.7')
-            from gi.repository import Notify
+            from gi.repository import Notify, GLib
             Notify.init(APP_NAME)
             notifier = Notify.Notification.new(APP_NAME)
         except (ImportError, ModuleNotFoundError):
@@ -38,7 +38,10 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
     elif notifier is not None:
         notifier.set_timeout(timeout * 1000)
         notifier.update(title, body, 'dialog-information')
-        notifier.show()
+        try:
+            notifier.show()
+        except GLib.GError as e:
+            logger.warning(f"Error while showing notification: {e}")
     else:
         try:
             sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
