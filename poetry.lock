@@ -1,79 +1,83 @@
 [[package]]
-category = "main"
-description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 name = "appdirs"
-optional = false
-python-versions = "*"
 version = "1.4.4"
+description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
-category = "main"
-description = "A module to work with countries and languages"
 name = "babelfish"
-optional = false
-python-versions = "*"
 version = "0.5.5"
+description = "A module to work with countries and languages"
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
-category = "main"
-description = "Python package for providing Mozilla's CA Bundle."
 name = "certifi"
-optional = false
-python-versions = "*"
 version = "2020.6.20"
-
-[[package]]
+description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
-description = "Universal encoding detector for Python 2 and 3"
-name = "chardet"
 optional = false
 python-versions = "*"
-version = "3.0.4"
 
 [[package]]
+name = "chardet"
+version = "3.0.4"
+description = "Universal encoding detector for Python 2 and 3"
 category = "main"
-description = "Cleo allows you to create beautiful and testable command-line interfaces."
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "cleo"
+version = "0.7.6"
+description = "Cleo allows you to create beautiful and testable command-line interfaces."
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.7.6"
 
 [package.dependencies]
 clikit = ">=0.4.0,<0.5.0"
 
 [[package]]
-category = "main"
-description = "CliKit is a group of utilities to build beautiful and testable command line interfaces."
 name = "clikit"
+version = "0.4.3"
+description = "CliKit is a group of utilities to build beautiful and testable command line interfaces."
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.4.3"
 
 [package.dependencies]
 pastel = ">=0.2.0,<0.3.0"
 pylev = ">=1.3,<2.0"
 
 [[package]]
-category = "main"
-description = "Painless YAML configuration."
 name = "confuse"
+version = "1.3.0"
+description = "Painless YAML configuration."
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
-version = "1.3.0"
-
-[package.dependencies]
-pyyaml = "*"
 
 [package.extras]
 test = ["pathlib"]
 
+[package.dependencies]
+pyyaml = "*"
+
 [[package]]
-category = "main"
-description = "GuessIt - a library for guessing information from video filenames."
 name = "guessit"
+version = "3.1.1"
+description = "GuessIt - a library for guessing information from video filenames."
+category = "main"
 optional = false
 python-versions = "*"
-version = "3.1.1"
+
+[package.extras]
+dev = ["zest.releaser", "pylint", "tox", "sphinx", "sphinx-autobuild"]
+test = ["pytest (>=3.3)", "pytest-benchmark", "pyyaml"]
 
 [package.dependencies]
 babelfish = "*"
@@ -81,126 +85,126 @@ python-dateutil = "*"
 rebulk = ">=2.0.0,<3.0.0"
 six = "*"
 
-[package.extras]
-dev = ["zest.releaser", "pylint", "tox", "sphinx", "sphinx-autobuild"]
-test = ["pytest (>=3.3)", "pytest-benchmark", "pyyaml"]
-
 [[package]]
-category = "main"
-description = "Internationalized Domain Names in Applications (IDNA)"
 name = "idna"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "2.10"
-
-[[package]]
+description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
-description = "Bring colors to your terminal."
-name = "pastel"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "0.2.0"
 
 [[package]]
+name = "pastel"
+version = "0.2.0"
+description = "Bring colors to your terminal."
 category = "main"
-description = "Python interface for cairo"
-marker = "sys_platform == \"linux\""
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
 name = "pycairo"
+version = "1.19.1"
+description = "Python interface for cairo"
+category = "main"
 optional = true
 python-versions = ">=3.5, <4"
-version = "1.19.1"
+marker = "sys_platform == \"linux\""
 
 [[package]]
-category = "main"
-description = "Python bindings for GObject Introspection"
-marker = "sys_platform == \"linux\""
 name = "pygobject"
+version = "3.36.1"
+description = "Python bindings for GObject Introspection"
+category = "main"
 optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
-version = "3.36.1"
+marker = "sys_platform == \"linux\""
 
 [package.dependencies]
 pycairo = ">=1.11.1"
 
 [[package]]
-category = "main"
-description = "A pure Python Levenshtein implementation that's not freaking GPL'd."
 name = "pylev"
+version = "1.3.0"
+description = "A pure Python Levenshtein implementation that's not freaking GPL'd."
+category = "main"
 optional = false
 python-versions = "*"
-version = "1.3.0"
 
 [[package]]
-category = "main"
-description = ""
-marker = "sys_platform == \"win32\""
 name = "pypiwin32"
+version = "223"
+description = ""
+category = "main"
 optional = false
 python-versions = "*"
-version = "223"
+marker = "sys_platform == \"win32\""
 
 [package.dependencies]
 pywin32 = ">=223"
 
 [[package]]
-category = "main"
-description = "A Python SOCKS client module. See https://github.com/Anorov/PySocks for more information."
 name = "pysocks"
+version = "1.7.1"
+description = "A Python SOCKS client module. See https://github.com/Anorov/PySocks for more information."
+category = "main"
 optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "1.7.1"
 
 [[package]]
-category = "main"
-description = "Extensions to the standard Python datetime module"
 name = "python-dateutil"
+version = "2.8.1"
+description = "Extensions to the standard Python datetime module"
+category = "main"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
-version = "2.8.1"
 
 [package.dependencies]
 six = ">=1.5"
 
 [[package]]
-category = "main"
-description = "Python for Window Extensions"
-marker = "sys_platform == \"win32\""
 name = "pywin32"
+version = "227"
+description = "Python for Window Extensions"
+category = "main"
 optional = false
 python-versions = "*"
-version = "227"
+marker = "sys_platform == \"win32\""
 
 [[package]]
-category = "main"
-description = "YAML parser and emitter for Python"
 name = "pyyaml"
+version = "5.3.1"
+description = "YAML parser and emitter for Python"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "5.3.1"
 
 [[package]]
-category = "main"
-description = "Rebulk - Define simple search patterns in bulk to perform advanced matching on any string."
 name = "rebulk"
+version = "2.0.1"
+description = "Rebulk - Define simple search patterns in bulk to perform advanced matching on any string."
+category = "main"
 optional = false
 python-versions = "*"
-version = "2.0.1"
-
-[package.dependencies]
-six = "*"
 
 [package.extras]
 dev = ["pytest", "zest.releaser", "pylint", "tox"]
 native = ["regex"]
 test = ["pytest"]
 
+[package.dependencies]
+six = "*"
+
 [[package]]
-category = "main"
-description = "Python HTTP for Humans."
 name = "requests"
+version = "2.24.0"
+description = "Python HTTP for Humans."
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "2.24.0"
+
+[package.extras]
+security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
+socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
 
 [package.dependencies]
 certifi = ">=2017.4.17"
@@ -208,25 +212,21 @@ chardet = ">=3.0.2,<4"
 idna = ">=2.5,<3"
 urllib3 = ">=1.21.1,<1.25.0 || >1.25.0,<1.25.1 || >1.25.1,<1.26"
 
-[package.extras]
-security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
-socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
-
 [[package]]
-category = "main"
-description = "Python 2 and 3 compatibility utilities"
 name = "six"
+version = "1.15.0"
+description = "Python 2 and 3 compatibility utilities"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
-version = "1.15.0"
 
 [[package]]
-category = "main"
-description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
+version = "1.25.10"
+description = "HTTP library with thread-safe connection pooling, file post, and more."
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
-version = "1.25.10"
 
 [package.extras]
 brotli = ["brotlipy (>=0.6.0)"]
@@ -234,25 +234,26 @@ secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "pyOpenSSL (>=0
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 
 [[package]]
-category = "main"
-description = "An easy-to-use Python library for displaying Windows 10 Toast Notifications"
-marker = "sys_platform == \"win32\""
 name = "win10toast"
+version = "0.9"
+description = "An easy-to-use Python library for displaying Windows 10 Toast Notifications"
+category = "main"
 optional = false
 python-versions = "*"
-version = "0.9"
+marker = "sys_platform == \"win32\""
 
 [package.dependencies]
 pypiwin32 = "*"
 setuptools = "*"
 
 [extras]
-linux_gobject = ["pygobject"]
 socks = ["pysocks"]
+linux_gobject = ["pygobject"]
 
 [metadata]
-content-hash = "bd77e01f4a1046bba527c9b1cbf0bc5eab3d6ec36530fb56845df02cd25efa6d"
+lock-version = "1.0"
 python-versions = "^3.7"
+content-hash = "bd77e01f4a1046bba527c9b1cbf0bc5eab3d6ec36530fb56845df02cd25efa6d"
 
 [metadata.files]
 appdirs = [
