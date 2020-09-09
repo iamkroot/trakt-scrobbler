@@ -24,8 +24,26 @@ if enable_notifs:
             notifier = None
 
 
-def notify(body, title=APP_NAME, timeout=5, stdout=False):
+def notify_linux(body, title=APP_NAME, timeout=5):
     global enable_notifs
+    global notifier
+    if notifier is not None:
+        notifier.set_timeout(timeout * 1000)
+        notifier.update(title, body, 'dialog-information')
+        try:
+            notifier.show()
+        except GLib.GError as e:
+            logger.warning(f"Error while showing notification: {e}")
+            notifier = Notify.Notification.new(APP_NAME)
+    else:
+        try:
+            sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
+        except FileNotFoundError:
+            logger.exception("Unable to send notification")
+            enable_notifs = False  # disable all future notifications until app restart
+
+
+def notify(body, title=APP_NAME, timeout=5, stdout=False):
     if stdout or not enable_notifs:
         print(body)
     if not enable_notifs:
@@ -35,16 +53,5 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
     elif sys.platform == 'darwin':
         osa_cmd = f'display notification "{body}" with title "{title}"'
         sp.run(["osascript", "-e", osa_cmd])
-    elif notifier is not None:
-        notifier.set_timeout(timeout * 1000)
-        notifier.update(title, body, 'dialog-information')
-        try:
-            notifier.show()
-        except GLib.GError as e:
-            logger.warning(f"Error while showing notification: {e}")
     else:
-        try:
-            sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
-        except FileNotFoundError:
-            logger.exception("Unable to send notification")
-            enable_notifs = False  # disable all future notifications until app restart
+        notify_linux(body, title, timeout)    
