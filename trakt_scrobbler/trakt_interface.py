@@ -197,7 +197,7 @@ def get_trakt_id(title, item_type, year=None):
     if results is None:  # Connection error
         return 0  # Dont store in cache
     elif results == [] or results[0]['score'] < 5:  # Weak or no match
-        msg = f'Trakt search yielded no results for {title}'
+        msg = f'Trakt search yielded no results for the {required_type}, {title}'
         msg += f", Year: {year}" * bool(year)
         logger.warning(msg)
         notify(msg)
