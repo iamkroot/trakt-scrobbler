@@ -1,6 +1,7 @@
 import shutil
 import subprocess as sp
 from .command import CMD_NAME, Command, platform, _get_win_pid, _kill_task_win
+import time
 
 
 class StartCommand(Command):
@@ -30,4 +31,5 @@ class StartCommand(Command):
                     f'start "trakt-scrobbler" /B "{shutil.which(CMD_NAME)}" run',
                     shell=True,
                 )
-        self.line("The monitors are running.")
+        time.sleep(1)
+        self.call("status")
