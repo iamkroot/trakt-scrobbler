@@ -1,129 +1,171 @@
 import time
 import sys
 import webbrowser
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta as td
 from trakt_scrobbler import logger, trakt_key_holder
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.utils import safe_request, read_json, write_json
 
-CLIENT_ID = trakt_key_holder.get_id()
-CLIENT_SECRET = trakt_key_holder.get_secret()
 API_URL = "https://api.trakt.tv"
 TRAKT_CACHE_PATH = DATA_DIR / 'trakt_cache.json'
-TRAKT_TOKEN_PATH = DATA_DIR / 'trakt_token.json'
 trakt_cache = {}
-token_data = {}
 
 
-def get_device_code():
-    code_request_params = {
-        "url": API_URL + "/oauth/device/code",
-        "headers": {"Content-Type": "application/json"},
-        "json": {"client_id": CLIENT_ID}
-    }
-    code_resp = safe_request('post', code_request_params)
-    return code_resp.json() if code_resp else None
+class TraktAuth:
+    TRAKT_TOKEN_PATH = DATA_DIR / 'trakt_token.json'
+    TOKEN_EXPIRY_BUFFER = td(days=1)
+    _CODE_FETCH_FAILS_LIMIT = 3
+    _REFRESH_RETRIES_LIMIT = 3
 
+    def __init__(self):
+        self.CLIENT_ID = trakt_key_holder.get_id()
+        self.CLIENT_SECRET = trakt_key_holder.get_secret()
+        self._token_data = {}
+        self._code_fetch_fails = 0
+        self._refresh_retries = 0
 
-def get_device_token(device_code):
-    token_request_params = {
-        "url": API_URL + "/oauth/device/token",
-        "headers": {"Content-Type": "application/json"},
-        "json": {
-            "code": device_code,
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET
+    @property
+    def headers(self):
+        return {
+            "Content-Type": "application/json",
+            "trakt-api-key": self.CLIENT_ID,
+            "trakt-api-version": "2",
+            "Authorization": "Bearer {}".format(self.get_access_token())
         }
-    }
-    token_resp = safe_request('post', token_request_params)
-    if not token_resp:
-        return
-    elif token_resp.status_code == 400:
-        return
-    elif token_resp.status_code == 200:
-        return token_resp.json()
-    else:
-        logger.error('Invalid status code of token response.')
-        sys.exit(1)
 
+    def get_access_token(self):
+        if not self.token_data:
+            logger.info("Access token not found. Initiating device authentication.")
+            self.device_auth()
+        elif self.is_token_expired():
+            logger.info("Trakt access token expired. Refreshing.")
+            notify("Trakt access token expired. Refreshing.")
+            self.refresh_token()
+        if not self.token_data or self.is_token_expired():
+            # either device_auth or refresh_token failed to get token
+            logger.critical("Unable to get access token.")
+            notify("Failed to authorize application with Trakt. "
+                   "Run 'trakts auth' manually to retry.", stdout=True)
+        else:
+            return self.token_data['access_token']
 
-def device_auth():
-    code_data = get_device_code()
-    if not code_data:
-        logger.error('Failed device auth.')
-        sys.exit(1)
+    @property
+    def token_data(self):
+        if not self._token_data:
+            self._token_data = read_json(self.TRAKT_TOKEN_PATH)
+        return self._token_data
 
-    logger.info(f"Verification URL: {code_data['verification_url']}")
-    logger.info(f"User Code: {code_data['user_code']}")
-    notify("Open {verification_url} in your browser and enter this code: "
-           "{user_code}".format(**code_data), timeout=60, stdout=True)
-    webbrowser.open(code_data['verification_url'])
+    @token_data.setter
+    def token_data(self, value):
+        if value is None:
+            return
+        self._token_data = value
+        write_json(self._token_data, self.TRAKT_TOKEN_PATH)
 
-    start = time.time()
-    while time.time() - start < code_data['expires_in']:
-        token_data = get_device_token(code_data['device_code'])
-        if not token_data:
+    def get_device_code(self):
+        code_request_params = {
+            "url": API_URL + "/oauth/device/code",
+            "headers": {"Content-Type": "application/json"},
+            "json": {"client_id": self.CLIENT_ID}
+        }
+        code_resp = safe_request('post', code_request_params)
+        return code_resp.json() if code_resp else None
+
+    def get_device_token(self, device_code):
+        token_request_params = {
+            "url": API_URL + "/oauth/device/token",
+            "headers": {"Content-Type": "application/json"},
+            "json": {
+                "code": device_code,
+                "client_id": self.CLIENT_ID,
+                "client_secret": self.CLIENT_SECRET
+            }
+        }
+        token_resp = safe_request('post', token_request_params)
+        if token_resp is None:
+            self._code_fetch_fails += 1
+            if self._code_fetch_fails == self._CODE_FETCH_FAILS_LIMIT:
+                logger.critical("Unable to get response from trakt.")
+                notify("Unable to get response from trakt.", stdout=True)
+                sys.exit(1)
+            return
+        elif token_resp.status_code == 400:
+            self._code_fetch_fails = 0
+            return False
+        elif token_resp.status_code == 200:
+            self.token_data = token_resp.json()
+            self._code_fetch_fails = 0
+            return True
+        else:
+            logger.critical("Invalid status code of token response.")
+            sys.exit(1)
+
+    def device_auth(self):
+        code_data = self.get_device_code()
+        if not code_data:
+            logger.error("Could not get device code.")
+            return
+
+        logger.info(f"Verification URL: {code_data['verification_url']}")
+        logger.info(f"User Code: {code_data['user_code']}")
+        notify("Open {verification_url} in your browser and enter this code: "
+               "{user_code}".format(**code_data), timeout=30, stdout=True)
+        webbrowser.open(code_data['verification_url'])
+
+        start = time.time()
+        while time.time() - start < code_data['expires_in']:
+            if self.get_device_token(code_data['device_code']):
+                notify('App authorized successfully.', stdout=True)
+                logger.info('App authorized successfully.')
+                break
             logger.debug('Waiting for user to authorize the app.')
             time.sleep(int(code_data['interval']))
         else:
-            notify('App authorized successfully.', stdout=True)
-            logger.info('Device auth successful.')
-            break
-    else:
-        logger.error('Timed out during auth.')
-    return token_data
+            logger.error('Timed out during auth.')
 
+    def refresh_token(self):
+        if self._refresh_retries == self._REFRESH_RETRIES_LIMIT:
+            self.token_data = {}
+            self._refresh_retries = 0
 
-def refresh_token(token_data):
-    exchange_params = {
-        "url": API_URL + '/oauth/token',
-        "headers": {"Content-Type": "application/json"},
-        "json": {
-            "refresh_token": token_data['refresh_token'],
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
-            "grant_type": "refresh_token"
+            logger.critical("Too many failed refreshes. Clearing token.")
+            notify("Trakt token expired. Couldn't auto-refresh token.", stdout=True)
+            self.device_auth()
+            return
+
+        exchange_params = {
+            "url": API_URL + '/oauth/token',
+            "headers": {"Content-Type": "application/json"},
+            "json": {
+                "refresh_token": self.token_data['refresh_token'],
+                "client_id": self.CLIENT_ID,
+                "client_secret": self.CLIENT_SECRET,
+                "redirect_uri": "urn:ietf:wg:oauth:2.0:oob",
+                "grant_type": "refresh_token"
+            }
         }
-    }
-    exchange_resp = safe_request('post', exchange_params)
-    if exchange_resp and exchange_resp.status_code == 200:
-        logger.info('Refreshed access token.')
-        return exchange_resp.json()
-    else:
-        logger.info("Error refreshing token.")
+        self._refresh_retries += 1
+        exchange_resp = safe_request('post', exchange_params)
+
+        if exchange_resp and exchange_resp.status_code == 200:
+            self.token_data = exchange_resp.json()
+            self._refresh_retries = 0
+            logger.info('Refreshed access token.')
+        else:
+            logger.error("Error refreshing token.")
+
+    def token_expires_at(self) -> dt:
+        return dt.fromtimestamp(self.token_data['created_at'] + self.token_data['expires_in'])
+
+    def is_token_expired(self) -> bool:
+        return self.token_expires_at() - dt.now() < self.TOKEN_EXPIRY_BUFFER
+
+    def clear_token(self):
+        self.token_data = {}
 
 
-def get_access_token():
-    global token_data
-    if not token_data:
-        token_data = read_json(TRAKT_TOKEN_PATH)
-    if not token_data:
-        logger.info("Access token not found in config. "
-                    "Initiating device authentication.")
-        token_data = device_auth()
-        write_json(token_data, TRAKT_TOKEN_PATH)
-    elif token_data['created_at'] + token_data['expires_in'] - \
-            time.time() < 86400:
-        logger.info("Access token about to expire. Refreshing.")
-        token_data = refresh_token(token_data)
-        write_json(token_data, TRAKT_TOKEN_PATH)
-    if not token_data:
-        logger.error("Unable to get access token. "
-                     f"Try deleting {TRAKT_TOKEN_PATH!s} and retry.")
-        notify("Failed to authorize application.", stdout=True)
-        sys.exit(1)
-    return token_data['access_token']
-
-
-def get_headers():
-    return {
-        "Content-Type": "application/json",
-        "trakt-api-key": CLIENT_ID,
-        "trakt-api-version": "2",
-        "Authorization": "Bearer {}".format(get_access_token())
-    }
+trakt_auth = TraktAuth()
 
 
 def search(query, types=None, year=None, extended=False):
@@ -133,7 +175,7 @@ def search(query, types=None, year=None, extended=False):
         "url": API_URL + '/search/' + ",".join(types),
         "params": {'query': query, 'extended': extended,
                    'field': 'title', 'years': year},
-        "headers": get_headers()
+        "headers": trakt_auth.headers
     }
     r = safe_request('get', search_params)
     return r.json() if r else None
@@ -193,7 +235,7 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_data['progress'] = progress
     scrobble_params = {
         "url": API_URL + '/scrobble/' + verb,
-        "headers": get_headers(),
+        "headers": trakt_auth.headers,
         "json": scrobble_data
     }
     scrobble_resp = safe_request('post', scrobble_params)
@@ -224,7 +266,7 @@ def add_to_history(media_info, updated_at, *args, **kwargs):
         return
     params = {
         "url": API_URL + '/sync/history',
-        "headers": get_headers(),
+        "headers": trakt_auth.headers,
         "json": history
     }
     resp = safe_request('post', params)

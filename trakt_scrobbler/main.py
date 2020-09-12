@@ -4,11 +4,9 @@ from trakt_scrobbler import config, logger
 from trakt_scrobbler.backlog_cleaner import BacklogCleaner
 from trakt_scrobbler.player_monitors import collect_monitors
 from trakt_scrobbler.scrobbler import Scrobbler
-from trakt_scrobbler.trakt_interface import get_access_token
 
 
 def main():
-    assert get_access_token()
     scrobble_queue = Queue()
     backlog_cleaner = BacklogCleaner()
     scrobbler = Scrobbler(scrobble_queue, backlog_cleaner)
