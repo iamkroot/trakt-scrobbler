@@ -47,6 +47,12 @@ def get_media_info(file_path):
         return None
     guess = use_regex and custom_regex(file_path) or use_guessit(file_path)
     logger.debug(f"Guess: {guess}")
+    return cleanup_guess(guess)
+
+
+def cleanup_guess(guess):
+    if not guess:
+        return None
 
     if any(key not in guess for key in ('title', 'type')) or \
        (guess['type'] == 'episode' and 'episode' not in guess):
@@ -59,7 +65,7 @@ def get_media_info(file_path):
 
     req_keys = ['type', 'title']
     if guess['type'] == 'episode':
-        season = guess.get('season', 1) or 1
+        season = guess.get('season') or 1
         if isinstance(season, list):
             logger.warning(f"Multiple probable seasons found: ({','.join(season)}). "
                            "Consider renaming the folder.")

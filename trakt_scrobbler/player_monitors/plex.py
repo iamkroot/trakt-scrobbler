@@ -3,6 +3,7 @@ from getpass import getpass
 import confuse
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
+from trakt_scrobbler.file_info import cleanup_guess
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
 from trakt_scrobbler.utils import read_json, safe_request, write_json
 
@@ -99,12 +100,14 @@ class PlexMon(WebInterfaceMon):
 
     @staticmethod
     def _get_media_info(status_data):
+        info = {}
         if status_data["type"] == "movie":
-            return {"type": "movie", "title": status_data["title"]}
+            info = {"type": "movie", "title": status_data["title"]}
         elif status_data["type"] == "episode":
-            return {
+            info = {
                 "type": "episode",
                 "title": status_data["grandparentTitle"],
                 "season": status_data["parentIndex"],
                 "episode": status_data["index"],
             }
+        return cleanup_guess(info)
