@@ -1,0 +1,9 @@
+[Unit]
+Description=Trakt Scrobbler Service
+
+[Service]
+ExecStart=%h/.local/bin/trakts run
+WorkingDirectory=%h/.local/pipx/venvs/trakt-scrobbler
+
+[Install]
+WantedBy=default.target

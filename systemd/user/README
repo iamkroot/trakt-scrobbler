@@ -1,0 +1,6 @@
+Put `trakt-srobbler.service` into $HOME/.config/systemd/user/trakt-scrobbler.service
+
+```
+$ systemctl --user daemon-reload
+$ systemctl start trakt-scrobbler
+```
