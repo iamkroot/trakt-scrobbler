@@ -30,7 +30,7 @@ Head over to the [wiki](https://github.com/iamkroot/trakt-scrobbler/wiki) for fu
 
 ## Contributing
 
-Feel free to create a new issue in case you find a bug/want to have a feature added. Proper PRs are welcome.
+Feel free to create a new issue in case you find a bug/want to have a feature added. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for more details. Proper PRs are welcome.
 
 ## Acknowledgements
 
