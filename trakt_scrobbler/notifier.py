@@ -54,4 +54,4 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
         osa_cmd = f'display notification "{body}" with title "{title}"'
         sp.run(["osascript", "-e", osa_cmd])
     else:
-        notify_linux(body, title, timeout)    
+        notify_linux(body, title, timeout)
