@@ -134,7 +134,12 @@ class WebInterfaceMon(Monitor):
                 logger.info(f'Unable to connect to {self.name}. Ensure that '
                             'the web interface is running.')
                 self.status = {}
+            except requests.HTTPError as e:
+                logger.error(f"Error while getting data from {self.name}: {e}")
+                break
             if not self.status.get("filepath") and not self.status.get("media_info"):
                 self.status = {}
             self.handle_status_update()
             time.sleep(self.poll_interval)
+
+        logger.warning(f"{self.name} monitor stopped")
