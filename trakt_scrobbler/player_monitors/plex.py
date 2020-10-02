@@ -77,7 +77,10 @@ class PlexMon(WebInterfaceMon):
         self.media_info_cache = {}
 
     def get_data(self, url):
-        data = self.sess.get(url).json()["MediaContainer"]
+        resp = self.sess.get(url)
+        # TODO: If we get a 401, clear token and restart plex auth flow
+        resp.raise_for_status()
+        data = resp.json()["MediaContainer"]
         if data["size"] > 0:
             return data["Metadata"][0]
 
