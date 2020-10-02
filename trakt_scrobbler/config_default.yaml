@@ -44,6 +44,7 @@ players:
     ip: localhost  # IP of the plex server
     port: '32400'
     poll_interval: 10  # in seconds. How frequently the monitor should check for player update.
+    scrobble_user: ""
 
 backlog:
   clear_interval: 1800  # 30 minutes

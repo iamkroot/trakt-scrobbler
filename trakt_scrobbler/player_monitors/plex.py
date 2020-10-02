@@ -58,6 +58,7 @@ class PlexMon(WebInterfaceMon):
         "ip": confuse.String(default="localhost"),
         "port": confuse.String(default="32400"),
         "poll_interval": confuse.Number(default=10),
+        "scrobble_user": confuse.String(default="")
     }
 
     def __init__(self, scrobble_queue):
@@ -81,8 +82,17 @@ class PlexMon(WebInterfaceMon):
         # TODO: If we get a 401, clear token and restart plex auth flow
         resp.raise_for_status()
         data = resp.json()["MediaContainer"]
-        if data["size"] > 0:
+
+        if data["size"] <= 0:
+            return None
+
+        # no user filter
+        if not self.config["scrobble_user"]:
             return data["Metadata"][0]
+
+        for metadata in data["Metadata"]:
+            if metadata["User"]["title"] == self.config["scrobble_user"]:
+                return metadata
 
     def update_status(self):
         status_data = self.get_data(self.session_url)
