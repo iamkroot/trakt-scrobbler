@@ -1,7 +1,9 @@
 import shutil
 import subprocess as sp
-from .command import CMD_NAME, Command, platform, _get_win_pid, _kill_task_win
+import sys
 import time
+from textwrap import dedent
+from .command import CMD_NAME, Command, platform, _get_win_pid, _kill_task_win
 
 
 class StartCommand(Command):
@@ -27,9 +29,19 @@ class StartCommand(Command):
                 _kill_task_win(pid)
                 pid = None
             if not pid:
-                sp.check_call(
-                    f'start "trakt-scrobbler" /B "{shutil.which(CMD_NAME)}" run',
-                    shell=True,
-                )
+                # Create a truly detached, background process with no window.
+                # Directly using 'START /B' won't work since it will be killed when
+                # 'trakts start' exits.
+                # As a workaround, use pythonw to first create a background process.
+
+                script = dedent(f"""
+                    import subprocess as sp
+                    sp.Popen(
+                        r'start "" /B "{shutil.which(CMD_NAME)}" run',
+                        shell=True,
+                    )
+                    """)
+                pythonw = sys.executable.replace("python.exe", "pythonw.exe")
+                sp.Popen([pythonw, "-c", script])
         time.sleep(1)
         self.call("status")
