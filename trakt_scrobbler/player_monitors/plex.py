@@ -33,7 +33,7 @@ def get_token():
         login = input("Plex login ID: ")
         pwd = getpass()
         resp = plex_token_auth(login, pwd)
-        if resp.ok:
+        if resp:
             token_data = {"token": resp.json()["user"]["authToken"]}
             write_json(token_data, PLEX_TOKEN_PATH)
             logger.info(f"Saved plex token to {PLEX_TOKEN_PATH}")
