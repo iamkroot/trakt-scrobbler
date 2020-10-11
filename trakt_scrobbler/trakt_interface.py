@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+from http import HTTPStatus
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.notifier import notify
@@ -81,6 +82,11 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
         "json": scrobble_data
     }
     scrobble_resp = safe_request('post', scrobble_params)
+
+    if scrobble_resp is not None and scrobble_resp.status_code == HTTPStatus.NOT_FOUND:
+        logger.warning("Not found on trakt. The media info is incorrect.")
+        return None
+
     return scrobble_resp.json() if scrobble_resp else False
 
 
