@@ -10,7 +10,9 @@ class TraktAuthCommand(Command):
     """
 
     def handle(self):
-        from trakt_scrobbler.trakt_interface import trakt_auth
+        from trakt_scrobbler.trakt_auth import TraktAuth
+
+        trakt_auth = TraktAuth()
 
         if self.option("force"):
             self.line("Forcing trakt authentication")
