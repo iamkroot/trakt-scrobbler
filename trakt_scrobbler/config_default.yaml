@@ -39,6 +39,8 @@ players:
   mpv:  # enable the JSON IPC server. Either via cmd line arg (eg: --input-ipc-server=\\.\pipe\mpvpipe), or in mpv.conf file
     ipc_path: auto-detect
     poll_interval: 10  # in seconds. How frequently the monitor should check for player update.
+    read_timeout: 2  # seconds to wait while reading data from mpv
+    restart_delay: 0.1  # seconds to wait after one file ends to check for the next play. usually needed for slow mpv wrappers which may cause delay
 
   plex:
     ip: localhost  # IP of the plex server

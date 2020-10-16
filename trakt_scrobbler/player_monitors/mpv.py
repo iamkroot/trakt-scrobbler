@@ -26,15 +26,19 @@ class MPVMon(Monitor):
     CONFIG_TEMPLATE = {
         "ipc_path": confuse.String(default="auto-detect"),
         "poll_interval": confuse.Number(default=10),
+        # seconds to wait while reading data from mpv
+        "read_timeout": confuse.Number(default=2),
+        # seconds to wait after one file ends to check for the next play
+        # usually needed for slow mpv wrappers which may cause delay
+        "restart_delay": confuse.Number(default=0.1)
     }
 
     def __init__(self, scrobble_queue):
-        try:
-            self.ipc_path = self.config['ipc_path']
-        except KeyError:
-            logger.exception('Check config for correct MPV params.')
-            return
         super().__init__(scrobble_queue)
+        self.ipc_path = self.config['ipc_path']
+        self.read_timeout = self.config['read_timeout']
+        self.poll_interval = self.config['poll_interval']
+        self.restart_delay = self.config['restart_delay']
         self.buffer = ''
         self.lock = threading.Lock()
         self.poll_timer = None
@@ -68,10 +72,10 @@ class MPVMon(Monitor):
                 self.conn_loop()
                 if self.poll_timer:
                     self.poll_timer.cancel()
-                time.sleep(1)
+                time.sleep(self.restart_delay)
             else:
                 logger.info('Unable to connect to MPV. Check ipc path.')
-                time.sleep(10)
+                time.sleep(self.poll_interval)
 
     def update_status(self):
         fpath = Path(self.vars['working-directory']) / Path(self.vars['path'])
@@ -96,7 +100,7 @@ class MPVMon(Monitor):
             self.send_command(['get_property', prop])
         if self.poll_timer:
             self.poll_timer.cancel()
-        self.poll_timer = threading.Timer(10, self.update_vars)
+        self.poll_timer = threading.Timer(self.poll_interval, self.update_vars)
         self.poll_timer.name = 'mpvpoll'
         self.poll_timer.start()
 
@@ -178,10 +182,11 @@ class MPVPosixMon(MPVMon):
         self.sock = socket.socket(socket.AF_UNIX)
         self.sock.connect(self.ipc_path)
         self.is_running = True
+        sock_list = [self.sock]
         while self.is_running:
-            r, _, e = select.select([self.sock], [], [], 0.1)
-            if r == [self.sock]:
-                # socket has data to read
+            r, _, _ = select.select(sock_list, [], [], self.read_timeout)
+            if r:  # r == [self.sock]
+                # socket has data to be read
                 data = self.sock.recv(4096)
                 if len(data) == 0:
                     # EOF reached
@@ -190,7 +195,7 @@ class MPVPosixMon(MPVMon):
                 self.on_data(data)
             while not self.write_queue.empty():
                 # block until self.sock can be written to
-                select.select([], [self.sock], [])
+                select.select([], sock_list, [])
                 try:
                     self.sock.sendall(self.write_queue.get_nowait())
                 except BrokenPipeError:
@@ -212,7 +217,6 @@ class MPVWinMon(MPVMon):
 
     def conn_loop(self):
         self.is_running = True
-        self.update_vars()
         self.file_handle = win32file.CreateFile(
             self.ipc_path,
             win32file.GENERIC_READ | win32file.GENERIC_WRITE,
@@ -232,11 +236,11 @@ class MPVWinMon(MPVMon):
             size = win32file.GetFileSize(self.file_handle)
             if size > 0:
                 while size > 0:
-                    # pipe has data to read
+                    # pipe has data to be read
                     _, data = win32file.ReadFile(self.file_handle, 4096)
                     self.on_data(data)
                     size = win32file.GetFileSize(self.file_handle)
             else:
-                time.sleep(1)
+                time.sleep(self.read_timeout)
         win32file.CloseHandle(self.file_handle)
         logger.debug('Pipe closed.')
