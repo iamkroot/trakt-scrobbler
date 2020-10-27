@@ -56,6 +56,8 @@ Use --add to avoid overwriting the previous list values (whitelist, monitored, e
 
 will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']"""
 
+    TRUTHY_BOOL = ("true", "yes", "1")
+
     def handle(self):
         import confuse
         from trakt_scrobbler import config
@@ -80,20 +82,22 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']"""
             value = values[0] if len(values) == 1 else values
             view.add(value)
         else:
-            if not isinstance(orig_val, list):
-                if len(values) > 1:
-                    raise ValueError("Given parameter only accepts a single value")
-                else:
-                    value = orig_val.__class__(values[0])
-            else:
+            if isinstance(orig_val, list):
                 if self.option("add"):
                     value = list(set(orig_val).union(values))
                 else:
                     value = values
+            elif len(values) == 1:
+                if isinstance(orig_val, bool):
+                    value = values[0].lower() in self.TRUTHY_BOOL
+                else:
+                    value = orig_val.__class__(values[0])
+            else:
+                raise ValueError("Given parameter only accepts a single value")
             view.set(value)
 
         ConfigCommand.save_config(config)
-        self.line(f"User config updated with '{key} = {value}'")
+        self.line(f'User config updated with "<info>{key}</info> = <comment>{value}</comment>"')
         self.line("Don't forget to restart the service for the changes to take effect.")
 
 
@@ -120,8 +124,8 @@ class ConfigUnsetCommand(Command):
         try:
             view.get()
         except confuse.NotFoundError:
-            self.line(f"{key} not found in user config.", "error")
-            self.line(f"Run '{CMD_NAME} config list' to see all user-defined values.")
+            self.line(f"<info>{key}</info> not found in user config.", "error")
+            self.line(f"Run <question>{CMD_NAME} config list</question> to see all user-defined values.")
             return 1
 
         for src in temp_root.sources:
