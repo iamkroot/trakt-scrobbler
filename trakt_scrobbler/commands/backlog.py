@@ -1,4 +1,5 @@
 from .command import Command
+from trakt_scrobbler.utils import pluralize
 
 
 class BacklogListCommand(Command):
@@ -64,7 +65,30 @@ class BacklogClearCommand(Command):
                     "Failed to clear backlog! Check log file for information.", "error"
                 )
             else:
-                self.info(f"Cleared {old} items.")
+                self.info(f"Cleared {pluralize(old, 'item')}.")
+        else:
+            self.info("No items in backlog!")
+
+
+class BacklogPurgeCommand(Command):
+    """
+    Purge all entries from the backlog, without trying to sync them with trakt.
+
+    purge
+    """
+
+    def handle(self):
+        from trakt_scrobbler.backlog_cleaner import BacklogCleaner
+
+        cleaner = BacklogCleaner(manual=True)
+        if cleaner.backlog:
+            res = self.confirm("WARNING: This may cause loss of scrobbles. Continue?")
+            if res:
+                old_backlog = cleaner.purge()
+                num_items = len(old_backlog)
+                self.info(f"Purged {pluralize(num_items, 'item')} from backlog.")
+            else:
+                self.info("Backlog is unchanged.")
         else:
             self.info("No items in backlog!")
 
@@ -76,7 +100,7 @@ class BacklogCommand(Command):
     backlog
     """
 
-    commands = [BacklogListCommand(), BacklogClearCommand()]
+    commands = [BacklogListCommand(), BacklogClearCommand(), BacklogPurgeCommand()]
 
     def handle(self):
         return self.call("help", self._config.name)

@@ -6,18 +6,21 @@ from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.utils import read_json, write_json
 from trakt_scrobbler import trakt_interface as trakt
 
-BACKLOG_PATH = DATA_DIR / "watched_backlog.json"
-
 
 class BacklogCleaner:
+    BACKLOG_PATH = DATA_DIR / "watched_backlog.json"
+
     def __init__(self, manual=False):
-        self.backlog = read_json(BACKLOG_PATH) or []
+        self.backlog = read_json(self.BACKLOG_PATH) or []
         self.clear_interval = config["backlog"]["clear_interval"].get(confuse.Number())
         self.expiry = config["backlog"]["expiry"].get(confuse.Number())
         self.timer_enabled = not manual
         if self.timer_enabled:
             self._make_timer()
             self.clear()
+
+    def save_backlog(self):
+        write_json(self.backlog, self.BACKLOG_PATH)
 
     def remove_expired(self):
         not_expired = []
@@ -27,7 +30,7 @@ class BacklogCleaner:
             else:
                 logger.warning(f"Item expired: {item}")
         self.backlog = not_expired
-        write_json(self.backlog, BACKLOG_PATH)
+        self.save_backlog()
 
     def _make_timer(self):
         self.timer = Timer(self.clear_interval, self.clear)
@@ -36,10 +39,9 @@ class BacklogCleaner:
 
     def add(self, data):
         self.backlog.append(data)
-        write_json(self.backlog, BACKLOG_PATH)
+        self.save_backlog()
 
     def clear(self):
-        self.backlog = read_json(BACKLOG_PATH) or []
         self.remove_expired()
 
         failed = []
@@ -51,8 +53,16 @@ class BacklogCleaner:
                 failed.append(item)
 
         self.backlog = failed
-        write_json(self.backlog, BACKLOG_PATH)
+        self.save_backlog()
 
         if self.timer_enabled:
             self.timer.cancel()
             self._make_timer()
+
+    def purge(self):
+        if not self.backlog:
+            return []
+        old_backlog = self.backlog
+        self.backlog = []
+        self.save_backlog()
+        return old_backlog

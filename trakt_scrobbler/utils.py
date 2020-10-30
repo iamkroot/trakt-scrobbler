@@ -2,6 +2,8 @@ import json
 import locale
 import logging.config
 import sys
+import threading
+import time
 import requests
 from functools import lru_cache
 from pathlib import Path
@@ -91,3 +93,9 @@ class AutoloadError(Exception):
         if self.src:
             msg += f" from '{self.src}'"
         return msg
+
+
+def pluralize(num: int, singular: str, plural: str = None) -> str:
+    if plural is None:
+        plural = singular + 's'
+    return f"{num} {singular if num == 1 else plural}"
