@@ -17,7 +17,12 @@ fileinfo:
 players:
   monitored: []  # players to be monitored. Allowed: mpc-be, mpc-hc, mpv, plex, vlc
 
+  # general parameters, can be overriden per player (Eg: trakts config set players.plex.skip_interval 10)
   skip_interval: 5  # min percent jump to consider for scrobbling to trakt
+  preview_threshold: 80  # min progress (in %) at which file should be opened for preview to be started
+  preview_duration: 60  # in seconds. How long the monitor should wait to start sending scrobbles
+  fast_pause_threshold: 1  # in seconds. Max time elapsed between a "play->pause" transition to trigger the "fast_pause" state
+  fast_pause_duration: 5  # in seconds. How long the monitor should wait to start sending scrobbles
 
   # player specific parameters
   mpc-be:  # enable web interface from options

@@ -1,10 +1,12 @@
 import time
+from enum import IntEnum
+from threading import Lock, Thread
+
+import confuse
 import requests
-from threading import Thread, Lock
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.file_info import get_media_info
 from trakt_scrobbler.utils import AutoloadError, ResumableTimer
-from enum import IntEnum
 
 SCROBBLE_VERBS = ('stop', 'pause', 'start')
 
@@ -42,8 +44,23 @@ class Monitor(Thread):
     """Generic base class that polls the player for state changes,
      and sends the info to scrobble queue."""
 
+    CONFIG_TEMPLATE = {
+        # min percent jump to consider for scrobbling to trakt
+        'skip_interval': confuse.Number(default=5),
+        # min progress (in %) at which file should be opened for preview to be started
+        'preview_threshold': confuse.Number(default=80),
+        # in seconds. How long the monitor should wait to start sending scrobbles
+        'preview_duration': confuse.Number(default=60),
+        # in seconds. Max time elapsed between a "play->pause" transition to trigger
+        # the "fast_pause" state
+        'fast_pause_threshold': confuse.Number(default=1),
+        # in seconds. How long the monitor should wait to start sending scrobbles
+        'fast_pause_duration': confuse.Number(default=5),
+    }
+
     def __new__(cls, *args, **kwargs):
         try:
+            cls.inject_base_config()
             cls.config = cls.autoload_cfg()
         except AutoloadError as e:
             logger.debug(str(e))
@@ -54,8 +71,17 @@ class Monitor(Thread):
             return super().__new__(cls)
 
     @classmethod
+    def inject_base_config(cls):
+        """Inject default values from base config to allow player-specific overrides"""
+        base_config = config['players'].get(Monitor.CONFIG_TEMPLATE)
+        base_template = confuse.as_template(base_config)
+        template = getattr(cls, 'CONFIG_TEMPLATE', {})
+        updated = {**base_template.subtemplates, **template}
+        cls.CONFIG_TEMPLATE = updated
+
+    @classmethod
     def autoload_cfg(cls):
-        template = getattr(cls, "CONFIG_TEMPLATE", None)
+        template = getattr(cls, 'CONFIG_TEMPLATE', None)
         monitor_cfg = config['players'][cls.name].get(template)
         auto_keys = {k for k, v in monitor_cfg.items() if v == "auto-detect"}
         if not auto_keys:
@@ -85,10 +111,14 @@ class Monitor(Thread):
         super().__init__()
         logger.info('Started monitor for ' + self.name)
         self.scrobble_queue = scrobble_queue
+        self.skip_interval = self.config['skip_interval']
+        self.preview_threshold = self.config['preview_threshold']
+        self.preview_duration = self.config['preview_duration']
+        self.fast_pause_threshold = self.config['fast_pause_threshold']
+        self.fast_pause_duration = self.config['fast_pause_duration']
         self.is_running = False
         self.status = {}
         self.prev_state = {}
-        self.skip_interval = self.config.get('skip_interval', 5)
         self.preview = False
         self.fast_pause = False
         self.scrobble_buf = None
@@ -134,33 +164,6 @@ class Monitor(Thread):
     def decide_action(self, prev, current):
         """
         Decide what action(s) to take depending on the prev and current states.
-
-        Pseudocode-
-        if media changed:
-            if in preview: exit preview
-            else if prev:  scrobble stop prev
-            if in fast_pause: exit fast_pause
-
-            if new is <__preview_threshold__% progress: scrobble
-            else: start preview
-                (put new in scrobble_buf, wait for __preview_delay__ secs,
-                then scrobble item in scrobble_buf and exit preview)
-        else if state changed:
-            if in preview
-                if new is stop: don't scrobble, exit_preview
-                if play->pause: don't scrobble, pause timer
-                if pause->play: don't scrobble, resume timer
-            else if in fast_pause:
-                if new is pause: don't scrobble, clear scrobble_buf and timer
-                else if new is play:
-                    start_delayed_play
-                    (start/update timer, put new in scrobble_buf,
-                    wait for __play_delay__ secs,
-                    then scrobble item in scrobble_buf and exit fast_pause)
-                else: scrobble, exit fast_pause
-            else:
-                scrobble
-                if play->pause within 1 sec realtime: fast_pause = 1
         """
 
         if not prev and not current:
@@ -180,8 +183,12 @@ class Monitor(Thread):
             if self.fast_pause:
                 yield 'exit_fast_pause'
             if current:
-                yield 'enter_preview' if current['progress'] > 80 else 'scrobble'
+                if current['progress'] > self.preview_threshold:
+                    yield 'enter_preview'
+                else:
+                    yield 'scrobble'
         elif transition.state_changed() or transition.progress() > self.skip_interval:
+            # state changed
             if self.preview:
                 if current['state'] == State.Stopped:
                     yield 'exit_preview'
@@ -206,7 +213,7 @@ class Monitor(Thread):
                 yield 'scrobble'
                 if (
                     transition.is_state_jump(State.Playing, State.Paused)
-                    and transition.elapsed_realtime() < 1
+                    and transition.elapsed_realtime() < self.fast_pause_threshold
                 ):
                     yield 'enter_fast_pause'
 
@@ -266,7 +273,7 @@ class Monitor(Thread):
                 self.preview = True
                 self.scrobble_buf = current
                 self.preview_timer = ResumableTimer(
-                    60, self.delayed_scrobble, (self.exit_preview,)
+                    self.preview_duration, self.delayed_scrobble, (self.exit_preview,)
                 )
                 self.preview_timer.start()
             elif action == "pause_preview":
@@ -287,7 +294,9 @@ class Monitor(Thread):
                     self.clear_timer('fast_pause_timer')
                     self.scrobble_buf = current
                 self.fast_pause_timer = ResumableTimer(
-                    5, self.delayed_scrobble, (self.exit_fast_pause,)
+                    self.fast_pause_duration,
+                    self.delayed_scrobble,
+                    (self.exit_fast_pause,),
                 )
                 self.fast_pause_timer.start()
             elif action == "exit_fast_pause":
