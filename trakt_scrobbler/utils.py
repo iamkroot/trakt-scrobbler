@@ -99,3 +99,34 @@ def pluralize(num: int, singular: str, plural: str = None) -> str:
     if plural is None:
         plural = singular + 's'
     return f"{num} {singular if num == 1 else plural}"
+
+
+class ResumableTimer:
+    def __init__(self, timeout, callback, args=None, kwargs=None):
+        self.timeout = timeout
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+        self.timer = threading.Timer(timeout, callback, args, kwargs)
+        self.start_time = time.time()
+
+    def start(self):
+        self.timer.start()
+
+    def pause(self):
+        self.timer.cancel()
+        self.timer = None
+        self.pause_time = time.time()
+
+    def resume(self):
+        if self.timer:
+            # don't resume if already running
+            return
+        self.timer = threading.Timer(
+            self.timeout - (self.pause_time - self.start_time),
+            self.callback, self.args, self.kwargs)
+
+        self.timer.start()
+
+    def cancel(self):
+        self.timer.cancel()

@@ -1,11 +1,41 @@
 import time
 import requests
-from threading import Thread
+from threading import Thread, Lock
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.file_info import get_media_info
-from trakt_scrobbler.utils import AutoloadError
+from trakt_scrobbler.utils import AutoloadError, ResumableTimer
+from enum import IntEnum
 
 SCROBBLE_VERBS = ('stop', 'pause', 'start')
+
+
+class State(IntEnum):
+    Stopped = 0
+    Paused = 1
+    Playing = 2
+
+
+class Transition:
+    """Helper class containing common properties of a state change"""
+
+    def __init__(self, prev, current):
+        self.prev = prev
+        self.current = current
+
+    def is_same_media(self) -> bool:
+        return self.current['media_info'] == self.prev['media_info']
+
+    def is_state_jump(self, from_: State, to: State) -> bool:
+        return self.prev['state'] == from_ and self.current['state'] == to
+
+    def state_changed(self) -> bool:
+        return self.prev['state'] != self.current['state']
+
+    def elapsed_realtime(self) -> float:
+        return self.current['updated_at'] - self.prev['updated_at']
+
+    def progress(self) -> float:
+        return self.current['progress'] - self.prev['progress']
 
 
 class Monitor(Thread):
@@ -59,6 +89,12 @@ class Monitor(Thread):
         self.status = {}
         self.prev_state = {}
         self.skip_interval = self.config.get('skip_interval', 5)
+        self.preview = False
+        self.fast_pause = False
+        self.scrobble_buf = None
+        self.lock = Lock()
+        self.preview_timer: ResumableTimer = None
+        self.fast_pause_timer: ResumableTimer = None
 
     def parse_status(self):
         if (
@@ -85,29 +121,179 @@ class Monitor(Thread):
         elif isinstance(ep, str):
             media_info['episode'] = int(ep)
 
-        progress = min(round(self.status['position'] * 100 /
-                             self.status['duration'], 2), 100)
+        progress = min(
+            round(self.status['position'] * 100 / self.status['duration'], 2), 100
+        )
         return {
             'state': self.status['state'],
             'progress': progress,
             'media_info': media_info,
-            'updated_at': time.time()
+            'updated_at': time.time(),
         }
 
-    def scrobble_if_state_changed(self, prev, current):
+    def decide_action(self, prev, current):
+        """
+        Decide what action(s) to take depending on the prev and current states.
+
+        Pseudocode-
+        if media changed:
+            if in preview: exit preview
+            else if prev:  scrobble stop prev
+            if in fast_pause: exit fast_pause
+
+            if new is <__preview_threshold__% progress: scrobble
+            else: start preview
+                (put new in scrobble_buf, wait for __preview_delay__ secs,
+                then scrobble item in scrobble_buf and exit preview)
+        else if state changed:
+            if in preview
+                if new is stop: don't scrobble, exit_preview
+                if play->pause: don't scrobble, pause timer
+                if pause->play: don't scrobble, resume timer
+            else if in fast_pause:
+                if new is pause: don't scrobble, clear scrobble_buf and timer
+                else if new is play:
+                    start_delayed_play
+                    (start/update timer, put new in scrobble_buf,
+                    wait for __play_delay__ secs,
+                    then scrobble item in scrobble_buf and exit fast_pause)
+                else: scrobble, exit fast_pause
+            else:
+                scrobble
+                if play->pause within 1 sec realtime: fast_pause = 1
+        """
+
         if not prev and not current:
-            return
-        if (not current and (not prev or prev['state'] != 0)) or \
-           (prev and current and prev['state'] != 0 and
-                prev['media_info'] != current['media_info']):
-            self.scrobble_queue.put(('stop', prev))
-        if not prev or \
-           (current and (prev['state'] != current['state'] or
-                         prev['media_info'] != current['media_info'] or
-                         current['progress'] - prev['progress'] >
-                         self.skip_interval)):
-            verb = SCROBBLE_VERBS[current['state']]
-            self.scrobble_queue.put((verb, current))
+            return None
+        transition = Transition(prev, current)
+        if (
+            not prev
+            or not current
+            or not transition.is_same_media()
+            or prev['state'] == State.Stopped
+        ):
+            # media changed
+            if self.preview:
+                yield 'exit_preview'
+            elif prev and prev['state'] != State.Stopped:
+                yield 'stop_previous'
+            if self.fast_pause:
+                yield 'exit_fast_pause'
+            if current:
+                yield 'enter_preview' if current['progress'] > 80 else 'scrobble'
+        elif transition.state_changed() or transition.progress() > self.skip_interval:
+            if self.preview:
+                if current['state'] == State.Stopped:
+                    yield 'exit_preview'
+                elif transition.is_state_jump(State.Playing, State.Paused):
+                    yield 'pause_preview'
+                elif current['state'] == State.Playing:
+                    yield 'resume_preview'
+                else:
+                    yield 'invalid_state'
+            elif self.fast_pause:
+                if (
+                    current['state'] == State.Stopped
+                    or transition.progress() > self.skip_interval
+                ):
+                    yield 'scrobble'
+                    yield 'exit_fast_pause'
+                elif current['state'] == State.Paused:
+                    yield 'clear_buf'
+                elif current['state'] == State.Playing:
+                    yield 'delayed_play'
+            else:  # normal state
+                yield 'scrobble'
+                if (
+                    transition.is_state_jump(State.Playing, State.Paused)
+                    and transition.elapsed_realtime() < 1
+                ):
+                    yield 'enter_fast_pause'
+
+    def scrobble_status(self, status):
+        verb = SCROBBLE_VERBS[status['state']]
+        self.scrobble_queue.put((verb, status))
+
+    def delayed_scrobble(self, cleanup=None):
+        logger.debug("Delayed scrobble")
+        with self.lock:
+            if self.scrobble_buf:
+                logger.debug(self.scrobble_buf)
+                self.scrobble_status(self.scrobble_buf)
+        if cleanup:
+            cleanup()
+
+    def clear_timer(self, timer_name):
+        timer = getattr(self, timer_name)
+        if timer is not None:
+            timer.cancel()
+            setattr(self, timer_name, None)
+
+    def exit_preview(self):
+        logger.debug("Exiting preview")
+        with self.lock:
+            if self.preview:
+                self.preview = False
+                self.scrobble_buf = None
+                self.clear_timer('preview_timer')
+
+    def exit_fast_pause(self):
+        logger.debug("Exiting fast_pause")
+        with self.lock:
+            if self.fast_pause:
+                self.fast_pause = False
+                self.scrobble_buf = None
+                self.clear_timer('fast_pause_timer')
+
+    def scrobble_if_state_changed(self, prev, current):
+        """
+        Possible race conditions:
+        1) start_preview, after __preview_duration__ secs, stop_preview
+           start_preview starts preview_timer for " secs, with cleanup=exit_preview.
+           the stop_preview also triggers exit_preview, both are run parallely.
+        """
+        for action in self.decide_action(prev, current):
+            logger.debug(f"{action=}")
+            if action == "scrobble":
+                logger.debug(current)
+                self.scrobble_status(current)
+            elif action == "stop_previous":
+                self.scrobble_queue.put(("stop", prev))
+            elif action == "exit_preview":
+                self.exit_preview()
+            elif action == "enter_preview":
+                assert not self.preview and not self.scrobble_buf, "Invalid state"
+                self.preview = True
+                self.scrobble_buf = current
+                self.preview_timer = ResumableTimer(
+                    60, self.delayed_scrobble, (self.exit_preview,)
+                )
+                self.preview_timer.start()
+            elif action == "pause_preview":
+                self.scrobble_buf = current
+                self.preview_timer.pause()
+            elif action == "resume_preview":
+                self.scrobble_buf = current
+                self.preview_timer.resume()
+            elif action == "enter_fast_pause":
+                assert not self.fast_pause, "Invalid state"
+                self.fast_pause = True
+            elif action == "clear_buf":
+                with self.lock:
+                    self.scrobble_buf = None
+                    self.clear_timer('fast_pause_timer')
+            elif action == "delayed_play":
+                with self.lock:
+                    self.clear_timer('fast_pause_timer')
+                    self.scrobble_buf = current
+                self.fast_pause_timer = ResumableTimer(
+                    5, self.delayed_scrobble, (self.exit_fast_pause,)
+                )
+                self.fast_pause_timer.start()
+            elif action == "exit_fast_pause":
+                self.exit_fast_pause()
+            else:
+                logger.warning(f"Invalid action {action}")
 
     def handle_status_update(self):
         current_state = self.parse_status()
@@ -131,8 +317,10 @@ class WebInterfaceMon(Monitor):
             try:
                 self.update_status()
             except requests.ConnectionError:
-                logger.info(f'Unable to connect to {self.name}. Ensure that '
-                            'the web interface is running.')
+                logger.info(
+                    f'Unable to connect to {self.name}. Ensure that '
+                    'the web interface is running.'
+                )
                 self.status = {}
             except requests.HTTPError as e:
                 logger.error(f"Error while getting data from {self.name}: {e}")
