@@ -22,7 +22,7 @@ appdirs = "^1.4.3"
 pywin32 = {version = "^227", platform = "win32"}
 win10toast = {version = "^0.9", platform = "win32"}
 cleo = "^0.7.6"
-confuse = "^1.1.0"
+confuse = "^1.3.0"
 pysocks = {version = "^1.7.1", optional = true}
 pygobject = { version = "^3.34", platform = "linux",  optional = true}
 
