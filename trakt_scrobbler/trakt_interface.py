@@ -74,12 +74,14 @@ def prepare_scrobble_data(title, type, year=None, *args, **kwargs):
     if type == 'movie':
         return {'movie': {'ids': {'trakt': trakt_id}}}
     elif type == 'episode':
+        season = kwargs.get('season')
+        if season is None:  # use absolute numbering, for anime
+            ep = {'number_abs': kwargs['episode']}
+        else:
+            ep = {'season': season, 'number': kwargs['episode']}
         return {
             'show': {'ids': {'trakt': trakt_id}},
-            'episode': {
-                'season': kwargs['season'],
-                'number': kwargs['episode']
-            }
+            'episode': ep
         }
 
 
