@@ -79,7 +79,8 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_params = {
         "url": API_URL + '/scrobble/' + verb,
         "headers": trakt_auth.headers,
-        "json": scrobble_data
+        "json": scrobble_data,
+        "timeout": 30,
     }
     scrobble_resp = safe_request('post', scrobble_params)
 
@@ -115,7 +116,8 @@ def add_to_history(media_info, updated_at, *args, **kwargs):
     params = {
         "url": API_URL + '/sync/history',
         "headers": trakt_auth.headers,
-        "json": history
+        "json": history,
+        "timeout": 30,
     }
     resp = safe_request('post', params)
     if not resp:
