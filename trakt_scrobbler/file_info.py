@@ -65,7 +65,10 @@ def cleanup_guess(guess):
 
     req_keys = ['type', 'title']
     if guess['type'] == 'episode':
-        season = guess.get('season') or 1
+        season = guess.get('season')
+        if season is None:
+            # if we don't find a season, default to 1
+            season = 1  # TODO: Add proper support for absolute-numbered episodes
         if isinstance(season, list):
             logger.warning(f"Multiple probable seasons found: ({','.join(season)}). "
                            "Consider renaming the folder.")
