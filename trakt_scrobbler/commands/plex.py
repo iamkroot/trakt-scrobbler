@@ -13,7 +13,7 @@ class PlexAuthCommand(Command):
         from trakt_scrobbler.player_monitors import plex
 
         if self.option("force"):
-            plex.PLEX_TOKEN_PATH.unlink()
+            plex.PLEX_TOKEN_PATH.unlink(missing_ok=True)
             self.line("Forcing plex authentication")
         token = plex.get_token()
         if token:
