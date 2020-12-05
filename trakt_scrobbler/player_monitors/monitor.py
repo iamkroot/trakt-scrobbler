@@ -227,8 +227,8 @@ class Monitor(Thread):
             if self.scrobble_buf:
                 logger.debug(self.scrobble_buf)
                 self.scrobble_status(self.scrobble_buf)
-        if cleanup:
-            cleanup()
+            if cleanup:
+                cleanup()
 
     def clear_timer(self, timer_name):
         timer = getattr(self, timer_name)
@@ -238,19 +238,17 @@ class Monitor(Thread):
 
     def exit_preview(self):
         logger.debug("Exiting preview")
-        with self.lock:
-            if self.preview:
-                self.preview = False
-                self.scrobble_buf = None
-                self.clear_timer('preview_timer')
+        if self.preview:
+            self.preview = False
+            self.scrobble_buf = None
+            self.clear_timer('preview_timer')
 
     def exit_fast_pause(self):
         logger.debug("Exiting fast_pause")
-        with self.lock:
-            if self.fast_pause:
-                self.fast_pause = False
-                self.scrobble_buf = None
-                self.clear_timer('fast_pause_timer')
+        if self.fast_pause:
+            self.fast_pause = False
+            self.scrobble_buf = None
+            self.clear_timer('fast_pause_timer')
 
     def scrobble_if_state_changed(self, prev, current):
         """
@@ -260,7 +258,7 @@ class Monitor(Thread):
            the stop_preview also triggers exit_preview, both are run parallely.
         """
         for action in self.decide_action(prev, current):
-            logger.debug(f"{action=}")
+            logger.debug(f"action={action}")
             if action == "scrobble":
                 logger.debug(current)
                 self.scrobble_status(current)
@@ -286,13 +284,11 @@ class Monitor(Thread):
                 assert not self.fast_pause, "Invalid state"
                 self.fast_pause = True
             elif action == "clear_buf":
-                with self.lock:
-                    self.scrobble_buf = None
-                    self.clear_timer('fast_pause_timer')
+                self.clear_timer('fast_pause_timer')
+                self.scrobble_buf = None
             elif action == "delayed_play":
-                with self.lock:
-                    self.clear_timer('fast_pause_timer')
-                    self.scrobble_buf = current
+                self.clear_timer('fast_pause_timer')
+                self.scrobble_buf = current
                 self.fast_pause_timer = ResumableTimer(
                     self.fast_pause_duration,
                     self.delayed_scrobble,
@@ -306,7 +302,8 @@ class Monitor(Thread):
 
     def handle_status_update(self):
         current_state = self.parse_status()
-        self.scrobble_if_state_changed(self.prev_state, current_state)
+        with self.lock:
+            self.scrobble_if_state_changed(self.prev_state, current_state)
         self.prev_state = current_state
 
 
