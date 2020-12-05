@@ -84,9 +84,13 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     }
     scrobble_resp = safe_request('post', scrobble_params)
 
-    if scrobble_resp is not None and scrobble_resp.status_code == HTTPStatus.NOT_FOUND:
-        logger.warning("Not found on trakt. The media info is incorrect.")
-        return None
+    if scrobble_resp is not None:
+        if scrobble_resp.status_code == HTTPStatus.NOT_FOUND:
+            logger.warning("Not found on trakt. The media info is incorrect.")
+            return None
+        elif scrobble_resp.status_code == HTTPStatus.CONFLICT:
+            logger.warning("Scrobble already exists on trakt server.")
+            return None
 
     return scrobble_resp.json() if scrobble_resp else False
 
