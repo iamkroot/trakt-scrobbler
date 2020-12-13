@@ -112,7 +112,6 @@ class MPVMon(Monitor):
     def handle_event(self, event):
         if event == 'end-file':
             self.vars['state'] = 0
-            self.is_running = False
             self.update_status()
         elif event == 'pause':
             self.vars['state'] = 1
@@ -234,8 +233,9 @@ class MPVWinMon(MPVMon):
                 while not self.write_queue.empty():
                     win32file.WriteFile(
                         self.file_handle, self.write_queue.get_nowait())
-            except win32file.error:
-                logger.debug('Exception while writing to pipe.', exc_info=True)
+            except win32file.error as e:
+                if "The pipe is being closed" not in str(e):
+                    logger.debug('Exception while writing to pipe.', exc_info=True)
                 self.is_running = False
                 break
             size = win32file.GetFileSize(self.file_handle)
