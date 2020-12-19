@@ -141,3 +141,78 @@ def add_to_history(media_info, updated_at, *args, **kwargs):
     added = resp.json()['added']
     return (media_info['type'] == 'movie' and added['movies'] > 0) or \
         (media_info['type'] == 'episode' and added['episodes'] > 0)
+
+
+def _conv_timestamp(updated_at) -> str:
+    return dt.utcfromtimestamp(updated_at).isoformat() + 'Z'
+
+
+def convert_movie(movie):
+    trakt_id = get_trakt_id(**movie["media_info"])
+    if trakt_id < 1:
+        return trakt_id
+    hist_movie = {
+        "ids": {"trakt": trakt_id},
+        "watched_at": _conv_timestamp(movie["updated_at"]),
+    }
+    if movie["media_info"].get("year"):
+        hist_movie["year"] = movie["media_info"]["year"]
+    return hist_movie
+
+
+def convert_show(show):
+    trakt_id = get_trakt_id(**show["media_info"])
+    if trakt_id < 1:
+        return trakt_id
+    hist_show = {
+        "ids": {"trakt": trakt_id},
+        "seasons": []
+    }
+    if show["media_info"].get("year"):
+        hist_show["year"] = show["media_info"]["year"]
+    for season, episodes in show["seasons"].items():
+        hist_season = {"number": int(season), "episodes": []}
+        for episode, data in episodes.items():
+            hist_season["episodes"].append({
+                "number": int(episode),
+                "watched_at": _conv_timestamp(data["updated_at"])
+            })
+        hist_show["seasons"].append(hist_season)
+    return hist_show
+
+
+def prepare_bulk_history_data(backlog):
+    invalid, history = {}, {}
+    for category, convertor in (("movies", convert_movie), ("shows", convert_show)):
+        invalid[category], history[category] = [], []
+        for key, item in backlog[category].items():
+            converted = convertor(item)
+            if converted == 0:  # connection error
+                return
+            elif converted == -1:  # invalid Trakt ID
+                invalid[category].append(key)
+            else:
+                history[category].append(converted)
+    return invalid, history
+
+
+def bulk_add_to_history(backlog):
+    history_data = prepare_bulk_history_data(backlog)
+    if history_data is None:
+        # connection error
+        return False
+    invalid, history = history_data
+    if not any(history.values()):
+        # nothing in history, don't make an unnecessary API call
+        return invalid, {}
+    params = {
+        "url": API_URL + '/sync/history',
+        "headers": trakt_auth.headers,
+        "json": history,
+        "timeout": 30,
+    }
+    resp = safe_request('post', params)
+    if not resp:
+        # connection error
+        return False
+    return invalid, resp.json()
