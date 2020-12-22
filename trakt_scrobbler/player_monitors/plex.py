@@ -87,7 +87,7 @@ class PlexMon(WebInterfaceMon):
             return None
 
         # no user filter
-        if not self.config["scrobble_user"]:
+        if not self.config["scrobble_user"] or "User" not in data["Metadata"][0]:
             return data["Metadata"][0]
 
         for metadata in data["Metadata"]:
@@ -107,20 +107,44 @@ class PlexMon(WebInterfaceMon):
     def get_media_info(self, status_data):
         media_info = self.media_info_cache.get(status_data["ratingKey"])
         if not media_info:
-            media_info = self._get_media_info(status_data)
+            if status_data["type"] == "episode":
+                # get the show's data
+                show_key = status_data["grandparentKey"]
+                show_data = self.media_info_cache.get(show_key)
+                if not show_data:
+                    show_data = self.get_data(self.URL + show_key)
+                    self.media_info_cache[show_key] = show_data
+            else:
+                show_data = None
+            media_info = self._get_media_info(status_data, show_data)
             self.media_info_cache[status_data["ratingKey"]] = media_info
         return media_info
 
     @staticmethod
-    def _get_media_info(status_data):
-        info = {}
+    def _get_media_info(status_data, show_data=None):
         if status_data["type"] == "movie":
-            info = {"type": "movie", "title": status_data["title"]}
+            info = {
+                "type": "movie",
+                "title": status_data["title"],
+                "year": status_data.get("year"),
+            }
         elif status_data["type"] == "episode":
             info = {
                 "type": "episode",
                 "title": status_data["grandparentTitle"],
                 "season": status_data["parentIndex"],
                 "episode": status_data["index"],
+                "year": show_data and show_data.get("year"),
             }
+        else:
+            logger.warning(f"Unknown media type {status_data['type']}")
+            return None
+
+        if info["year"] is not None:
+            info["year"] = year = int(info["year"])
+            # if year is at the end of the title, like "The Boys (2019)", remove it
+            # otherwise it might not show up on Trakt search
+            suffix = f" ({year})"
+            if info["title"].endswith(suffix):
+                info["title"] = info["title"].replace(suffix, "")
         return cleanup_guess(info)
