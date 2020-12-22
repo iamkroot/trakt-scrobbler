@@ -185,7 +185,7 @@ class Monitor(Thread):
             if current:
                 if current['progress'] > self.preview_threshold:
                     yield 'enter_preview'
-                else:
+                elif not prev or not transition.is_same_media():
                     yield 'scrobble'
         elif transition.state_changed() or transition.progress() > self.skip_interval:
             # state changed
