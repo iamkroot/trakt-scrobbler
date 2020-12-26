@@ -31,11 +31,13 @@ def get_trakt_id(title, item_type, year=None):
     if not trakt_cache:
         trakt_cache = read_json(TRAKT_CACHE_PATH) or {'movie': {}, 'show': {}}
 
-    trakt_id = trakt_cache[required_type].get(title)
+    key = f"{title}{year or ''}"
+
+    trakt_id = trakt_cache[required_type].get(key)
     if trakt_id:
         return trakt_id
 
-    logger.debug(f'Searching trakt: Title: "{title}", Year: {year}')
+    logger.debug(f'Searching trakt: Title: "{title}"{year and f", Year: {year}" or ""}')
     results = search(title, [required_type], year)
     if results is None:  # Connection error
         return 0  # Dont store in cache
@@ -48,7 +50,7 @@ def get_trakt_id(title, item_type, year=None):
     else:
         trakt_id = results[0][required_type]['ids']['trakt']
 
-    trakt_cache[required_type][title] = trakt_id
+    trakt_cache[required_type][key] = trakt_id
     logger.debug(f'Trakt ID: {trakt_id}')
     write_json(trakt_cache, TRAKT_CACHE_PATH)
     return trakt_id
