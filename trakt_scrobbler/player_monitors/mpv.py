@@ -40,7 +40,7 @@ class MPVMon(Monitor):
         self.poll_interval = self.config['poll_interval']
         self.restart_delay = self.config['restart_delay']
         self.buffer = ''
-        self.lock = threading.Lock()
+        self.ipc_lock = threading.Lock()  # for IPC write queue
         self.poll_timer = None
         self.write_queue = Queue()
         self.sent_commands = {}
@@ -70,6 +70,11 @@ class MPVMon(Monitor):
             if self.can_connect():
                 self.update_vars()
                 self.conn_loop()
+                if self.vars['state'] != 0:
+                    # create a 'stop' event in case the player didn't send 'end-file'
+                    self.vars['state'] = 0
+                    self.update_status()
+                self.vars = {}
                 if self.poll_timer:
                     self.poll_timer.cancel()
                 time.sleep(self.restart_delay)
@@ -158,7 +163,7 @@ class MPVMon(Monitor):
             self.handle_cmd_response(mpv_json)
 
     def send_command(self, elements):
-        with self.lock:
+        with self.ipc_lock:
             command = {'command': elements, 'request_id': self.command_counter}
             self.sent_commands[self.command_counter] = command
             self.command_counter += 1
