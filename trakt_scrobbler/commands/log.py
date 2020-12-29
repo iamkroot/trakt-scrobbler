@@ -2,7 +2,7 @@ import subprocess as sp
 from .command import Command, platform
 
 
-class OpenLogCommand(Command):
+class LogOpenCommand(Command):
     """
     Open the latest log file in your default editor.
 
@@ -21,7 +21,7 @@ class OpenLogCommand(Command):
         elif platform == "linux":
             sp.Popen(["xdg-open", file_path])
         elif platform == "win32":
-            sp.Popen(f'start "{file_path}"', shell=True)
+            sp.Popen(["explorer", file_path])
         self.line(
             "In case this command doesn't work, "
             "manually open the log file from the path."
@@ -48,7 +48,7 @@ class LogCommand(Command):
     log
     """
 
-    commands = [LogLocationCommand(), OpenLogCommand()]
+    commands = [LogLocationCommand(), LogOpenCommand()]
 
     def handle(self):
         return self.call("help", self._config.name)
