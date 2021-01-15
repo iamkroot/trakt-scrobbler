@@ -13,37 +13,18 @@ if enable_notifs:
 
         toaster = ToastNotifier()
     else:
-        import subprocess as sp
         try:
-            import gi
-            gi.require_version('Notify', '0.7')
-            from gi.repository import Notify, GLib
-            Notify.init(APP_NAME)
-            notifier = Notify.Notification.new(APP_NAME)
+            from pydbus import SessionBus
         except (ImportError, ModuleNotFoundError):
-            notifier = None
-
-
-def notify_linux(body, title=APP_NAME, timeout=5):
-    global enable_notifs
-    global notifier
-    if notifier is not None:
-        notifier.set_timeout(timeout * 1000)
-        notifier.update(title, body, 'dialog-information')
-        try:
-            notifier.show()
-        except GLib.GError as e:
-            logger.warning(f"Error while showing notification: {e}")
-            notifier = Notify.Notification.new(APP_NAME)
-    else:
-        try:
-            sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
-        except FileNotFoundError:
-            logger.exception("Unable to send notification")
-            enable_notifs = False  # disable all future notifications until app restart
+            import subprocess as sp
+        else:
+            NOTIFIER = SessionBus().get('.Notifications')
+            NOTIF_ID = 0
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
+    global enable_notifs
+
     if stdout or not enable_notifs:
         print(body)
     if not enable_notifs:
@@ -52,6 +33,30 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
         toaster.show_toast(title, body, duration=timeout, threaded=True)
     elif sys.platform == 'darwin':
         osa_cmd = f'display notification "{body}" with title "{title}"'
-        sp.run(["osascript", "-e", osa_cmd])
+        sp.run(["osascript", "-e", osa_cmd], check=False)
+    elif 'SessionBus' in globals() and 'NOTIFIER' in globals():
+        global NOTIFIER
+        global NOTIF_ID
+        NOTIF_ID = NOTIFIER.Notify(
+            APP_NAME,
+            NOTIF_ID,
+            'dialog-information',
+            title,
+            body,
+            None,
+            None,
+            timeout * 1000
+        )
     else:
-        notify_linux(body, title, timeout)
+        try:
+            sp.run([
+                "notify-send",
+                "-a", title,
+                "-i", 'dialog-information',
+                "-t", str(timeout * 1000),
+                title,
+                body
+            ], check=False)
+        except FileNotFoundError:
+            logger.exception("Unable to send notification")
+            enable_notifs = False  # disable all future notifications until app restart
