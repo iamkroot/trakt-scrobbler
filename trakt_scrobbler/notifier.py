@@ -3,11 +3,11 @@ import confuse
 from trakt_scrobbler import config, logger
 
 APP_NAME = 'Trakt Scrobbler'
-enable_notifs = config['general']['enable_notifs'].get(
+ENABLE_NOTIFS = config['general']['enable_notifs'].get(
     confuse.Choice([True, False], default=True)
 )
 
-if enable_notifs:
+if ENABLE_NOTIFS:
     if sys.platform == 'win32':
         from win10toast import ToastNotifier
 
@@ -23,23 +23,21 @@ if enable_notifs:
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
-    global enable_notifs
+    _globals = globals()
 
-    if stdout or not enable_notifs:
+    if stdout or not _globals['ENABLE_NOTIFS']:
         print(body)
-    if not enable_notifs:
+    if not _globals['ENABLE_NOTIFS']:
         return
     if sys.platform == 'win32':
         toaster.show_toast(title, body, duration=timeout, threaded=True)
     elif sys.platform == 'darwin':
         osa_cmd = f'display notification "{body}" with title "{title}"'
         sp.run(["osascript", "-e", osa_cmd], check=False)
-    elif 'SessionBus' in globals() and 'NOTIFIER' in globals():
-        global NOTIFIER
-        global NOTIF_ID
-        NOTIF_ID = NOTIFIER.Notify(
+    elif 'SessionBus' in _globals and 'NOTIFIER' in _globals:
+        _globals['NOTIF_ID'] = NOTIFIER.Notify(
             APP_NAME,
-            NOTIF_ID,
+            _globals['NOTIF_ID'],
             'dialog-information',
             title,
             body,
@@ -59,4 +57,5 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
             ], check=False)
         except FileNotFoundError:
             logger.exception("Unable to send notification")
-            enable_notifs = False  # disable all future notifications until app restart
+            # disable all future notifications until app restart
+            _globals['ENABLE_NOTIFS'] = False
