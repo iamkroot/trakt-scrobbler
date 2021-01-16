@@ -56,7 +56,9 @@ class VLCMon(WebInterfaceMon):
         vlcrc = ConfigParser(strict=False, inline_comment_prefixes="#")
         vlcrc.optionxform = lambda option: option
         if not vlcrc.read(vlcrc_path, encoding="utf-8-sig"):
-            raise FileNotFoundError(vlcrc_path)
+            import errno
+            import os
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), vlcrc_path)
         return {
             "port": lambda: vlcrc.get("core", "http-port", fallback=8080),
             "password": lambda: vlcrc.get("lua", "http-password"),

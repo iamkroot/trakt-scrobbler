@@ -92,6 +92,8 @@ class Monitor(Thread):
             logger.debug(f"Auto val not found for {', '.join(auto_keys)}")
             logger.error(f"Autoload not supported for {cls.name}.")
             raise AutoloadError
+        except FileNotFoundError as e:
+            raise AutoloadError(src=e.filename)
         while auto_keys:
             param = auto_keys.pop()
             try:
@@ -103,7 +105,6 @@ class Monitor(Thread):
                 monitor_cfg[param] = param_loader()
                 logger.debug(f"Autoloaded {cls.name} {param} = {monitor_cfg[param]}")
             except FileNotFoundError as e:
-                logger.error(f"File not found: {e.filename}")
                 raise AutoloadError(src=e.filename)
         return monitor_cfg
 
