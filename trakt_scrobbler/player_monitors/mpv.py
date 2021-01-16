@@ -15,7 +15,11 @@ if os.name == 'posix':
     import select
     import socket
 elif os.name == 'nt':
+    import win32event
     import win32file
+    import win32pipe
+    from winerror import (ERROR_BROKEN_PIPE, ERROR_MORE_DATA, ERROR_IO_PENDING,
+                          ERROR_PIPE_BUSY)
 
 
 class MPVMon(Monitor):
@@ -70,7 +74,8 @@ class MPVMon(Monitor):
             if self.can_connect():
                 self.update_vars()
                 self.conn_loop()
-                if self.vars['state'] != 0:
+                if all(key in self.vars for key in self.WATCHED_PROPS) \
+                   and self.vars['state'] != 0:
                     # create a 'stop' event in case the player didn't send 'end-file'
                     self.vars['state'] = 0
                     self.update_status()
@@ -121,8 +126,7 @@ class MPVMon(Monitor):
             self.update_vars()
 
     def handle_cmd_response(self, resp):
-        command = self.sent_commands[resp['request_id']]['command']
-        del self.sent_commands[resp['request_id']]
+        command = self.sent_commands.pop(resp['request_id'])
         if resp['error'] != 'success':
             logger.error(f'Error with command {command!s}. Response: {resp!s}')
             return
@@ -164,7 +168,7 @@ class MPVMon(Monitor):
     def send_command(self, elements):
         with self.ipc_lock:
             command = {'command': elements, 'request_id': self.command_counter}
-            self.sent_commands[self.command_counter] = command
+            self.sent_commands[self.command_counter] = elements
             self.command_counter += 1
             self.write_queue.put(str.encode(json.dumps(command) + '\n'))
 
@@ -219,33 +223,98 @@ class MPVWinMon(MPVMon):
         return win32file.GetFileAttributes((self.ipc_path)) == \
             win32file.FILE_ATTRIBUTE_NORMAL
 
+    def _transact(self, write_data):
+        """Wrapper over TransactNamedPipe"""
+        read_buf = win32file.AllocateReadBuffer(512)
+        err, data = win32pipe.TransactNamedPipe(self.file_handle, write_data, read_buf)
+        while err == ERROR_MORE_DATA:
+            err, d = win32file.ReadFile(self.file_handle, read_buf)
+            data += d
+        return data
+
+    def _read_all_data(self):
+        """Read all the remaining data on the pipe"""
+        data = b""
+        read_buf = win32file.AllocateReadBuffer(512)
+        while win32file.GetFileSize(self.file_handle):
+            _, d = win32file.ReadFile(self.file_handle, read_buf)
+            data += d
+        return data
+
+    def _call(self, method, *args, max_retries=5):
+        """Call a pipe API method and retry if necessary"""
+        try:
+            return method(*args)
+        except win32file.error as e:
+            if e.args[0] == ERROR_BROKEN_PIPE:
+                self.is_running = False
+            elif e.args[0] == ERROR_PIPE_BUSY and max_retries != 0:
+                # something in the pipe, read the data and retry
+                data = self._call(self._read_all_data)
+                if not self.is_running:
+                    return
+                if data:
+                    self.on_data(data)
+                return self._call(method, *args, max_retries=max_retries - 1)
+            else:
+                raise
+
     def conn_loop(self):
-        self.is_running = True
         self.file_handle = win32file.CreateFile(
             self.ipc_path,
             win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-            0, None,
+            0,
+            None,
             win32file.OPEN_EXISTING,
-            0, None
+            win32file.FILE_FLAG_OVERLAPPED,
+            None
         )
+
+        # needed for blocking on read
+        overlapped = win32file.OVERLAPPED()
+        overlapped.hEvent = win32event.CreateEvent(None, 0, 0, None)
+
+        # needed for transactions
+        win32pipe.SetNamedPipeHandleState(
+            self.file_handle, win32pipe.PIPE_READMODE_MESSAGE, None, None)
+        read_buf = win32file.AllocateReadBuffer(1024)
+        self.is_running = True
         while self.is_running:
-            try:
-                while not self.write_queue.empty():
-                    win32file.WriteFile(
-                        self.file_handle, self.write_queue.get_nowait())
-            except win32file.error as e:
-                if "The pipe is being closed" not in str(e):
-                    logger.debug('Exception while writing to pipe.', exc_info=True)
+            val = self._call(win32file.ReadFile, self.file_handle, read_buf, overlapped)
+            if not self.is_running:
+                break
+            err, data = val
+            if err != 0 and err != ERROR_IO_PENDING:
+                logger.warning(f"Unexpected read result {err}. Quitting.")
+                logger.debug(f"data={bytes(data)}")
                 self.is_running = False
                 break
-            size = win32file.GetFileSize(self.file_handle)
-            if size > 0:
-                while size > 0:
-                    # pipe has data to be read
-                    _, data = win32file.ReadFile(self.file_handle, 4096)
+            if err == ERROR_IO_PENDING:
+                err = win32event.WaitForSingleObject(
+                    overlapped.hEvent, self.read_timeout)
+
+            if err == win32event.WAIT_OBJECT_0:  # data is available
+                data = bytes(data)
+                line = data[:data.find(b"\n")]
+                self.on_line(line)
+
+            while not self.write_queue.empty():
+                # first see if mpv sent some data that needs to be read
+                data = self._call(self._read_all_data)
+                if not self.is_running:
+                    break
+                if data:
                     self.on_data(data)
-                    size = win32file.GetFileSize(self.file_handle)
-            else:
-                time.sleep(self.read_timeout)
-        win32file.CloseHandle(self.file_handle)
+                # cancel all remaining reads/writes. Should be benign
+                win32file.CancelIo(self.file_handle)
+
+                write_data = self.write_queue.get_nowait()
+                data = self._call(self._transact, write_data)
+                if not self.is_running:
+                    break
+                self.on_line(data[:-1])
+
+        self.is_running = False
+        self.file_handle.close()
+        self.file_handle = None
         logger.debug('Pipe closed.')
