@@ -41,4 +41,4 @@ def _get_win_pid():
 
 
 def _kill_task_win(pid):
-    sp.check_call(["taskkill", "/pid", pid, "/f"])
+    sp.check_call(["taskkill", "/pid", pid, "/f", "/t"])
