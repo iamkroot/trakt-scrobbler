@@ -27,6 +27,7 @@ if enable_notifs:
 
 
 def dbus_notify(title, body, timeout):
+    global notif_id
     connection = open_dbus_connection(bus='SESSION')
     msg = new_method_call(notifier, 'Notify', 'susssasa{sv}i',
                           (
@@ -37,16 +38,14 @@ def dbus_notify(title, body, timeout):
                               body,
                               [], {},
                               timeout,
-                          )
-                          )
+                          ))
     reply = connection.send_and_get_reply(msg)
     connection.close()
-    return reply.body[0]
+    notif_id = reply.body[0]
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
     global enable_notifs
-    global notif_id
 
     if stdout or not enable_notifs:
         print(body)
@@ -58,7 +57,7 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
         osa_cmd = f'display notification "{body}" with title "{title}"'
         sp.run(["osascript", "-e", osa_cmd], check=False)
     elif notifier is not None:
-        notif_id = dbus_notify(title, body, timeout * 1000)
+        dbus_notify(title, body, timeout * 1000)
     else:
         try:
             sp.run([
