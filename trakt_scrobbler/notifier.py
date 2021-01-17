@@ -14,13 +14,34 @@ if enable_notifs:
         toaster = ToastNotifier()
     else:
         try:
-            from pydbus import SessionBus
+            from jeepney import DBusAddress, new_method_call
+            from jeepney.io.blocking import open_dbus_connection
         except (ImportError, ModuleNotFoundError):
             import subprocess as sp
             notifier, notif_id = None, None
         else:
-            notifier = SessionBus().get('.Notifications')
+            notifier = DBusAddress('/org/freedesktop/Notifications',
+                                   bus_name='org.freedesktop.Notifications',
+                                   interface='org.freedesktop.Notifications')
             notif_id = 0
+
+
+def dbus_notify(title, body, timeout):
+    connection = open_dbus_connection(bus='SESSION')
+    msg = new_method_call(notifier, 'Notify', 'susssasa{sv}i',
+                          (
+                              APP_NAME,
+                              notif_id,
+                              'dialog-information',
+                              title,
+                              body,
+                              [], {},
+                              timeout,
+                          )
+                          )
+    reply = connection.send_and_get_reply(msg)
+    connection.close()
+    return reply.body[0]
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
@@ -37,16 +58,7 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
         osa_cmd = f'display notification "{body}" with title "{title}"'
         sp.run(["osascript", "-e", osa_cmd], check=False)
     elif notifier is not None:
-        notif_id = notifier.Notify(
-            APP_NAME,
-            notif_id,
-            'dialog-information',
-            title,
-            body,
-            None,
-            None,
-            timeout * 1000
-        )
+        notif_id = dbus_notify(title, body, timeout * 1000)
     else:
         try:
             sp.run([

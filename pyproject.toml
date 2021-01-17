@@ -24,7 +24,7 @@ win10toast = {version = "^0.9", platform = "win32"}
 cleo = "^0.7.6"
 confuse = "^1.3.0"
 pysocks = {version = "^1.7.1", optional = true}
-pydbus = { version = "^0.6", platform = "linux"}
+jeepney = { version = "^0.6", platform = "linux"}
 
 [tool.poetry.dev-dependencies]
 
