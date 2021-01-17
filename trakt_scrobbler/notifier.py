@@ -13,37 +13,40 @@ if enable_notifs:
 
         toaster = ToastNotifier()
     else:
-        import subprocess as sp
         try:
-            import gi
-            gi.require_version('Notify', '0.7')
-            from gi.repository import Notify, GLib
-            Notify.init(APP_NAME)
-            notifier = Notify.Notification.new(APP_NAME)
+            from jeepney import DBusAddress, new_method_call
+            from jeepney.io.blocking import open_dbus_connection
         except (ImportError, ModuleNotFoundError):
-            notifier = None
+            import subprocess as sp
+            notifier, notif_id = None, None
+        else:
+            notifier = DBusAddress('/org/freedesktop/Notifications',
+                                   bus_name='org.freedesktop.Notifications',
+                                   interface='org.freedesktop.Notifications')
+            notif_id = 0
 
 
-def notify_linux(body, title=APP_NAME, timeout=5):
-    global enable_notifs
-    global notifier
-    if notifier is not None:
-        notifier.set_timeout(timeout * 1000)
-        notifier.update(title, body, 'dialog-information')
-        try:
-            notifier.show()
-        except GLib.GError as e:
-            logger.warning(f"Error while showing notification: {e}")
-            notifier = Notify.Notification.new(APP_NAME)
-    else:
-        try:
-            sp.run(["notify-send", "-a", title, "-t", str(timeout * 1000), body])
-        except FileNotFoundError:
-            logger.exception("Unable to send notification")
-            enable_notifs = False  # disable all future notifications until app restart
+def dbus_notify(title, body, timeout):
+    global notif_id
+    connection = open_dbus_connection(bus='SESSION')
+    msg = new_method_call(notifier, 'Notify', 'susssasa{sv}i',
+                          (
+                              APP_NAME,
+                              notif_id,
+                              'dialog-information',
+                              title,
+                              body,
+                              [], {},
+                              timeout,
+                          ))
+    reply = connection.send_and_get_reply(msg)
+    connection.close()
+    notif_id = reply.body[0]
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
+    global enable_notifs
+
     if stdout or not enable_notifs:
         print(body)
     if not enable_notifs:
@@ -52,6 +55,20 @@ def notify(body, title=APP_NAME, timeout=5, stdout=False):
         toaster.show_toast(title, body, duration=timeout, threaded=True)
     elif sys.platform == 'darwin':
         osa_cmd = f'display notification "{body}" with title "{title}"'
-        sp.run(["osascript", "-e", osa_cmd])
+        sp.run(["osascript", "-e", osa_cmd], check=False)
+    elif notifier is not None:
+        dbus_notify(title, body, timeout * 1000)
     else:
-        notify_linux(body, title, timeout)
+        try:
+            sp.run([
+                "notify-send",
+                "-a", title,
+                "-i", 'dialog-information',
+                "-t", str(timeout * 1000),
+                title,
+                body
+            ], check=False)
+        except FileNotFoundError:
+            logger.exception("Unable to send notification")
+            # disable all future notifications until app restart
+            enable_notifs = False
