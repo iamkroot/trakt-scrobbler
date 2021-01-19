@@ -35,7 +35,7 @@ TL;DR, the commit message:
 *   is clear about what part of the code is affected -- often by prefixing with the name of the subsystem and a colon, like "notifier: ..." or "cli: ...".
 *   is a complete sentence, *not* ending with a period.
 
-...and the commmit body: 
+...and the commit body:
 *   if needed, explains the rationale behind the change.
 *   ends with the ID of the linked issue (e.g., "Closes [#17](https://github.com/iamkroot/trakt-scrobbler/issues/17)", "Fixes [#66](https://github.com/iamkroot/trakt-scrobbler/issues/66)". 'Fixes' is used for bugs, 'Closes' for features)
 

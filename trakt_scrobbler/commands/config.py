@@ -3,7 +3,7 @@ from .command import Command, CMD_NAME
 
 class ConfigListCommand(Command):
     """
-    Lists configuration settings. By default, only overriden values are shown.
+    Lists configuration settings. By default, only overridden values are shown.
 
     list
         {--all : Include default values too}

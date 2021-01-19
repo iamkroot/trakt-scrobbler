@@ -256,7 +256,7 @@ class Monitor(Thread):
         Possible race conditions:
         1) start_preview, after __preview_duration__ secs, stop_preview
            start_preview starts preview_timer for " secs, with cleanup=exit_preview.
-           the stop_preview also triggers exit_preview, both are run parallely.
+           the stop_preview also triggers exit_preview, both are run parallelly.
         """
         for action in self.decide_action(prev, current):
             logger.debug(f"action={action}")
