@@ -3,7 +3,7 @@ from .command import Command
 
 class PlexAuthCommand(Command):
     """
-    Runs the authetication flow for trakt.tv
+    Runs the authentication flow for trakt.tv
 
     plex
         {--f|force : Force run the flow, ignoring already existing credentials.}
