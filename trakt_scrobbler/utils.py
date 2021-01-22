@@ -35,7 +35,7 @@ def safe_request(verb, params):
     params.setdefault('proxies', proxies)
     try:
         resp = requests.request(verb, **params)
-    except requests.exceptions.ConnectionError as e:
+    except (requests.ConnectionError, requests.Timeout) as e:
         logger.error(f"Failed to connect: {e}")
         logger.debug(f'Request: {verb} {params}')
         return None
