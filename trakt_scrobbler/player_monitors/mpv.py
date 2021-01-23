@@ -25,8 +25,8 @@ elif os.name == 'nt':
 class MPVMon(Monitor):
     name = 'mpv'
     exclude_import = True
-    WATCHED_PROPS = ['pause', 'path', 'working-directory',
-                     'duration', 'time-pos']
+    WATCHED_PROPS = frozenset(('pause', 'path', 'working-directory',
+                               'duration', 'time-pos'))
     CONFIG_TEMPLATE = {
         "ipc_path": confuse.String(default="auto-detect"),
         "poll_interval": confuse.Number(default=10),
@@ -74,8 +74,7 @@ class MPVMon(Monitor):
             if self.can_connect():
                 self.update_vars()
                 self.conn_loop()
-                if all(key in self.vars for key in self.WATCHED_PROPS) \
-                   and self.vars['state'] != 0:
+                if self.vars.get('state', 0) != 0:
                     # create a 'stop' event in case the player didn't send 'end-file'
                     self.vars['state'] = 0
                     self.update_status()
@@ -88,6 +87,9 @@ class MPVMon(Monitor):
                 time.sleep(self.poll_interval)
 
     def update_status(self):
+        if not self.WATCHED_PROPS.issubset(self.vars):
+            logger.warning("Incomplete media status info")
+            return
         fpath = Path(self.vars['working-directory']) / Path(self.vars['path'])
 
         # Update last known position if player is stopped
@@ -116,6 +118,10 @@ class MPVMon(Monitor):
 
     def handle_event(self, event):
         if event == 'end-file':
+            # Since the player might be shutting down, we can't update vars.
+            # Reuse the previous self.vars and only update the state value.
+            # This might be inaccurate in terms of position, which is why
+            # regular polling is needed
             self.vars['state'] = 0
             self.update_status()
         elif event == 'pause':
@@ -141,6 +147,7 @@ class MPVMon(Monitor):
             self.updated_props_count += 1
         if self.updated_props_count == len(self.WATCHED_PROPS):
             self.update_status()
+            # resetting self.vars to {} here is a bad idea.
 
     def on_data(self, data):
         self.buffer = self.buffer + data.decode('utf-8')
