@@ -77,6 +77,18 @@ optional = false
 python-versions = ">=3.6,<4.0"
 
 [[package]]
+name = "filelock"
+version = "3.7.1"
+description = "A platform independent file lock."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo (>=2021.8.17b43)", "sphinx (>=4.1)", "sphinx-autodoc-typehints (>=1.12)"]
+testing = ["covdefaults (>=1.2.0)", "coverage (>=4)", "pytest (>=4)", "pytest-cov", "pytest-timeout (>=1.4.2)"]
+
+[[package]]
 name = "guessit"
 version = "3.4.3"
 description = "GuessIt - a library for guessing information from video filenames."
@@ -280,7 +292,7 @@ socks = ["pysocks"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "0ada4b3bc27301a13b5b3b174a5d5118959c93a72b2a7dc9e88b5ee4393042b3"
+content-hash = "92795f2a2e461045b8cf5622aeb0737aec1e9ad5d4e77db18584ecb118685f41"
 
 [metadata.files]
 appdirs = [
@@ -291,14 +303,8 @@ babelfish = [
     {file = "babelfish-0.6.0-py3-none-any.whl", hash = "sha256:268f1c6279f2a04a66837972e8a9f3dcc68e16f1201eec57d2a4b828a8b41b11"},
     {file = "babelfish-0.6.0.tar.gz", hash = "sha256:2dadfadd1b205ca5fa5dc9fa637f5b7933160a0418684c7c46a7a664033208a2"},
 ]
-certifi = [
-    {file = "certifi-2022.6.15-py3-none-any.whl", hash = "sha256:fe86415d55e84719d75f8b69414f6438ac3547d2078ab91b67e779ef69378412"},
-    {file = "certifi-2022.6.15.tar.gz", hash = "sha256:84c85a9078b11105f04f3036a9482ae10e4621616db313fe045dd24743a0820d"},
-]
-charset-normalizer = [
-    {file = "charset-normalizer-2.1.0.tar.gz", hash = "sha256:575e708016ff3a5e3681541cb9d79312c416835686d054a23accb873b254f413"},
-    {file = "charset_normalizer-2.1.0-py3-none-any.whl", hash = "sha256:5189b6f22b01957427f35b6a08d9a0bc45b46d3788ef5a92e978433c7a35f8a5"},
-]
+certifi = []
+charset-normalizer = []
 cleo = [
     {file = "cleo-0.8.1-py2.py3-none-any.whl", hash = "sha256:141cda6dc94a92343be626bb87a0b6c86ae291dfc732a57bf04310d4b4201753"},
     {file = "cleo-0.8.1.tar.gz", hash = "sha256:3d0e22d30117851b45970b6c14aca4ab0b18b1b53c8af57bed13208147e4069f"},
@@ -307,14 +313,12 @@ clikit = [
     {file = "clikit-0.6.2-py2.py3-none-any.whl", hash = "sha256:71268e074e68082306e23d7369a7b99f824a0ef926e55ba2665e911f7208489e"},
     {file = "clikit-0.6.2.tar.gz", hash = "sha256:442ee5db9a14120635c5990bcdbfe7c03ada5898291f0c802f77be71569ded59"},
 ]
-confuse = [
-    {file = "confuse-2.0.0-py3-none-any.whl", hash = "sha256:3c6906a852926af89a0d83fa15a65b2859793ac4fcec61f31e2c1df59d2dead5"},
-    {file = "confuse-2.0.0.tar.gz", hash = "sha256:acc57c45ec2a9850a90fe7c29812bbdd8405e48a49c1a22899df915d0aca941f"},
-]
+confuse = []
 crashtest = [
     {file = "crashtest-0.3.1-py3-none-any.whl", hash = "sha256:300f4b0825f57688b47b6d70c6a31de33512eb2fa1ac614f780939aa0cf91680"},
     {file = "crashtest-0.3.1.tar.gz", hash = "sha256:42ca7b6ce88b6c7433e2ce47ea884e91ec93104a4b754998be498a8e6c3d37dd"},
 ]
+filelock = []
 guessit = [
     {file = "guessit-3.4.3-py3-none-any.whl", hash = "sha256:f7f790c9e55a7bcc8ff887d3146e089c65a23eff72edfb6684ac5fedb47488a5"},
     {file = "guessit-3.4.3.tar.gz", hash = "sha256:731e96e6a1f3b065d05accc8c19f35d4485d880b77ab8dc4b262cc353df294f7"},
@@ -323,14 +327,8 @@ idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
     {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
 ]
-importlib-resources = [
-    {file = "importlib_resources-5.9.0-py3-none-any.whl", hash = "sha256:f78a8df21a79bcc30cfd400bdc38f314333de7c0fb619763f6b9dabab8268bb7"},
-    {file = "importlib_resources-5.9.0.tar.gz", hash = "sha256:5481e97fb45af8dcf2f798952625591c58fe599d0735d86b10f54de086a61681"},
-]
-jeepney = [
-    {file = "jeepney-0.8.0-py3-none-any.whl", hash = "sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755"},
-    {file = "jeepney-0.8.0.tar.gz", hash = "sha256:5efe48d255973902f6badc3ce55e2aa6c5c3b3bc642059ef3a91247bcfcc5806"},
-]
+importlib-resources = []
+jeepney = []
 pastel = [
     {file = "pastel-0.2.1-py2.py3-none-any.whl", hash = "sha256:4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364"},
     {file = "pastel-0.2.1.tar.gz", hash = "sha256:e6581ac04e973cac858828c6202c1e1e81fee1dc7de7683f3e1ffe0bfd8a573d"},
@@ -407,18 +405,12 @@ rebulk = [
     {file = "rebulk-3.1.0-py3-none-any.whl", hash = "sha256:e56550ae25a822111bff8c8f5eeea14cb44f406e9a9ce67ad4e350253b2fff6c"},
     {file = "rebulk-3.1.0.tar.gz", hash = "sha256:809de3a97c68afa831f7101b10d316fe62e061dc9f7f67a44b7738128721173a"},
 ]
-requests = [
-    {file = "requests-2.28.1-py3-none-any.whl", hash = "sha256:8fefa2a1a1365bf5520aac41836fbee479da67864514bdb821f31ce07ce65349"},
-    {file = "requests-2.28.1.tar.gz", hash = "sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983"},
-]
+requests = []
 six = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
-urllib3 = [
-    {file = "urllib3-1.26.11-py2.py3-none-any.whl", hash = "sha256:c33ccba33c819596124764c23a97d25f32b28433ba0dedeb77d873a38722c9bc"},
-    {file = "urllib3-1.26.11.tar.gz", hash = "sha256:ea6e8fb210b19d950fab93b60c9009226c63a28808bc8386e05301e25883ac0a"},
-]
+urllib3 = []
 urlmatch = [
     {file = "urlmatch-1.0.1.macosx-10.12-x86_64.tar.gz", hash = "sha256:21c88712cfaccf22270d2dd9957fccf9afb9fc6340fb34d169f93f6305ee8938"},
     {file = "urlmatch-1.0.1.tar.gz", hash = "sha256:3f0c3529f03f3b31efc4547ce44e6512ff5714bf61f7f6ac355b1636ad16eb2d"},
@@ -426,7 +418,4 @@ urlmatch = [
 win10toast = [
     {file = "win10toast-0.9-py2.py3-none-any.whl", hash = "sha256:44e5afa1001de88a0ee533872231521fa67c7d144f39974089af242d9c4620a4"},
 ]
-zipp = [
-    {file = "zipp-3.8.1-py3-none-any.whl", hash = "sha256:47c40d7fe183a6f21403a199b3e4192cca5774656965b0a4988ad2f8feb5f009"},
-    {file = "zipp-3.8.1.tar.gz", hash = "sha256:05b45f1ee8f807d0cc928485ca40a07cb491cf092ff587c0df9cb1fd154848d2"},
-]
+zipp = []

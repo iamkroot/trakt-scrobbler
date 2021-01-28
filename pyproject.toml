@@ -31,6 +31,7 @@ confuse = "^2.0"
 pysocks = {version = "^1.7.1", optional = true}
 jeepney = {version = "^0.8", platform = "linux"}
 urlmatch = "^1.0.1"
+filelock = "^3.0.12"
 
 [tool.poetry.dev-dependencies]
 

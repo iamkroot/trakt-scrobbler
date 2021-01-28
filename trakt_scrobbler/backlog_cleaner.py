@@ -1,14 +1,19 @@
-import confuse
 from collections import defaultdict
 from copy import deepcopy
+from functools import wraps
 from threading import Timer
+
+import confuse
+from filelock import FileLock
 from trakt_scrobbler import config, logger
+from trakt_scrobbler import trakt_interface as trakt
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.utils import read_json, write_json
-from trakt_scrobbler import trakt_interface as trakt
 
 
 def _read_shows(shows: dict):
+    """Convert numbers in {"Show Name": {"01": {"03": {...}, "05": {...}}, ...}}
+    from strings to ints"""
     for show in shows.values():
         seasons = defaultdict(dict)
         for season, episodes in show["seasons"].items():
@@ -19,47 +24,68 @@ def _read_shows(shows: dict):
 
 class BacklogCleaner:
     BACKLOG_PATH = DATA_DIR / "watched_backlog.json"
+    _LOCK_FILE_PATH = BACKLOG_PATH.with_suffix(".json.lock")
     DEFAULT_BACKLOG = {"movies": {}, "shows": {}}
 
     def __init__(self, manual=False):
         self.clear_interval = config["backlog"]["clear_interval"].get(confuse.Number())
+        # File lock is needed to handle the case when user triggers backlog clear
+        # manually, and at the same time our recurring timer gets called. This will
+        # result in items being added twice.
+        # file_lock is re-entrant. A single process may acquire it recursively but
+        # other processes will block.
+        self.file_lock = FileLock(self._LOCK_FILE_PATH)
         self.unknown_items = UnknownItems()
         self.timer_enabled = not manual
         if self.timer_enabled:
             self._make_timer()
             self.clear()
 
+    def _make_timer(self):
+        self.timer = Timer(self.clear_interval, self.clear)
+        self.timer.name = "backlog_cleaner"
+        self.timer.start()
+
     @property
     def backlog(self):
-        return self.read_backlog()
+        self._backlog = self.read_backlog()
+        return self._backlog
+
+    def with_lock(func):
+        """Decorator to acquire file lock before calling func"""
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            with self.file_lock:
+                return func(self, *args, **kwargs)
+        return wrapper
 
     @backlog.setter
     def backlog(self, value):
         self._backlog = value
         self.save_backlog()
 
+    @with_lock
     def read_backlog(self):
         backlog = read_json(self.BACKLOG_PATH)
         if not backlog:
-            self._backlog = deepcopy(self.DEFAULT_BACKLOG)
+            _backlog = deepcopy(self.DEFAULT_BACKLOG)
+            self.save_backlog()
         elif isinstance(backlog, dict):
             _read_shows(backlog["shows"])
-            self._backlog = backlog
+            _backlog = backlog
         elif isinstance(backlog, list):  # old backlog style
             # import the items into new style
-            self._backlog = deepcopy(self.DEFAULT_BACKLOG)
+            _backlog = deepcopy(self.DEFAULT_BACKLOG)
             for item in backlog:
                 self.add(item)
-        return self._backlog
+            self.save_backlog()
+        return _backlog
 
+    @with_lock
     def save_backlog(self):
         write_json(self._backlog, self.BACKLOG_PATH)
 
-    def _make_timer(self):
-        self.timer = Timer(self.clear_interval, self.clear)
-        self.timer.name = "backlog_cleaner"
-        self.timer.start()
-
+    @with_lock
     def add(self, data):
         media_info = data["media_info"]
         title = media_info["title"]
@@ -86,9 +112,14 @@ class BacklogCleaner:
         self.save_backlog()
 
     def mark_invalid(self, category, key):
-        item = self.backlog[category].pop(key)
-        self.unknown_items.add(category, key, item)
+        try:
+            item = self.backlog[category].pop(key)
+        except KeyError:
+            logger.warning(f"Could not find {key} in {category} backlog.")
+        else:
+            self.unknown_items.add(category, key, item)
 
+    @with_lock
     def clear(self):
         result = trakt.bulk_add_to_history(self.backlog)
         added, invalid = {}, {}
@@ -110,6 +141,7 @@ class BacklogCleaner:
 
         return result is not False, added, invalid
 
+    @with_lock
     def purge(self):
         old_backlog = self.backlog
         self.backlog = deepcopy(self.DEFAULT_BACKLOG)
