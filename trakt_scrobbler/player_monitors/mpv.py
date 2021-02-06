@@ -96,6 +96,8 @@ class MPVMon(Monitor):
         pos = self.vars['time-pos']
         if self.vars['state'] == 0 and self.status['state'] == 2:
             pos += round(time.time() - self.status['time'], 3)
+        pos = min(pos, self.vars['duration'])
+
         self.status = {
             'state': self.vars['state'],
             'filepath': str(fpath),
