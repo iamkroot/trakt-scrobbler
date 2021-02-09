@@ -127,16 +127,17 @@ class Monitor(Thread):
         self.preview_timer: ResumableTimer = None
         self.fast_pause_timer: ResumableTimer = None
 
-    def parse_status(self):
+    @staticmethod
+    def parse_status(status):
         if (
-            'filepath' not in self.status and 'media_info' not in self.status
-        ) or not self.status.get('duration'):
+            'filepath' not in status and 'media_info' not in status
+        ) or not status.get('duration'):
             return {}
 
-        if 'filepath' in self.status:
-            media_info = get_media_info(self.status['filepath'])
+        if 'filepath' in status:
+            media_info = get_media_info(status['filepath'])
         else:
-            media_info = self.status['media_info']
+            media_info = status['media_info']
 
         if media_info is None:
             return {}
@@ -145,18 +146,17 @@ class Monitor(Thread):
         if isinstance(ep, list):
             media_info = media_info.copy()
             num_eps = len(media_info['episode'])
-            self.status['duration'] = self.status['duration'] // num_eps
-            ep_num = int(self.status['position'] // self.status['duration'])
+            status['duration'] //= num_eps
+            ep_num, status['position'] = divmod(status['position'], status['duration'])
+            # handle case when pos == duration, causing ep_num == num_eps
+            ep_num = min(ep_num, num_eps - 1)
             media_info['episode'] = media_info['episode'][ep_num]
-            self.status['position'] %= self.status['duration']
         elif isinstance(ep, str):
             media_info['episode'] = int(ep)
 
-        progress = min(
-            round(self.status['position'] * 100 / self.status['duration'], 2), 100
-        )
+        progress = min(round(status['position'] * 100 / status['duration'], 2), 100)
         return {
-            'state': self.status['state'],
+            'state': status['state'],
             'progress': progress,
             'media_info': media_info,
             'updated_at': time.time(),
@@ -302,7 +302,7 @@ class Monitor(Thread):
                 logger.warning(f"Invalid action {action}")
 
     def handle_status_update(self):
-        current_state = self.parse_status()
+        current_state = self.parse_status(self.status)
         with self.lock:
             self.scrobble_if_state_changed(self.prev_state, current_state)
         self.prev_state = current_state
