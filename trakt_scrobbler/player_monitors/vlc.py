@@ -61,7 +61,7 @@ class VLCMon(WebInterfaceMon):
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), vlcrc_path)
         return {
             "port": lambda: vlcrc.get("core", "http-port", fallback=8080),
-            "password": lambda: vlcrc.get("lua", "http-password"),
+            "password": lambda: vlcrc.get("lua", "http-password", fallback=""),
         }
 
     def update_status(self):
