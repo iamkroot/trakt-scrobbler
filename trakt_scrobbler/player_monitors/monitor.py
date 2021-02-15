@@ -148,8 +148,11 @@ class Monitor(Thread):
             num_eps = len(media_info['episode'])
             status['duration'] //= num_eps
             ep_num, status['position'] = divmod(status['position'], status['duration'])
-            # handle case when pos == duration, causing ep_num == num_eps
-            ep_num = min(ep_num, num_eps - 1)
+            ep_num = int(ep_num)
+            # handle case when pos >= duration, causing ep_num == num_eps
+            if ep_num == num_eps:
+                ep_num -= 1
+                status['position'] = status['duration']
             media_info['episode'] = media_info['episode'][ep_num]
         elif isinstance(ep, str):
             media_info['episode'] = int(ep)
