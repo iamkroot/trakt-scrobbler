@@ -68,10 +68,10 @@ class MPVMon(Monitor):
 
         ipc_path = mpv_conf.get("root", "input-ipc-server")
         if ipc_path[0:2] == "~~":
-            ipc_path = conf_path.parent.joinpath(ipc_path[3:])
+            ipc_path = str(conf_path.parent / ipc_path[3:])
 
         return {
-            "ipc_path": ipc_path
+            "ipc_path": lambda: ipc_path
         }
 
     def run(self):
