@@ -65,8 +65,13 @@ class MPVMon(Monitor):
         )
         mpv_conf.optionxform = lambda option: option
         mpv_conf.read_string("[root]\n" + conf_path.read_text())
+
+        ipc_path = mpv_conf.get("root", "input-ipc-server")
+        if ipc_path[0:2] == "~~":
+            ipc_path = conf_path.parent.joinpath(ipc_path[3:])
+
         return {
-            "ipc_path": lambda: mpv_conf.get("root", "input-ipc-server")
+            "ipc_path": ipc_path
         }
 
     def run(self):
