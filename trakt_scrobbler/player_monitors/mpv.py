@@ -90,6 +90,9 @@ class MPVMon(Monitor):
         if not self.WATCHED_PROPS.issubset(self.vars):
             logger.warning("Incomplete media status info")
             return
+        if self.vars['path'].startswith("http"):
+            logger.warning(f"File is not local. Skipping {self.vars['path']}")
+            return
         fpath = Path(self.vars['working-directory']) / Path(self.vars['path'])
 
         # Update last known position if player is stopped
