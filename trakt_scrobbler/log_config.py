@@ -3,21 +3,45 @@ from trakt_scrobbler.app_dirs import DATA_DIR
 file_path = DATA_DIR / "trakt_scrobbler.log"
 
 
-class StoppedPlayersFilter(logging.Filter):
-    """Only allow the first 'Unable to connect' for players not running."""
+class DuplicateMessageFilter(logging.Filter):
+    """Only show the first instance of many duplicate logs by filtering out the
+    other consective instances of the same message.
+
+    Done on a per-thread basis, otherwise "Unable to connect to MPV" and "Unable
+    to connect to VLC" would count as duplicates, and second one would be filtered out.
+
+    Example (each line is a new log message, all generated in one thread):
+        Some random message
+        Unable to connect
+        Unable to connect
+        Unable to connect
+        ...
+        Some other message
+
+    becomes:
+        Some random message
+        Unable to connect
+        Some other message
+    """
+    MESSAGES = ("Unable to connect", "File is not local")
 
     def __init__(self):
-        self.log_count = set()
+        # for each message to be filtered, keep track of the threads that generated it
+        self.msg_history = {msg: set() for msg in self.MESSAGES}
 
     def filter(self, record: logging.LogRecord):
         if not isinstance(record.msg, str):
             return True
-        if 'Unable to connect' in record.msg:
-            val = record.thread not in self.log_count
-            self.log_count.add(record.thread)
-            return val
-        else:  # some other message is sent from the thread
-            self.log_count.discard(record.thread)
+
+        for msg in self.MESSAGES:
+            if msg in record.msg:
+                val = record.thread not in self.msg_history[msg]
+                self.msg_history[msg].add(record.thread)
+                return val
+            else:  # some other message is sent from the thread
+                # we should allow the message to be logged the next time it is generated
+                # by the same thread
+                self.msg_history[msg].discard(record.thread)
         return True
 
 
@@ -43,8 +67,8 @@ LOGGING_CONF = {
         }
     },
     'filters': {
-        'stoppedplayersfilter': {
-            '()': StoppedPlayersFilter,
+        'duplicatemessagefilter': {
+            '()': DuplicateMessageFilter,
         },
         'modulesfilter': {
             '()': ModuleFilter
@@ -59,7 +83,7 @@ LOGGING_CONF = {
             'mode': 'a',
             'level': 'DEBUG',
             'formatter': 'verbose',
-            'filters': ['stoppedplayersfilter', 'modulesfilter']
+            'filters': ['duplicatemessagefilter', 'modulesfilter']
         }
     },
     'loggers': {
