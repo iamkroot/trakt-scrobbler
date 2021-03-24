@@ -42,6 +42,8 @@ def dbus_notify(title, body, timeout):
     reply = connection.send_and_get_reply(msg)
     connection.close()
     notif_id = reply.body[0]
+    if not isinstance(notif_id, int):
+        notif_id = 0
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False):
