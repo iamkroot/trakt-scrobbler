@@ -61,11 +61,11 @@ category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
 
-[package.extras]
-test = ["pathlib"]
-
 [package.dependencies]
 pyyaml = "*"
+
+[package.extras]
+test = ["pathlib"]
 
 [[package]]
 name = "guessit"
@@ -75,14 +75,14 @@ category = "main"
 optional = false
 python-versions = "*"
 
-[package.extras]
-dev = ["tox", "mkdocs", "mkdocs-material", "pyinstaller", "python-semantic-release"]
-test = ["pytest", "pytest-benchmark", "pylint", "pyyaml"]
-
 [package.dependencies]
 babelfish = "*"
 python-dateutil = "*"
 rebulk = ">=3"
+
+[package.extras]
+dev = ["tox", "mkdocs", "mkdocs-material", "pyinstaller", "python-semantic-release"]
+test = ["pytest", "pytest-benchmark", "pylint", "pyyaml"]
 
 [[package]]
 name = "idna"
@@ -99,7 +99,6 @@ description = "Low-level, pure Python DBus protocol wrapper."
 category = "main"
 optional = false
 python-versions = ">=3.6"
-marker = "sys_platform == \"linux\""
 
 [package.extras]
 test = ["pytest", "pytest-trio", "pytest-asyncio", "testpath", "trio"]
@@ -127,7 +126,6 @@ description = ""
 category = "main"
 optional = false
 python-versions = "*"
-marker = "sys_platform == \"win32\""
 
 [package.dependencies]
 pywin32 = ">=223"
@@ -158,7 +156,6 @@ description = "Python for Window Extensions"
 category = "main"
 optional = false
 python-versions = "*"
-marker = "sys_platform == \"win32\""
 
 [[package]]
 name = "pyyaml"
@@ -189,15 +186,15 @@ category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
-[package.extras]
-security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
-socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
-
 [package.dependencies]
 certifi = ">=2017.4.17"
 chardet = ">=3.0.2,<5"
 idna = ">=2.5,<3"
 urllib3 = ">=1.21.1,<1.27"
+
+[package.extras]
+security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
+socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 
 [[package]]
 name = "six"
@@ -209,16 +206,16 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "urllib3"
-version = "1.26.3"
+version = "1.26.4"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
 
 [package.extras]
-brotli = ["brotlipy (>=0.6.0)"]
 secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "certifi", "ipaddress"]
-socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
+socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
+brotli = ["brotlipy (>=0.6.0)"]
 
 [[package]]
 name = "win10toast"
@@ -227,17 +224,15 @@ description = "An easy-to-use Python library for displaying Windows 10 Toast Not
 category = "main"
 optional = false
 python-versions = "*"
-marker = "sys_platform == \"win32\""
 
 [package.dependencies]
 pypiwin32 = "*"
-setuptools = "*"
 
 [extras]
 socks = ["pysocks"]
 
 [metadata]
-lock-version = "1.0"
+lock-version = "1.1"
 python-versions = "^3.7"
 content-hash = "6ca518b9e85e9e68be81991aeac99d3510b2d36b18f8e24c61aadd30486a467c"
 
@@ -352,8 +347,8 @@ six = [
     {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
 ]
 urllib3 = [
-    {file = "urllib3-1.26.3-py2.py3-none-any.whl", hash = "sha256:1b465e494e3e0d8939b50680403e3aedaa2bc434b7d5af64dfd3c958d7f5ae80"},
-    {file = "urllib3-1.26.3.tar.gz", hash = "sha256:de3eedaad74a2683334e282005cd8d7f22f4d55fa690a2a1020a416cb0a47e73"},
+    {file = "urllib3-1.26.4-py2.py3-none-any.whl", hash = "sha256:2f4da4594db7e1e110a944bb1b551fdf4e6c136ad42e4234131391e21eb5b0df"},
+    {file = "urllib3-1.26.4.tar.gz", hash = "sha256:e7b021f7241115872f92f43c6508082facffbd1c048e3c6e2bb9c2a157e28937"},
 ]
 win10toast = [
     {file = "win10toast-0.9-py2.py3-none-any.whl", hash = "sha256:44e5afa1001de88a0ee533872231521fa67c7d144f39974089af242d9c4620a4"},
