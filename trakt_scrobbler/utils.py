@@ -108,9 +108,9 @@ class ResumableTimer:
         self.args = args
         self.kwargs = kwargs
         self.timer = threading.Timer(timeout, callback, args, kwargs)
-        self.start_time = time.time()
 
     def start(self):
+        self.start_time = time.time()
         self.timer.start()
 
     def pause(self):
@@ -122,11 +122,12 @@ class ResumableTimer:
         if self.timer:
             # don't resume if already running
             return
+        # reduce the timeout by num of seconds for which timer was active
+        self.timeout -= self.pause_time - self.start_time
         self.timer = threading.Timer(
-            self.timeout - (self.pause_time - self.start_time),
-            self.callback, self.args, self.kwargs)
-
-        self.timer.start()
+            self.timeout, self.callback, self.args, self.kwargs)
+        self.start()
 
     def cancel(self):
-        self.timer.cancel()
+        if self.timer is not None:
+            self.timer.cancel()
