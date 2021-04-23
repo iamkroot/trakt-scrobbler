@@ -1,3 +1,4 @@
+import logging
 import logging.config
 import sys
 import threading
@@ -7,11 +8,19 @@ import yaml
 from trakt_scrobbler.log_config import LOGGING_CONF
 from trakt_scrobbler.__version__ import __version__  # noqa
 
+logging.config.dictConfig(LOGGING_CONF)
+logger = logging.getLogger("trakt_scrobbler")
+
 
 def register_exception_handler():
     """Exception handler to log all errors from threads."""
     def error_logger(*exc_info):
         logger.exception("Unhandled exception", exc_info=exc_info)
+        try:
+            from trakt_scrobbler.notifier import notify
+            notify(f"Check log file.\n{exc_info[1]}", "Unhandled Exception")
+        except Exception:
+            logger.exception("Exception while notifying user.")
 
     sys.excepthook = error_logger
 
@@ -38,9 +47,6 @@ def register_exception_handler():
 
     threading.Thread.__init__ = init
 
-
-logging.config.dictConfig(LOGGING_CONF)
-logger = logging.getLogger("trakt_scrobbler")
 
 register_exception_handler()
 
