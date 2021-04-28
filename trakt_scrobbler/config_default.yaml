@@ -9,6 +9,8 @@ fileinfo:
   # if defined, only files from these directories will be scrobbled
   whitelist: []  # Keep as [] to allow all
 
+  exclude_patterns: []  # ignore files matching these regex patterns
+
   # custom regex to identify media information, should be posix path
   include_regexes:
     movie: []

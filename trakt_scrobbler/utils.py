@@ -1,15 +1,18 @@
 import json
 import locale
 import logging.config
+import re
 import sys
 import threading
 import time
-import requests
 from functools import lru_cache
 from pathlib import Path
-from urllib.parse import urlparse, unquote
+from urllib.parse import unquote, urlparse
 
+import confuse
+import requests
 from trakt_scrobbler import config
+
 logger = logging.getLogger('trakt_scrobbler')
 proxies = config['general']['proxies'].get()
 
@@ -131,3 +134,15 @@ class ResumableTimer:
     def cancel(self):
         if self.timer is not None:
             self.timer.cancel()
+
+
+class RegexPat(confuse.Template):
+    """A regex configuration value template"""
+
+    def convert(self, value, view) -> re.Pattern:
+        """Check that the value is an regex.
+        """
+        try:
+            return re.compile(value)
+        except re.error as e:
+            self.fail(u"malformed regex: '{}' error: {}".format(e.pattern, e), view)

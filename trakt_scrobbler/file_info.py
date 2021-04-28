@@ -4,21 +4,34 @@ import guessit
 from functools import lru_cache
 from pathlib import Path
 from trakt_scrobbler import config, logger
-from trakt_scrobbler.utils import cleanup_encoding
+from trakt_scrobbler.utils import cleanup_encoding, RegexPat
 
-whitelist = config["fileinfo"]["whitelist"].get(confuse.Sequence(confuse.Path()))
-regexes = config["fileinfo"]['include_regexes'].get()
+
+cfg = config["fileinfo"]
+whitelist = cfg["whitelist"].get(confuse.Sequence(confuse.Path()))
+regexes = cfg['include_regexes'].get()
+exclude_patterns = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
 use_regex = any(regexes.values())
 
 
-def whitelist_file(file_path) -> Path:
+def whitelist_file(file_path) -> bool:
     if not whitelist:
         return True
     file_path = cleanup_encoding(file_path)
     parents = set(file_path.absolute().resolve().parents)
     for path in whitelist:
         if path in parents:
-            return path
+            logger.debug(f"Matched whitelist entry {path}")
+            return True
+    return False
+
+
+def exclude_file(file_path: Path) -> bool:
+    path_posix = str(file_path.as_posix())
+    for pattern in exclude_patterns:
+        if pattern.match(path_posix):
+            logger.debug(f"Matched exclude pattern '{pattern}' for '{path_posix}'")
+            return True
     return False
 
 
@@ -44,6 +57,9 @@ def get_media_info(file_path):
     file_path = Path(file_path)
     if not whitelist_file(file_path):
         logger.info("File path not in whitelist.")
+        return None
+    if exclude_file(file_path):
+        logger.info("File path matches exclude pattern.")
         return None
     guess = use_regex and custom_regex(file_path) or use_guessit(file_path)
     logger.debug(f"Guess: {guess}")
