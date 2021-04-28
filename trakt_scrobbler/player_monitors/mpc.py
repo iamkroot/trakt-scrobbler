@@ -39,7 +39,9 @@ class MPCMon(WebInterfaceMon):
 
     def update_status(self):
         variables = self.get_vars()
-        if variables['duration'] == '0':
+        # when a file has just started, it may happen that the variables page is
+        # pingable, but not populated. So check that variables isn't empty
+        if not variables or variables['duration'] == '0':
             self.status = {}
             return
         self.status['state'] = int(variables['state'])
