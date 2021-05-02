@@ -86,6 +86,14 @@ def file_uri_to_path(file_uri: str) -> str:
 
 
 @lru_cache()
+def is_url(url: str) -> bool:
+    try:
+        return urlparse(url).scheme != ''
+    except ValueError:
+        return False
+
+
+@lru_cache()
 def cleanup_encoding(file_path: Path) -> Path:
     if sys.platform == "win32":
         enc = locale.getpreferredencoding()

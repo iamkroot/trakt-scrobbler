@@ -10,6 +10,7 @@ from pathlib import Path
 from queue import Queue
 from trakt_scrobbler import logger
 from trakt_scrobbler.player_monitors.monitor import Monitor
+from trakt_scrobbler.utils import is_url
 
 if os.name == 'posix':
     import select
@@ -90,10 +91,9 @@ class MPVMon(Monitor):
         if not self.WATCHED_PROPS.issubset(self.vars):
             logger.warning("Incomplete media status info")
             return
-        if self.vars['path'].startswith("http"):
-            logger.warning(f"File is not local. Skipping {self.vars['path']}")
-            return
-        fpath = Path(self.vars['working-directory']) / Path(self.vars['path'])
+        fpath = self.vars['path']
+        if not is_url(fpath) and not Path(fpath).is_absolute():
+            fpath = str(Path(self.vars['working-directory']) / fpath)
 
         # Update last known position if player is stopped
         pos = self.vars['time-pos']
@@ -103,7 +103,7 @@ class MPVMon(Monitor):
 
         self.status = {
             'state': self.vars['state'],
-            'filepath': str(fpath),
+            'filepath': fpath,
             'position': pos,
             'duration': self.vars['duration'],
             'time': time.time()
