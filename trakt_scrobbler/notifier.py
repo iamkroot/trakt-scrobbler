@@ -1,6 +1,7 @@
-import sys
-import confuse
 import subprocess as sp
+import sys
+from copy import deepcopy
+
 from trakt_scrobbler import config, logger
 
 
@@ -15,13 +16,73 @@ class Singleton(type):
 
 class Notifier(metaclass=Singleton):
     APP_NAME = 'Trakt Scrobbler'
+    CATEGORIES = {
+        "misc": {},
+        "exception": {},
+        "scrobble": {
+            "start": {},
+            "pause": {},
+            # TODO: Add resume category
+            "stop": {}
+        }
+    }
 
     def __init__(self) -> None:
-        self.enable_notifs = config['general']['enable_notifs'].get(
-            confuse.Choice([True, False], default=True)
-        )
-        if self.enable_notifs:
+        self.enabled_categories = set()
+        self.read_categories()
+        if self.enabled_categories:
+            logger.debug("Notifications enabled for categories: "
+                         f"{', '.join(self.enabled_categories)}")
             self.import_deps()
+
+    def read_categories(self):
+        # TODO: Parse this data to allow reverse enables
+        # Example: scrobble=False, scrobble.stop=True
+        # currently, user would have to specify all subcategories of scrobble
+        data = config['general']['enable_notifs'].get()
+        categories = deepcopy(self.CATEGORIES)
+        self.merge_categories(categories, data)
+        self.flatten_categories(categories)
+
+    @classmethod
+    def merge_categories(cls, root: dict, user, default=True, parents=[]):
+        """Merge data from user config with default categories"""
+        if not isinstance(user, (dict, bool)):
+            logger.error(f"Invalid value {user} for category {'.'.join(parents)}")
+            return
+        if isinstance(user, dict):
+            # check for extra keys not present in existing categories
+            extra = set(user.keys()).difference(root)
+            if extra:
+                msg = f"Extra categor{'ies' if len(extra) > 1 else 'y'}"
+                if parents:
+                    msg += f" under {'.'.join(parents)}"
+                msg += f": {', '.join(extra)}"
+                logger.warning(msg)
+
+        for k, v in root.items():
+            value = user if isinstance(user, bool) else user.get(k, default)
+            if v:  # recurse for sub-categories
+                parents.append(k)
+                cls.merge_categories(v, value, default)
+                parents.pop()
+            elif isinstance(value, bool):
+                root[k] = value
+            else:
+                logger.error(
+                    f"Expected bool but found {value} for category "
+                    f"{'.'.join(parents + [k])}"
+                )
+
+    def flatten_categories(self, categories: dict, parents=[]):
+        """Prepare the category data by flattening them into a string"""
+        for k, v in categories.items():
+            if isinstance(v, dict):
+                parents.append(k)
+                self.flatten_categories(v, parents)
+                parents.pop()
+            elif v is True:
+                self.enabled_categories.add('.'.join(parents + [k]))
 
     def import_deps(self):
         if sys.platform == 'win32':
@@ -42,10 +103,10 @@ class Notifier(metaclass=Singleton):
                                             interface='org.freedesktop.Notifications')
                 self.notif_id = 0
 
-    def notify(self, body, title=APP_NAME, timeout=5, stdout=False):
-        if stdout or not self.enable_notifs:
+    def notify(self, body, title=APP_NAME, timeout=5, stdout=False, category="misc"):
+        if stdout:
             print(body)
-        if not self.enable_notifs:
+        if category not in self.enabled_categories:
             return
         if sys.platform == 'win32':
             toaster.show_toast(title, body, duration=timeout, threaded=True)
@@ -67,7 +128,7 @@ class Notifier(metaclass=Singleton):
             except FileNotFoundError:
                 logger.exception("Unable to send notification")
                 # disable all future notifications until app restart
-                self.enable_notifs = False
+                self.enabled_categories = set()
 
     def dbus_notify(self, title, body, timeout):
         msg = self.new_method_call(self.notifier, 'Notify', 'susssasa{sv}i',
