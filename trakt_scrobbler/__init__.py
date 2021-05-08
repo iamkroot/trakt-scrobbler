@@ -18,7 +18,8 @@ def register_exception_handler():
         logger.exception("Unhandled exception", exc_info=exc_info)
         try:
             from trakt_scrobbler.notifier import Notifier
-            Notifier().notify(f"Check log file.\n{exc_info[1]}", "Unhandled Exception")
+            Notifier().notify(f"Check log file.\n{exc_info[1]}", "Unhandled Exception",
+                              category="exception")
         except Exception:
             logger.exception("Exception while notifying user.")
 

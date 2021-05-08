@@ -32,7 +32,7 @@ class Scrobbler(Thread):
                         " S{season:02}E{number:02}".format(**resp['episode']))
             msg = f"Scrobble {verb} successful for {name}"
             logger.info(msg)
-            self.notify(msg)
+            self.notify(msg, category=f"scrobble.{verb}")
             self.backlog_cleaner.clear()
         elif resp is False and verb == 'stop' and data['progress'] > 80:
             logger.warning('Scrobble unsuccessful. Will try again later.')
