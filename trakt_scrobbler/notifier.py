@@ -22,7 +22,7 @@ class Notifier(metaclass=Singleton):
         "scrobble": {
             "start": {},
             "pause": {},
-            # TODO: Add resume category
+            "resume": {},
             "stop": {}
         },
         "trakt": {}

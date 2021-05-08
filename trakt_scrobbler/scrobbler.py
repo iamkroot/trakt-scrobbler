@@ -13,12 +13,19 @@ class Scrobbler(Thread):
         self.scrobble_queue = scrobble_queue
         self.backlog_cleaner = backlog_cleaner
         self.notify = Notifier().notify
+        self.prev_scrobble = None
 
     def run(self):
         while True:
             scrobble_item = self.scrobble_queue.get()
             self.scrobble(*scrobble_item)
             self.scrobble_queue.task_done()
+
+    def is_resume(self, verb, data):
+        if not self.prev_scrobble or verb != "start":
+            return False
+        prev_verb, prev_data = self.prev_scrobble
+        return prev_verb == "pause" and prev_data['media_info'] == data['media_info']
 
     def scrobble(self, verb, data):
         logger.debug(f"Scrobbling {verb} at {data['progress']:.2f}% for "
@@ -30,12 +37,14 @@ class Scrobbler(Thread):
             else:
                 name = (resp['show']['title'] +
                         " S{season:02}E{number:02}".format(**resp['episode']))
-            msg = f"Scrobble {verb} successful for {name}"
+            category = 'resume' if self.is_resume(verb, data) else verb
+            msg = f"Scrobble {category} successful for {name}"
             logger.info(msg)
-            self.notify(msg, category=f"scrobble.{verb}")
+            self.notify(msg, category=f"scrobble.{category}")
             self.backlog_cleaner.clear()
         elif resp is False and verb == 'stop' and data['progress'] > 80:
             logger.warning('Scrobble unsuccessful. Will try again later.')
             self.backlog_cleaner.add(data)
         else:
             logger.warning('Scrobble unsuccessful.')
+        self.prev_scrobble = (verb, data)
