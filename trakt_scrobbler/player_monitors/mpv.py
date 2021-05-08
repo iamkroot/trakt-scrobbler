@@ -210,6 +210,7 @@ class MPVPosixMon(MPVMon):
                 try:
                     data = self.sock.recv(4096)
                 except ConnectionResetError:
+                    self.is_running = False
                     break
                 if len(data) == 0:
                     # EOF reached
