@@ -45,7 +45,7 @@ def get_trakt_id(title, item_type, year=None):
         msg = f'Trakt search yielded no results for the {required_type}, {title}'
         msg += f", Year: {year}" * bool(year)
         logger.warning(msg)
-        Notifier().notify(msg)
+        Notifier().notify(msg, category="trakt")
         trakt_id = -1
     else:
         trakt_id = results[0][required_type]['ids']['trakt']

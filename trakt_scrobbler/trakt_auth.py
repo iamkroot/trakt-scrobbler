@@ -39,13 +39,14 @@ class TraktAuth:
             self.device_auth()
         elif self.is_token_expired():
             logger.info("Trakt access token expired. Refreshing.")
-            self.notify("Trakt access token expired. Refreshing.")
+            self.notify("Trakt access token expired. Refreshing.", category="trakt")
             self.refresh_token()
         if not self.token_data or self.is_token_expired():
             # either device_auth or refresh_token failed to get token
             logger.critical("Unable to get access token.")
             self.notify("Failed to authorize application with Trakt. "
-                        "Run 'trakts auth' manually to retry.", stdout=True)
+                        "Run 'trakts auth' manually to retry.",
+                        stdout=True, category="trakt")
         else:
             return self.token_data['access_token']
 
@@ -86,7 +87,8 @@ class TraktAuth:
             self._code_fetch_fails += 1
             if self._code_fetch_fails == self._CODE_FETCH_FAILS_LIMIT:
                 logger.critical("Unable to get response from trakt.")
-                self.notify("Unable to get response from trakt.", stdout=True)
+                self.notify("Unable to get response from trakt.",
+                            stdout=True, category="trakt")
                 sys.exit(1)
             return
         elif token_resp.status_code == 400:
@@ -110,13 +112,15 @@ class TraktAuth:
         logger.info(f"User Code: {code_data['user_code']}")
         self.notify(
             "Open {verification_url} in your browser and enter this code: "
-            "{user_code}".format(**code_data), timeout=30, stdout=True)
+            "{user_code}".format(**code_data), timeout=30, stdout=True,
+            category="trakt")
         webbrowser.open(code_data['verification_url'])
 
         start = time.time()
         while time.time() - start < code_data['expires_in']:
             if self.get_device_token(code_data['device_code']):
-                self.notify('App authorized successfully.', stdout=True)
+                self.notify('App authorized successfully.',
+                            stdout=True, category="trakt")
                 logger.info('App authorized successfully.')
                 break
             logger.debug('Waiting for user to authorize the app.')

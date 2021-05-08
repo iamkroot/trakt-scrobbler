@@ -17,14 +17,15 @@ class Singleton(type):
 class Notifier(metaclass=Singleton):
     APP_NAME = 'Trakt Scrobbler'
     CATEGORIES = {
-        "misc": {},
         "exception": {},
+        "misc": {},
         "scrobble": {
             "start": {},
             "pause": {},
             # TODO: Add resume category
             "stop": {}
-        }
+        },
+        "trakt": {}
     }
 
     def __init__(self) -> None:
