@@ -2,7 +2,7 @@ from datetime import datetime as dt
 from http import HTTPStatus
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
-from trakt_scrobbler.notifier import notify
+from trakt_scrobbler.notifier import Notifier
 from trakt_scrobbler.trakt_auth import API_URL, TraktAuth
 from trakt_scrobbler.utils import safe_request, read_json, write_json
 
@@ -45,7 +45,7 @@ def get_trakt_id(title, item_type, year=None):
         msg = f'Trakt search yielded no results for the {required_type}, {title}'
         msg += f", Year: {year}" * bool(year)
         logger.warning(msg)
-        notify(msg)
+        Notifier().notify(msg)
         trakt_id = -1
     else:
         trakt_id = results[0][required_type]['ids']['trakt']
