@@ -1,7 +1,14 @@
 version: '1.0'
 
 general:
-  enable_notifs: true
+  enable_notifs:
+    exception: yes
+    misc: yes
+    scrobble:
+      start: yes
+      pause: yes
+      stop: yes
+    trakt: yes
   proxies: {}
 
 fileinfo:
