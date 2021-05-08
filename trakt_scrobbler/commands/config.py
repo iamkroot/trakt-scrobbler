@@ -58,13 +58,40 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']"""
 
     TRUTHY_BOOL = ("true", "yes", "1")
 
+    def handle_enable_notifs(self, config, view, key, values):
+        if len(values) != 1:
+            raise ValueError("Given parameter only accepts a single value")
+        from trakt_scrobbler.notifier import Notifier
+
+        value = values[0].lower() in self.TRUTHY_BOOL
+
+        view = view["general"]["enable_notifs"]
+        user_cat = key.replace("general.enable_notifs", "").lstrip(".")
+        if user_cat:
+            heirarchy = user_cat.split('.')
+            categories = Notifier.CATEGORIES
+            for sub_category in heirarchy:  # traverse down the heirarchy
+                if sub_category not in categories:
+                    raise KeyError(f"{sub_category} is not a valid category name.")
+                categories = categories[sub_category]
+                view = view[sub_category]
+        view.set(value)
+
+        ConfigCommand.save_config(config)
+        self.line(f'User config updated with "<info>{key}</info> = <comment>{value}</comment>"')
+        self.line("Don't forget to restart the service for the changes to take effect.")
+
     def handle(self):
         import confuse
         from trakt_scrobbler import config
 
         view = config
-        key = self.argument("key")
+        key = self.argument("key").strip(".")
         values = self.argument("value")
+
+        # special case for notification categories
+        if key.startswith("general.enable_notifs"):
+            return self.handle_enable_notifs(config, view, key, values)
 
         # fix path escaping due to trailing backslash for windows
         values = [val[:-1] if val.endswith(r"\\") else val for val in values]
