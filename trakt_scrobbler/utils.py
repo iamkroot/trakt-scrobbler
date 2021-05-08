@@ -11,10 +11,29 @@ from urllib.parse import unquote, urlparse
 
 import confuse
 import requests
+from requests.packages.urllib3.util.retry import Retry
 from trakt_scrobbler import config
 
 logger = logging.getLogger('trakt_scrobbler')
-proxies = config['general']['proxies'].get()
+
+
+def init_sess():
+    proxies = config['general']['proxies'].get()
+    retries = Retry(
+        total=5,
+        method_whitelist=["HEAD", "GET", "OPTIONS", "POST"],
+        status_forcelist=[429, 500, 502, 503, 504],
+        backoff_factor=1
+    )
+    adapter = requests.adapters.HTTPAdapter(max_retries=retries)
+    sess = requests.Session()
+    sess.proxies = proxies
+    sess.mount("https://", adapter)
+    sess.mount("http://", adapter)
+    return sess
+
+
+sess = init_sess()
 
 
 def read_json(file_path):
@@ -35,9 +54,8 @@ def write_json(data, file_path):
 
 def safe_request(verb, params):
     """ConnectionError handling for requests methods."""
-    params.setdefault('proxies', proxies)
     try:
-        resp = requests.request(verb, **params)
+        resp = sess.request(verb, **params)
     except (requests.ConnectionError, requests.Timeout) as e:
         logger.error(f"Failed to connect: {e}")
         logger.debug(f'Request: {verb} {params}')
