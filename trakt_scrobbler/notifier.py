@@ -110,7 +110,7 @@ class Notifier(metaclass=Singleton):
         if category not in self.enabled_categories:
             return
         if sys.platform == 'win32':
-            toaster.show_toast(title, body, duration=timeout, threaded=True)
+            self.toaster.show_toast(title, body, duration=timeout, threaded=True)
         elif sys.platform == 'darwin':
             osa_cmd = f'display notification "{body}" with title "{title}"'
             sp.run(["osascript", "-e", osa_cmd], check=False)
