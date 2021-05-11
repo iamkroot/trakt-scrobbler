@@ -7,6 +7,7 @@ import threading
 import time
 from functools import lru_cache
 from pathlib import Path
+from typing import Iterable
 from urllib.parse import unquote, urlparse
 
 import confuse
@@ -113,7 +114,11 @@ class AutoloadError(Exception):
         if self.param:
             msg += f" for '{self.param}'"
         if self.src:
-            msg += f" from '{self.src}'"
+            if isinstance(self.src, Iterable) and not isinstance(self.src, str):
+                src = "any of " + ", ".join(map(lambda s: f"'{s}'", self.src))
+            else:
+                src = f"'{self.src!s}'"
+            msg += f" from {src}"
         if self.extra_msg:
             msg += ": " + self.extra_msg
         return msg
