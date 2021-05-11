@@ -207,7 +207,11 @@ class MPVPosixMon(MPVMon):
             r, _, _ = select.select(sock_list, [], [], self.read_timeout)
             if r:  # r == [self.sock]
                 # socket has data to be read
-                data = self.sock.recv(4096)
+                try:
+                    data = self.sock.recv(4096)
+                except ConnectionResetError:
+                    self.is_running = False
+                    break
                 if len(data) == 0:
                     # EOF reached
                     self.is_running = False
