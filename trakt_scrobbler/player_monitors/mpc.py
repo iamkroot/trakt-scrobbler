@@ -1,3 +1,4 @@
+import os
 import re
 import confuse
 from trakt_scrobbler import logger
@@ -54,7 +55,7 @@ class MPCMon(WebInterfaceMon):
 
 
 class MPCHCMon(MPCMon):
-    exclude_import = False
+    exclude_import = os.name != 'nt'
     name = 'mpc-hc'
 
     @classmethod
@@ -64,7 +65,7 @@ class MPCHCMon(MPCMon):
 
 
 class MPCBEMon(MPCHCMon):
-    exclude_import = False
+    exclude_import = os.name != 'nt'
     name = 'mpc-be'
 
     @classmethod
