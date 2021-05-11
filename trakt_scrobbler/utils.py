@@ -103,9 +103,10 @@ def cleanup_encoding(file_path: Path) -> Path:
 
 
 class AutoloadError(Exception):
-    def __init__(self, param=None, src=None):
+    def __init__(self, param=None, src=None, extra_msg=""):
         self.param = param
         self.src = src
+        self.extra_msg = extra_msg
 
     def __str__(self):
         msg = "Failed to autoload value"
@@ -113,6 +114,8 @@ class AutoloadError(Exception):
             msg += f" for '{self.param}'"
         if self.src:
             msg += f" from '{self.src}'"
+        if self.extra_msg:
+            msg += ": " + self.extra_msg
         return msg
 
 
