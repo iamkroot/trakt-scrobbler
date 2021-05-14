@@ -17,8 +17,8 @@ from trakt_scrobbler.utils import AutoloadError
 ARG_PAT = re.compile(r'--input-ipc-server=(?P<ipc_path>[^\'" ]+)')
 
 
-class SMPlayerMon(MPVMon):
-    name = "smplayer"
+class SMPlayerMPVMon(MPVMon):
+    name = "smplayer@mpv"
 
     @classmethod
     def read_player_cfg(cls, auto_keys=None):
@@ -46,16 +46,16 @@ class SMPlayerMon(MPVMon):
         }
 
 
-class SMPlayerPosixMon(MPVPosixMon, SMPlayerMon):
+class SMPlayerMPVPosixMon(MPVPosixMon, SMPlayerMPVMon):
     pass
 
 
-class SMPlayerWinMon(MPVWinMon, SMPlayerMon):
+class SMPlayerMPVWinMon(MPVWinMon, SMPlayerMPVMon):
     pass
 
 
 class SyncplayMPVMon(MPVMon):
-    name = "syncplay:mpv"
+    name = "syncplay@mpv"
 
     @classmethod
     def read_player_cfg(cls, auto_keys=None):

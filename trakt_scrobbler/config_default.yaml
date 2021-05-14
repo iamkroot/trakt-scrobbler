@@ -25,7 +25,7 @@ fileinfo:
     episode: []
 
 players:
-  monitored: []  # players to be monitored. Allowed: mpc-be, mpc-hc, mpv, plex, smplayer, vlc
+  monitored: []  # players to be monitored. Allowed: mpc-be, mpc-hc, mpv, plex, smplayer@mpv, syncplay@mpv, vlc
 
   # general parameters, can be overridden per player (Eg: trakts config set players.plex.skip_interval 10)
   skip_interval: 5  # min percent jump to consider for scrobbling to trakt
@@ -57,11 +57,14 @@ players:
     read_timeout: 2  # seconds to wait while reading data from mpv
     restart_delay: 0.1  # seconds to wait after one file ends to check for the next play. usually needed for slow mpv wrappers which may cause delay
 
-  smplayer:  # enable the JSON IPC server for mpv from Settings->Advanced->Mplayer/mpv->Options: "--input-ipc-server=\\.\pipe\mpvpipe" (Windows) or "--input-ipc-server=/tmp/mpvsocket" (Linux)
+  smplayer@mpv:  # enable the JSON IPC server for mpv from Settings->Advanced->Mplayer/mpv->Options: "--input-ipc-server=\\.\pipe\mpvpipe" (Windows) or "--input-ipc-server=/tmp/mpvsocket" (Linux)
     ipc_path: auto-detect
     poll_interval: 10  # in seconds. How frequently the monitor should check for player update.
     read_timeout: 2  # seconds to wait while reading data from mpv
     restart_delay: 0.1  # seconds to wait after one file ends to check for the next play
+
+  syncplay@mpv:
+    ipc_path: auto-detect
 
   plex:
     ip: localhost  # IP of the plex server
