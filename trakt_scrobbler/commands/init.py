@@ -30,8 +30,10 @@ class InitCommand(Command):
             None,
             multiple=True,
         )
-        self.line(f"Selected: {', '.join(players)}")
         self.call_sub("config set", f"players.monitored {' '.join(players)}", True)
+        self.line(f"Selected: {', '.join(players)}")
+        self.line("<info>If you wish to change these in the future, use</info> "
+                  "<comment>trakts config set players.monitored player1 player2</comment>")
 
         for Mon, name, val in self.get_reqd_params(monitors, players):
             msg = f"Enter '{name}' for {Mon.name}"
