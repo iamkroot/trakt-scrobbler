@@ -2,64 +2,76 @@ import re
 import confuse
 import guessit
 from functools import lru_cache
-from pathlib import Path
+from urllib.parse import unquote, urlparse, urlunparse
 from trakt_scrobbler import config, logger
-from trakt_scrobbler.utils import cleanup_encoding, RegexPat
+from trakt_scrobbler.utils import cleanup_encoding, RegexPat, is_url
 
 
 cfg = config["fileinfo"]
-whitelist = cfg["whitelist"].get(confuse.Sequence(confuse.Path()))
+whitelist = cfg["whitelist"].get(confuse.StrSeq())
 regexes = cfg['include_regexes'].get()
 exclude_patterns = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
 use_regex = any(regexes.values())
 
 
-def whitelist_file(file_path) -> bool:
+def whitelist_file(file_path: str) -> bool:
+    """Check if the played media file is in the allowed list of paths.
+
+    Simply checks that some whitelist path should be prefix of file_path.
+
+    An edge case that is deliberately not handled:
+    Suppose user has whitelisted "path/to/tv" directory
+    and the user also has another directory "path/to/tv shows".
+    If the user plays something from the latter, it will still be whitelisted.
+    """
     if not whitelist:
         return True
-    file_path = cleanup_encoding(file_path)
-    parents = set(file_path.absolute().resolve().parents)
     for path in whitelist:
-        if path in parents:
+        if file_path.startswith(path):
             logger.debug(f"Matched whitelist entry {path}")
             return True
     return False
 
 
-def exclude_file(file_path: Path) -> bool:
-    path_posix = str(file_path.as_posix())
+def exclude_file(file_path: str) -> bool:
     for pattern in exclude_patterns:
-        if pattern.match(path_posix):
-            logger.debug(f"Matched exclude pattern '{pattern}' for '{path_posix}'")
+        if pattern.match(file_path):
+            logger.debug(f"Matched exclude pattern '{pattern}' for '{file_path}'")
             return True
     return False
 
 
-def custom_regex(file_path):
-    path_posix = str(file_path.as_posix())
+def custom_regex(file_path: str):
     for item_type, patterns in regexes.items():
         for pattern in patterns:
-            m = re.match(pattern, path_posix)
+            m = re.match(pattern, file_path)
             if m:
-                logger.debug(f"Matched regex pattern '{pattern}' for '{path_posix}'")
+                logger.debug(f"Matched regex pattern '{pattern}' for '{file_path}'")
                 guess = m.groupdict()
                 guess['type'] = item_type
                 return guess
 
 
-def use_guessit(file_path):
-    return guessit.guessit(str(file_path))
+def use_guessit(file_path: str):
+    return guessit.guessit(file_path)
 
 
 @lru_cache(maxsize=None)
-def get_media_info(file_path):
-    logger.debug(f"Filepath '{file_path}'")
-    file_path = Path(file_path)
+def get_media_info(file_path: str):
+    logger.debug(f"Raw filepath '{file_path}'")
+    file_path = cleanup_encoding(file_path)
+    parsed = urlparse(file_path)
+    if is_url(parsed):
+        # remove the query and fragment from the url, keeping only important parts
+        *important, _, _ = parsed
+        file_path = unquote(urlunparse((*important, "", "")))
+        logger.debug(f"Converted to url '{file_path}'")
+
     if not whitelist_file(file_path):
         logger.info("File path not in whitelist.")
         return None
     if exclude_file(file_path):
-        logger.info("File path matches exclude pattern.")
+        logger.info("Ignoring file.")
         return None
     guess = use_regex and custom_regex(file_path) or use_guessit(file_path)
     logger.debug(f"Guess: {guess}")

@@ -1,14 +1,15 @@
 import json
 import locale
 import logging.config
+import os
 import re
 import sys
 import threading
 import time
-from functools import lru_cache
-from pathlib import Path
 from typing import Iterable
-from urllib.parse import unquote, urlparse
+from functools import lru_cache, singledispatch
+from urllib.parse import ParseResult, urlparse
+from urllib.request import url2pathname
 
 import confuse
 import requests
@@ -22,7 +23,7 @@ def init_sess():
     proxies = config['general']['proxies'].get()
     retries = Retry(
         total=5,
-        method_whitelist=["HEAD", "GET", "OPTIONS", "POST"],
+        allowed_methods=["HEAD", "GET", "OPTIONS", "POST"],
         status_forcelist=[429, 500, 502, 503, 504],
         backoff_factor=1
     )
@@ -69,36 +70,43 @@ def safe_request(verb, params):
 
 
 @lru_cache()
-def file_uri_to_path(file_uri: str) -> str:
-    if "://" not in file_uri:
-        logger.warning(f"Invalid file uri '{file_uri}'")
-        return None
-
-    try:
-        path = urlparse(unquote(file_uri)).path
-    except ValueError:
-        logger.warning(f"Invalid file uri '{file_uri}'")
-        return None
-
-    if sys.platform == 'win32' and path.startswith('/'):  # remove leading '/'
-        path = path[1:]
-    return path
+@singledispatch
+def is_url(parsed_path: ParseResult) -> bool:
+    """Check whether the given path is a URL like 'https://example.org/path.mkv'"""
+    if sys.platform == 'win32':
+        # parsing "D:\path" causes scheme="D", netloc=""
+        return len(parsed.scheme) >= 2 or parsed.netloc != ''
+    else:  # on other platforms, it's simple
+        return parsed_path.scheme != ''
 
 
 @lru_cache()
-def is_url(url: str) -> bool:
+@is_url.register  # overload based on type
+def is_url_str(path: str) -> bool:
     try:
-        return urlparse(url).scheme != ''
+        return is_url(urlparse(path))
     except ValueError:
         return False
 
 
 @lru_cache()
-def cleanup_encoding(file_path: Path) -> Path:
+def file_uri_to_path(file_uri: str) -> str:
+    """Convert a file uri to absolute path."""
+    try:
+        parsed = urlparse(file_uri)
+        host = "{0}{0}{mnt}{0}".format(os.path.sep, mnt=parsed.netloc)
+        return os.path.abspath(os.path.join(host, url2pathname(parsed.path)))
+    except ValueError:
+        logger.warning(f"Invalid file uri '{file_uri}'")
+        return None
+
+
+@lru_cache()
+def cleanup_encoding(file_path: str) -> str:
     if sys.platform == "win32":
         enc = locale.getpreferredencoding()
         try:
-            file_path = Path(str(file_path).encode(enc).decode())
+            file_path = str(file_path).encode(enc).decode()
         except (UnicodeEncodeError, UnicodeDecodeError) as e:
             logger.debug(f"System encoding scheme: '{enc}'")
             try:
