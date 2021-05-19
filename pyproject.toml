@@ -26,6 +26,15 @@ confuse = "^1.3.0"
 pysocks = {version = "^1.7.1", optional = true}
 jeepney = {version = "^0.6", platform = "linux"}
 
+[[tool.poetry.dependencies.urlmatch]]
+# for some reason, poetry picks the MacOS package by default
+url = "https://files.pythonhosted.org/packages/84/4e/654a4b6b335b339da7208ca1e54a34d1180e94c09b11b63dd76ee731b378/urlmatch-1.0.1.tar.gz"
+markers = "sys_platform != 'darwin'"
+
+[[tool.poetry.dependencies.urlmatch]]
+version = "^1.0.1"
+markers = "sys_platform == 'darwin'"
+
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.extras]
@@ -37,3 +46,6 @@ trakts = "trakt_scrobbler.console:main"
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.pyright]
+reportGeneralTypeIssues = false

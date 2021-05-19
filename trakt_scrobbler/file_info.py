@@ -5,7 +5,7 @@ from functools import lru_cache
 from urllib.parse import unquote, urlparse, urlunparse
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.utils import cleanup_encoding, RegexPat, is_url
-
+from urlmatch import urlmatch, BadMatchPattern
 
 cfg = config["fileinfo"]
 whitelist = cfg["whitelist"].get(confuse.StrSeq())
@@ -14,7 +14,16 @@ exclude_patterns = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
 use_regex = any(regexes.values())
 
 
-def whitelist_file(file_path: str) -> bool:
+def matches_url(path, file_path) -> bool:
+    try:
+        if urlmatch(path, file_path, path_required=False, fuzzy_scheme=True):
+            return True
+    except BadMatchPattern:
+        return False
+    return False
+
+
+def whitelist_file(file_path: str, is_url=False) -> bool:
     """Check if the played media file is in the allowed list of paths.
 
     Simply checks that some whitelist path should be prefix of file_path.
@@ -27,16 +36,17 @@ def whitelist_file(file_path: str) -> bool:
     if not whitelist:
         return True
     for path in whitelist:
-        if file_path.startswith(path):
-            logger.debug(f"Matched whitelist entry {path}")
+        if is_url and matches_url(path, file_path) or file_path.startswith(path):
+            logger.debug(f"Matched whitelist entry '{path}'")
             return True
+
     return False
 
 
 def exclude_file(file_path: str) -> bool:
     for pattern in exclude_patterns:
         if pattern.match(file_path):
-            logger.debug(f"Matched exclude pattern '{pattern}' for '{file_path}'")
+            logger.debug(f"Matched exclude pattern '{pattern}'")
             return True
     return False
 
@@ -46,7 +56,7 @@ def custom_regex(file_path: str):
         for pattern in patterns:
             m = re.match(pattern, file_path)
             if m:
-                logger.debug(f"Matched regex pattern '{pattern}' for '{file_path}'")
+                logger.debug(f"Matched regex pattern '{pattern}'")
                 guess = m.groupdict()
                 guess['type'] = item_type
                 return guess
@@ -61,13 +71,15 @@ def get_media_info(file_path: str):
     logger.debug(f"Raw filepath '{file_path}'")
     file_path = cleanup_encoding(file_path)
     parsed = urlparse(file_path)
+    file_is_url = False
     if is_url(parsed):
+        file_is_url = True
         # remove the query and fragment from the url, keeping only important parts
         *important, _, _ = parsed
         file_path = unquote(urlunparse((*important, "", "")))
         logger.debug(f"Converted to url '{file_path}'")
 
-    if not whitelist_file(file_path):
+    if not whitelist_file(file_path, file_is_url):
         logger.info("File path not in whitelist.")
         return None
     if exclude_file(file_path):
