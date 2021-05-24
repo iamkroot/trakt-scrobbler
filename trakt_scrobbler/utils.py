@@ -75,7 +75,7 @@ def is_url(parsed_path: ParseResult) -> bool:
     """Check whether the given path is a URL like 'https://example.org/path.mkv'"""
     if sys.platform == 'win32':
         # parsing "D:\path" causes scheme="D", netloc=""
-        return len(parsed.scheme) >= 2 or parsed.netloc != ''
+        return len(parsed_path.scheme) >= 2 or parsed_path.netloc != ''
     else:  # on other platforms, it's simple
         return parsed_path.scheme != ''
 
