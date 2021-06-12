@@ -33,8 +33,10 @@ class MPVMon(Monitor):
         "poll_interval": confuse.Number(default=10),
         # seconds to wait while reading data from mpv
         "read_timeout": confuse.Number(default=2),
+        # seconds to wait while writing data to mpv
+        "write_timeout": confuse.Number(default=60),
         # seconds to wait after one file ends to check for the next play
-        # usually needed for slow mpv wrappers which may cause delay
+        # needed to make sure we don't reconnect too soon after end-file
         "restart_delay": confuse.Number(default=0.1)
     }
 
@@ -42,6 +44,7 @@ class MPVMon(Monitor):
         super().__init__(scrobble_queue)
         self.ipc_path = self.config['ipc_path']
         self.read_timeout = self.config['read_timeout']
+        self.write_timeout = self.config['write_timeout']
         self.poll_interval = self.config['poll_interval']
         self.restart_delay = self.config['restart_delay']
         self.buffer = ''
@@ -219,12 +222,21 @@ class MPVPosixMon(MPVMon):
                 self.on_data(data)
             while not self.write_queue.empty():
                 # block until self.sock can be written to
-                select.select([], sock_list, [])
+                _, w, _ = select.select([], sock_list, [], self.write_timeout)
+                if not w:
+                    logger.warning("Timed out writing to socket. Killing connection.")
+                    self.is_running = False
+                    break
                 try:
                     self.sock.sendall(self.write_queue.get_nowait())
                 except BrokenPipeError:
                     self.is_running = False
+                else:
+                    self.write_queue.task_done()
         self.sock.close()
+        while not self.write_queue.empty():
+            self.write_queue.get_nowait()
+            self.write_queue.task_done()
         logger.debug('Sock closed')
 
 
