@@ -193,7 +193,6 @@ class MPVPosixMon(MPVMon):
 
     def __init__(self, scrobble_queue):
         super().__init__(scrobble_queue)
-        self.sock = socket.socket(socket.AF_UNIX)
 
     def can_connect(self):
         sock = socket.socket(socket.AF_UNIX)
@@ -202,16 +201,20 @@ class MPVPosixMon(MPVMon):
         return errno == 0
 
     def conn_loop(self):
-        self.sock = socket.socket(socket.AF_UNIX)
-        self.sock.connect(self.ipc_path)
+        sock = socket.socket(socket.AF_UNIX)
+        try:
+            sock.connect(self.ipc_path)
+        except ConnectionRefusedError:
+            logger.warning("Connection refused. Maybe we retried too soon?")
+            return
         self.is_running = True
-        sock_list = [self.sock]
+        sock_list = [sock]
         while self.is_running:
             r, _, _ = select.select(sock_list, [], [], self.read_timeout)
-            if r:  # r == [self.sock]
+            if r:  # r == [sock]
                 # socket has data to be read
                 try:
-                    data = self.sock.recv(4096)
+                    data = sock.recv(4096)
                 except ConnectionResetError:
                     self.is_running = False
                     break
@@ -221,19 +224,20 @@ class MPVPosixMon(MPVMon):
                     break
                 self.on_data(data)
             while not self.write_queue.empty():
-                # block until self.sock can be written to
+                # block until sock can be written to
                 _, w, _ = select.select([], sock_list, [], self.write_timeout)
                 if not w:
                     logger.warning("Timed out writing to socket. Killing connection.")
                     self.is_running = False
                     break
                 try:
-                    self.sock.sendall(self.write_queue.get_nowait())
+                    sock.sendall(self.write_queue.get_nowait())
                 except BrokenPipeError:
                     self.is_running = False
+                    break
                 else:
                     self.write_queue.task_done()
-        self.sock.close()
+        sock.close()
         while not self.write_queue.empty():
             self.write_queue.get_nowait()
             self.write_queue.task_done()
