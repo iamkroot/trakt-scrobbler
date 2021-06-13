@@ -6,7 +6,7 @@ import confuse
 import requests
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.file_info import get_media_info
-from trakt_scrobbler.notifier import Notifier
+from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.utils import AutoloadError, ResumableTimer
 
 SCROBBLE_VERBS = ('stop', 'pause', 'start')
@@ -66,11 +66,11 @@ class Monitor(Thread):
         except AutoloadError as e:
             logger.debug(str(e))
             logger.error(f"Config value autoload failed for {cls.name}.")
-            Notifier().notify(f"Check log file. {e!s}")
+            notify(f"Check log file. {e!s}", category="exception")
         except Exception:
             msg = f"Config value autoload failed for {cls.name}."
             logger.exception(msg)
-            Notifier().notify(f"{msg} Check log file.")
+            notify(f"{msg} Check log file.", category="exception")
         else:
             return super().__new__(cls)
 

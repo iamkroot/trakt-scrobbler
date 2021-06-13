@@ -4,7 +4,7 @@ import webbrowser
 from datetime import datetime as dt, timedelta as td
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler import logger, trakt_key_holder
-from trakt_scrobbler.notifier import Notifier
+from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.utils import read_json, write_json, safe_request
 
 API_URL = "https://api.trakt.tv"
@@ -17,7 +17,6 @@ class TraktAuth:
     _REFRESH_RETRIES_LIMIT = 3
 
     def __init__(self):
-        self.notify = Notifier().notify
         self.CLIENT_ID = trakt_key_holder.get_id()
         self.CLIENT_SECRET = trakt_key_holder.get_secret()
         self._token_data = {}
@@ -39,14 +38,14 @@ class TraktAuth:
             self.device_auth()
         elif self.is_token_expired():
             logger.info("Trakt access token expired. Refreshing.")
-            self.notify("Trakt access token expired. Refreshing.", category="trakt")
+            notify("Trakt access token expired. Refreshing.", category="trakt")
             self.refresh_token()
         if not self.token_data or self.is_token_expired():
             # either device_auth or refresh_token failed to get token
             logger.critical("Unable to get access token.")
-            self.notify("Failed to authorize application with Trakt. "
-                        "Run 'trakts auth' manually to retry.",
-                        stdout=True, category="trakt")
+            notify("Failed to authorize application with Trakt. "
+                   "Run 'trakts auth' manually to retry.",
+                   stdout=True, category="trakt")
         else:
             return self.token_data['access_token']
 
@@ -87,8 +86,8 @@ class TraktAuth:
             self._code_fetch_fails += 1
             if self._code_fetch_fails == self._CODE_FETCH_FAILS_LIMIT:
                 logger.critical("Unable to get response from trakt.")
-                self.notify("Unable to get response from trakt.",
-                            stdout=True, category="trakt")
+                notify("Unable to get response from trakt.",
+                       stdout=True, category="trakt")
                 sys.exit(1)
             return
         elif token_resp.status_code == 400:
@@ -110,7 +109,7 @@ class TraktAuth:
 
         logger.info(f"Verification URL: {code_data['verification_url']}")
         logger.info(f"User Code: {code_data['user_code']}")
-        self.notify(
+        notify(
             "Open {verification_url} in your browser and enter this code: "
             "{user_code}".format(**code_data), timeout=30, stdout=True,
             category="trakt")
@@ -119,8 +118,8 @@ class TraktAuth:
         start = time.time()
         while time.time() - start < code_data['expires_in']:
             if self.get_device_token(code_data['device_code']):
-                self.notify('App authorized successfully.',
-                            stdout=True, category="trakt")
+                notify('App authorized successfully.',
+                       stdout=True, category="trakt")
                 logger.info('App authorized successfully.')
                 break
             logger.debug('Waiting for user to authorize the app.')
@@ -134,8 +133,7 @@ class TraktAuth:
             self._refresh_retries = 0
 
             logger.critical("Too many failed refreshes. Clearing token.")
-            self.notify("Trakt token expired. Couldn't auto-refresh token.",
-                        stdout=True)
+            notify("Trakt token expired. Couldn't auto-refresh token.", stdout=True)
             self.device_auth()
             return
 
@@ -161,8 +159,7 @@ class TraktAuth:
             logger.error("Error refreshing token.")
 
     def token_expires_at(self) -> dt:
-        return dt.fromtimestamp(self.token_data['created_at'] +
-                                self.token_data['expires_in'])
+        return dt.fromtimestamp(self.token_data['created_at'] + self.token_data['expires_in'])
 
     def is_token_expired(self) -> bool:
         return self.token_expires_at() - dt.now() < self.TOKEN_EXPIRY_BUFFER

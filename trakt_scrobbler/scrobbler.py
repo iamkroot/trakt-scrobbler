@@ -1,7 +1,7 @@
 from threading import Thread
 from trakt_scrobbler import logger
 from trakt_scrobbler import trakt_interface as trakt
-from trakt_scrobbler.notifier import Notifier
+from trakt_scrobbler.notifier import notify
 
 
 class Scrobbler(Thread):
@@ -12,7 +12,6 @@ class Scrobbler(Thread):
         logger.info('Started scrobbler thread.')
         self.scrobble_queue = scrobble_queue
         self.backlog_cleaner = backlog_cleaner
-        self.notify = Notifier().notify
         self.prev_scrobble = None
 
     def run(self):
@@ -40,7 +39,7 @@ class Scrobbler(Thread):
             category = 'resume' if self.is_resume(verb, data) else verb
             msg = f"Scrobble {category} successful for {name}"
             logger.info(msg)
-            self.notify(msg, category=f"scrobble.{category}")
+            notify(msg, category=f"scrobble.{category}")
             self.backlog_cleaner.clear()
         elif resp is False and verb == 'stop' and data['progress'] > 80:
             logger.warning('Scrobble unsuccessful. Will try again later.')
