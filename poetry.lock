@@ -227,6 +227,14 @@ secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "cer
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
+name = "urlmatch"
+version = "1.0.1"
+description = "Python library for matching URLs."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "win10toast"
 version = "0.9"
 description = "An easy-to-use Python library for displaying Windows 10 Toast Notifications"
@@ -243,7 +251,7 @@ socks = ["pysocks"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "040067a857dc2a43cf95e87f27fde4583b4b7c48c846db17830fdd0ef78ab6f6"
+content-hash = "6bc8dbba75361a0dd85a4f66b9ad2acbef701dd92b26d0561f3d86ff8f0a8dfb"
 
 [metadata.files]
 appdirs = [
@@ -368,6 +376,10 @@ six = [
 urllib3 = [
     {file = "urllib3-1.26.5-py2.py3-none-any.whl", hash = "sha256:753a0374df26658f99d826cfe40394a686d05985786d946fbe4165b5148f5a7c"},
     {file = "urllib3-1.26.5.tar.gz", hash = "sha256:a7acd0977125325f516bda9735fa7142b909a8d01e8b2e4c8108d0984e6e0098"},
+]
+urlmatch = [
+    {file = "urlmatch-1.0.1.macosx-10.12-x86_64.tar.gz", hash = "NOT_ALLOWED"},
+    {file = "urlmatch-1.0.1.tar.gz", hash = "sha256:3f0c3529f03f3b31efc4547ce44e6512ff5714bf61f7f6ac355b1636ad16eb2d"},
 ]
 win10toast = [
     {file = "win10toast-0.9-py2.py3-none-any.whl", hash = "sha256:44e5afa1001de88a0ee533872231521fa67c7d144f39974089af242d9c4620a4"},
