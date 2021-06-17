@@ -11,13 +11,14 @@ TRAKT_CACHE_PATH = DATA_DIR / 'trakt_cache.json'
 trakt_cache = {}
 
 
-def search(query, types=None, year=None, extended=False):
+def search(query, types=None, year=None, extended=False, page=1, limit=1):
     if not types:
         types = ['movie', 'show', 'episode']
     search_params = {
         "url": API_URL + '/search/' + ",".join(types),
         "params": {'query': query, 'extended': extended,
-                   'field': 'title', 'years': year},
+                   'field': 'title', 'years': year, 
+                   'page': page, 'limit': limit},
         "headers": trakt_auth.headers
     }
     r = safe_request('get', search_params)

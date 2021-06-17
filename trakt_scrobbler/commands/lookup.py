@@ -24,6 +24,10 @@ class DefaultAttrDict(dict):
         self[key] = value
 
 
+def wrap_iter(collection, style):
+    return (f"<{style}>{item}</>" for item in collection)
+
+
 class LookupCommand(Command):
     """
     Performs a search for the given media title
@@ -33,7 +37,8 @@ class LookupCommand(Command):
         {--type=* : Type of media (show/movie)}
         {--year= : Specific year}
         {--brief : Only print trakt ID of top result}
-        {--max-results=3 : Number of results to display}
+        {--limit=3 : Number of results to fetch per page}
+        {--page=1 : Number of page of results to fetch}
     """
     MEDIA_TYPES = {"show", "movie"}
 
@@ -82,23 +87,39 @@ class LookupCommand(Command):
         year = self.option("year")
         media_types = set(self.option("type"))
         brief = self.option("brief")
-        max_results = int(self.option("max-results"))
+        limit = int(self.option("limit"))
+        page = int(self.option("page"))
+
+        if limit < 1:
+            self.line_error(f"Invalid limit {limit}!")
+            return 1
+        if page < 1:
+            self.line_error(f"Invalid page {page}!")
+            return 1
+
+        if limit > 10:
+            self.info("At most 10 results can be fetched in a page. "
+                      "If more are required, use the --page to specify next page")
+            limit = 10
 
         extra_types = media_types.difference(self.MEDIA_TYPES)
         if extra_types:
-            extra_types = tuple(map(lambda s: f"<fg=yellow>{s}</>", extra_types))
-            self.line_error(f"Invalid media {pluralize(extra_types, 'type')} '{' '.join(extra_types)}'!", style="error")
-            self.line(f"Must be from '<info>{'</>, <info>'.join(self.MEDIA_TYPES)}</>'")
+            extra_types = tuple(f"<fg=yellow>{t}</>" for t in extra_types)
+            self.line_error(f"Invalid media {pluralize(extra_types, 'type')} '"
+                            f"{' '.join(extra_types)}'!", style="error")
+            self.line(f"Must be from '"
+                      f"{', '.join(f'<info>{t}</>' for t in self.MEDIA_TYPES)}'")
             return 1
+        if not media_types:
+            media_types = self.MEDIA_TYPES
 
-        res = search(name, types=media_types, year=year, extended="full")
+        res = search(name, types=media_types, year=year, extended="full",
+                     page=page, limit=limit)
         if not res:
             self.line("No results!", style="error")
             return
         infos = []
         for media in res:
-            if media['type'] not in self.MEDIA_TYPES: 
-                continue
             info = self.extract_media_info(media[media["type"]])
 
             if brief:
@@ -113,7 +134,7 @@ class LookupCommand(Command):
                 **info
             )
             infos.append(info2)
-            if len(infos) == max_results:
+            if len(infos) == limit:
                 break
 
         for info in infos:
