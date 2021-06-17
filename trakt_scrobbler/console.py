@@ -7,6 +7,7 @@ from trakt_scrobbler.commands.backlog import BacklogCommand
 from trakt_scrobbler.commands.config import ConfigCommand
 from trakt_scrobbler.commands.init import InitCommand
 from trakt_scrobbler.commands.log import LogCommand
+from trakt_scrobbler.commands.lookup import LookupCommand
 from trakt_scrobbler.commands.plex import PlexAuthCommand
 from trakt_scrobbler.commands.run import RunCommand
 from trakt_scrobbler.commands.start import StartCommand
@@ -23,6 +24,7 @@ def main():
     application.add(ConfigCommand())
     application.add(InitCommand())
     application.add(LogCommand())
+    application.add(LookupCommand())
     application.add(PlexAuthCommand())
     application.add(RunCommand())
     application.add(StartCommand())

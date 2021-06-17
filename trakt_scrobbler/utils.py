@@ -6,7 +6,7 @@ import re
 import sys
 import threading
 import time
-from typing import Iterable
+from typing import Iterable, Union
 from functools import lru_cache, singledispatch
 from urllib.parse import ParseResult, urlparse
 from urllib.request import url2pathname
@@ -140,10 +140,12 @@ class AutoloadError(Exception):
         return msg
 
 
-def pluralize(num: int, singular: str, plural: str = None) -> str:
+def pluralize(num: Union[int, Iterable], singular: str, plural: str = None) -> str:
+    if isinstance(num, Iterable):
+        num = len(num)
     if plural is None:
         plural = singular + 's'
-    return f"{num} {singular if num == 1 else plural}"
+    return f"{singular if num == 1 else plural}"
 
 
 class ResumableTimer:

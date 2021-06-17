@@ -65,7 +65,7 @@ class BacklogClearCommand(Command):
                     "Failed to clear backlog! Check log file for information.", "error"
                 )
             else:
-                self.info(f"Cleared {pluralize(old, 'item')}.")
+                self.info(f"Cleared {old} {pluralize(old, 'item')}.")
         else:
             self.info("No items in backlog!")
 
@@ -86,7 +86,7 @@ class BacklogPurgeCommand(Command):
             if res:
                 old_backlog = cleaner.purge()
                 num_items = len(old_backlog)
-                self.info(f"Purged {pluralize(num_items, 'item')} from backlog.")
+                self.info(f"Purged {num_items} {pluralize(num_items, 'item')} from backlog.")
             else:
                 self.info("Backlog is unchanged.")
         else:
