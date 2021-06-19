@@ -4,6 +4,7 @@ import guessit
 from functools import lru_cache
 from urllib.parse import unquote, urlparse, urlunparse
 from trakt_scrobbler import config, logger
+from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.utils import cleanup_encoding, RegexPat, is_url
 from urlmatch import urlmatch, BadMatchPattern
 
@@ -63,7 +64,12 @@ def custom_regex(file_path: str):
 
 
 def use_guessit(file_path: str):
-    return guessit.guessit(file_path)
+    try:
+        return guessit.guessit(file_path)
+    except guessit.api.GuessitException:
+        logger.exception("Encountered guessit error.")
+        notify("Encountered guessit error. File a bug report!", category="exception")
+        return {}
 
 
 @lru_cache(maxsize=None)
