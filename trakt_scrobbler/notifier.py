@@ -52,10 +52,10 @@ def flatten_categories(categories: dict, parents=[]):
     for k, v in categories.items():
         if isinstance(v, dict):
             parents.append(k)
-            flatten_categories(v, parents)
+            yield from flatten_categories(v, parents)
             parents.pop()
         elif v is True:
-            enabled_categories.add('.'.join(parents + [k]))
+            yield '.'.join(parents + [k])
 
 
 # TODO: Parse this data to allow enabling only subcategories
@@ -64,8 +64,7 @@ def flatten_categories(categories: dict, parents=[]):
 user_notif_categories = config['general']['enable_notifs'].get()
 categories = deepcopy(CATEGORIES)
 merge_categories(categories, user_notif_categories)
-enabled_categories = set()
-flatten_categories(categories)
+enabled_categories = set(flatten_categories(categories))
 
 if enabled_categories:
     logger.debug("Notifications enabled for categories: "
