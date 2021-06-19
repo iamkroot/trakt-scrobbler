@@ -47,7 +47,7 @@ class MPVMon(Monitor):
         self.write_timeout = self.config['write_timeout']
         self.poll_interval = self.config['poll_interval']
         self.restart_delay = self.config['restart_delay']
-        self.buffer = ''
+        self.buffer: bytes = b''
         self.ipc_lock = threading.Lock()  # for IPC write queue
         self.poll_timer = None
         self.write_queue = Queue()
@@ -157,23 +157,26 @@ class MPVMon(Monitor):
             self.update_status()
             # resetting self.vars to {} here is a bad idea.
 
-    def on_data(self, data):
-        self.buffer = self.buffer + data.decode('utf-8')
-        while True:
-            line_end = self.buffer.find('\n')
-            if line_end == -1:
+    def on_data(self, data: bytes):
+        self.buffer += data
+        partial_line = b""
+        for line in self.buffer.splitlines(keepends=True):
+            if line.endswith(b"\n"):
+                # no need to strip, json.loads will handle it
+                self.on_line(line)
+            else:
                 # partial line received
                 # self.on_line() is called in next data batch
-                break
-            else:
-                self.on_line(self.buffer[:line_end])  # doesn't include \n
-                self.buffer = self.buffer[line_end + 1:]  # doesn't include \n
+                partial_line = line
+        self.buffer = partial_line
 
-    def on_line(self, line):
+
+    def on_line(self, line: bytes):
         try:
             mpv_json = json.loads(line)
         except json.JSONDecodeError:
-            logger.warning('Invalid JSON received. Skipping. ' + line, exc_info=True)
+            logger.warning('Invalid JSON received. Skipping.', exc_info=True)
+            logger.debug(line)
             return
         if 'event' in mpv_json:
             self.handle_event(mpv_json['event'])
