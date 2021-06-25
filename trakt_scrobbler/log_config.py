@@ -23,7 +23,7 @@ class DuplicateMessageFilter(logging.Filter):
         Unable to connect
         Some other message
     """
-    MESSAGES = ("Unable to connect", "File is not local")
+    MESSAGES = ("Unable to connect", "'error': 'property unavailable'")
 
     def __init__(self):
         # for each message to be filtered, keep track of the threads that generated it
