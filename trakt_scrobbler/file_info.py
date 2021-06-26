@@ -1,12 +1,14 @@
 import re
+from functools import lru_cache
+from typing import Union
+from urllib.parse import unquote, urlparse, urlunparse
+
 import confuse
 import guessit
-from functools import lru_cache
-from urllib.parse import unquote, urlparse, urlunparse
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.notifier import notify
-from trakt_scrobbler.utils import cleanup_encoding, RegexPat, is_url
-from urlmatch import urlmatch, BadMatchPattern
+from trakt_scrobbler.utils import RegexPat, cleanup_encoding, is_url
+from urlmatch import BadMatchPattern, urlmatch
 
 cfg = config["fileinfo"]
 whitelist = cfg["whitelist"].get(confuse.StrSeq())
@@ -24,7 +26,7 @@ def matches_url(path, file_path) -> bool:
     return False
 
 
-def whitelist_file(file_path: str, is_url=False) -> bool:
+def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[bool, str]:
     """Check if the played media file is in the allowed list of paths.
 
     Simply checks that some whitelist path should be prefix of file_path.
@@ -39,7 +41,7 @@ def whitelist_file(file_path: str, is_url=False) -> bool:
     for path in whitelist:
         if is_url and matches_url(path, file_path) or file_path.startswith(path):
             logger.debug(f"Matched whitelist entry '{path}'")
-            return True
+            return path if return_path else True
 
     return False
 

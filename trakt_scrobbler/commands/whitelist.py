@@ -1,36 +1,62 @@
 from pathlib import Path
+
+from trakt_scrobbler.utils import is_url
+from urlmatch.urlmatch import BadMatchPattern, urlmatch
+
 from .command import Command
 from .config import ConfigCommand
 
 
 class WhitelistAddCommand(Command):
     """
-    Add folder(s) to whitelist.
+    Add path(s) to whitelist.
 
     add
-        {folder* : Folder to be whitelisted}
+        {path* : path to be whitelisted}
     """
 
-    def _add_single(self, folder: str):
+    def _parse_local(self, folder: str):
         try:
             fold = Path(folder)
         except ValueError:
             self.line_error(f"Invalid folder {folder}")
             return
         if not fold.exists() and not self.confirm(
-            f"Folder {fold} does not exist. Are you sure you want to add it?"
+            f"Path <comment>{fold}</> does not exist. Are you sure you want to add it?"
         ):
             return
         folder = str(fold.absolute().resolve())
         if folder.endswith("\\"):  # fix string escaping
             folder += "\\"
-        self.call_sub("config set", f'--add fileinfo.whitelist "{folder}"', silent=True)
-        self.line(f"<comment>{folder}</comment> added to whitelist.")
+        return folder
+
+    def _parse_url(self, path: str):
+        try:
+            urlmatch(path, "<fake path>")
+        except BadMatchPattern as e:
+            self.line_error(f"Could not add <comment>{path}</> as url:\n<error>{e}</>")
+            return
+        return path
+        
+
+    def _parse_single(self, path: str):
+        if is_url(path):
+            return self._parse_url(path)
+        else:
+            return self._parse_local(path)
 
     def handle(self):
-        for folder in self.argument("folder"):
-            self._add_single(folder)
-        self.line("Don't forget to restart the service for the changes to take effect.")
+        changed = False
+        for path in self.argument("path"):
+            parsed = self._parse_single(path)
+            if parsed:
+                changed = True
+                self.call_sub("config set", f'--add fileinfo.whitelist "{parsed}"',
+                              silent=True)
+                self.line(f"<comment>{path}</> added to whitelist.")
+        if changed:
+            self.line("Don't forget to restart the service for the changes "
+                      "to take effect.", "info")
 
 
 class WhitelistShowCommand(Command):
@@ -49,10 +75,10 @@ class WhitelistShowCommand(Command):
             self.line("Whitelist empty!")
             return
 
-        self.info("Whitelist:")
+        whitelist = list(sorted(whitelist))
+        self.info("Whitelisted paths:")
         for path in whitelist:
             self.line(path)
-        self.line("Don't forget to restart the service for any changes to take effect.")
 
 
 class WhitelistRemoveCommand(Command):
@@ -70,12 +96,13 @@ class WhitelistRemoveCommand(Command):
         if not whitelist:
             self.line("Whitelist empty!")
             return
+        whitelist = list(sorted(whitelist))
 
         choices = self.choice(
-            "Select the folders to be removed from whitelist", whitelist, multiple=True
+            "Select the paths to be removed from whitelist", whitelist, multiple=True
         )
         if not self.confirm(
-            f"This will remove {', '.join(choices)} from whitelist. Continue?",
+            f"This will remove {', '.join(f'<comment>{c}</>' for c in choices)} from whitelist. Continue?",
             default=True,
         ):
             self.line("Aborted", "error")
@@ -101,20 +128,11 @@ class WhitelistTestCommand(Command):
         from trakt_scrobbler.file_info import whitelist_file
 
         path = self.argument("path")
-        try:
-            path = Path(path)
-        except ValueError:
-            self.line_error(f"Invalid path '{path}'")
-            return 1
-        whitelist_path = whitelist_file(path)
+        whitelist_path = whitelist_file(path, is_url(path), return_path=True)
         if whitelist_path is True:
-            self.info(
-                "Whitelist is empty! Use <comment>whitelist add</comment> command"
-            )
+            self.info("Whitelist is empty, so given path is trivially whitelisted.")
         elif whitelist_path:
-            self.info(
-                f"The path is whitelisted through <comment>{whitelist_path}</comment>"
-            )
+            self.info(f"The path is whitelisted through <comment>{whitelist_path}</>")
         else:
             self.line_error(f"The path is not in whitelist!")
 
