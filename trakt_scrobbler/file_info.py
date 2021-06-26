@@ -88,7 +88,7 @@ def get_media_info(file_path: str):
         file_path = unquote(urlunparse((*important, "", "")))
         logger.debug(f"Converted to url '{file_path}'")
         # only use the actual path for guessit, skipping scheme,domain,params,etc.
-        guessit_path = parsed.path
+        guessit_path = unquote(parsed.path)
         logger.debug(f"Guessit url '{guessit_path}'")
 
     if not whitelist_file(file_path, file_is_url):
