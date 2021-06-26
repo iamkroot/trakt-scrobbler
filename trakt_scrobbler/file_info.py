@@ -78,12 +78,16 @@ def get_media_info(file_path: str):
     file_path = cleanup_encoding(file_path)
     parsed = urlparse(file_path)
     file_is_url = False
+    guessit_path = file_path
     if is_url(parsed):
         file_is_url = True
         # remove the query and fragment from the url, keeping only important parts
         *important, _, _ = parsed
         file_path = unquote(urlunparse((*important, "", "")))
         logger.debug(f"Converted to url '{file_path}'")
+        # only use the actual path for guessit, skipping scheme,domain,params,etc.
+        guessit_path = parsed.path
+        logger.debug(f"Guessit url '{guessit_path}'")
 
     if not whitelist_file(file_path, file_is_url):
         logger.info("File path not in whitelist.")
@@ -91,7 +95,7 @@ def get_media_info(file_path: str):
     if exclude_file(file_path):
         logger.info("Ignoring file.")
         return None
-    guess = use_regex and custom_regex(file_path) or use_guessit(file_path)
+    guess = use_regex and custom_regex(file_path) or use_guessit(guessit_path)
     logger.debug(f"Guess: {guess}")
     return cleanup_guess(guess)
 
