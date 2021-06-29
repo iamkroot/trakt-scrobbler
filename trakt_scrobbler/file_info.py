@@ -1,7 +1,7 @@
 import re
 from functools import lru_cache
 from typing import Union
-from urllib.parse import unquote, urlparse, urlunparse
+from urllib.parse import unquote, urlsplit, urlunsplit
 
 import confuse
 import guessit
@@ -76,20 +76,21 @@ def use_guessit(file_path: str):
 
 @lru_cache(maxsize=None)
 def get_media_info(file_path: str):
-    logger.debug(f"Raw filepath '{file_path}'")
+    logger.debug(f"Raw filepath {file_path!r}")
     file_path = cleanup_encoding(file_path)
-    parsed = urlparse(file_path)
+    parsed = urlsplit(file_path)
     file_is_url = False
     guessit_path = file_path
     if is_url(parsed):
         file_is_url = True
         # remove the query and fragment from the url, keeping only important parts
-        *important, _, _ = parsed
-        file_path = unquote(urlunparse((*important, "", "")))
-        logger.debug(f"Converted to url '{file_path}'")
-        # only use the actual path for guessit, skipping scheme,domain,params,etc.
-        guessit_path = unquote(parsed.path)
-        logger.debug(f"Guessit url '{guessit_path}'")
+        scheme, netloc, path, _, _ = parsed
+        path = unquote(path)  # quoting should only be applied to the path
+        file_path = urlunsplit((scheme, netloc, path, "", ""))
+        logger.debug(f"Converted to url {file_path!r}")
+        # only use the actual path for guessit, skipping other parts
+        guessit_path = path
+        logger.debug(f"Guessit url {guessit_path!r}")
 
     if not whitelist_file(file_path, file_is_url):
         logger.info("File path not in whitelist.")
