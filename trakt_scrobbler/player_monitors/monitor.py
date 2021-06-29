@@ -24,21 +24,38 @@ class Transition:
     def __init__(self, prev, current):
         self.prev = prev
         self.current = current
-
-    def is_same_media(self) -> bool:
-        return self.current['media_info'] == self.prev['media_info']
+        self._is_same_media = None
 
     def is_state_jump(self, from_: State, to: State) -> bool:
         return self.prev['state'] == from_ and self.current['state'] == to
 
+    @property
+    def from_playing_to_paused(self) -> bool:
+        return (self.prev['state'] == State.Playing and 
+                self.current['state'] == State.Paused)
+
+    @property
+    def is_same_media(self) -> bool:
+        # cache this because it is called multiple times and is relatively expensive
+        if self._is_same_media is None:
+            self._is_same_media = self.current['media_info'] == self.prev['media_info']
+        return self._is_same_media
+
+    @property
     def state_changed(self) -> bool:
         return self.prev['state'] != self.current['state']
 
+    @property
     def elapsed_realtime(self) -> float:
         return self.current['updated_at'] - self.prev['updated_at']
 
+    @property
     def progress(self) -> float:
         return self.current['progress'] - self.prev['progress']
+
+    @property
+    def abs_progress(self) -> float:
+        return abs(self.progress)
 
 
 class Monitor(Thread):
@@ -87,6 +104,7 @@ class Monitor(Thread):
     def autoload_cfg(cls):
         template = getattr(cls, 'CONFIG_TEMPLATE', None)
         monitor_cfg = config['players'][cls.name].get(template)
+        assert monitor_cfg is not None
         auto_keys = {k for k, v in monitor_cfg.items() if v == "auto-detect"}
         if not auto_keys:
             return monitor_cfg
@@ -180,7 +198,7 @@ class Monitor(Thread):
         if (
             not prev
             or not current
-            or not transition.is_same_media()
+            or not transition.is_same_media
             or prev['state'] == State.Stopped
         ):
             # media changed
@@ -193,14 +211,19 @@ class Monitor(Thread):
             if current:
                 if current['progress'] > self.preview_threshold:
                     yield 'enter_preview'
-                elif not prev or not transition.is_same_media():
+                elif (
+                    not prev 
+                    or not transition.is_same_media
+                    or transition.state_changed
+                    or transition.abs_progress > self.skip_interval
+                ):
                     yield 'scrobble'
-        elif transition.state_changed() or transition.progress() > self.skip_interval:
+        elif transition.state_changed or transition.abs_progress > self.skip_interval:
             # state changed
             if self.preview:
                 if current['state'] == State.Stopped:
                     yield 'exit_preview'
-                elif transition.is_state_jump(State.Playing, State.Paused):
+                elif transition.from_playing_to_paused:
                     yield 'pause_preview'
                 elif current['state'] == State.Playing:
                     yield 'resume_preview'
@@ -209,7 +232,7 @@ class Monitor(Thread):
             elif self.fast_pause:
                 if (
                     current['state'] == State.Stopped
-                    or transition.progress() > self.skip_interval
+                    or transition.abs_progress > self.skip_interval
                 ):
                     yield 'scrobble'
                     yield 'exit_fast_pause'
@@ -220,8 +243,8 @@ class Monitor(Thread):
             else:  # normal state
                 yield 'scrobble'
                 if (
-                    transition.is_state_jump(State.Playing, State.Paused)
-                    and transition.elapsed_realtime() < self.fast_pause_threshold
+                    transition.from_playing_to_paused
+                    and transition.elapsed_realtime < self.fast_pause_threshold
                 ):
                     yield 'enter_fast_pause'
 
