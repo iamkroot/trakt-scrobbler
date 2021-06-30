@@ -15,7 +15,7 @@ class ConfigListCommand(Command):
             if isinstance(v, dict):
                 self._print_cfg(v, key + ".")
             else:
-                self.line(f"{key} = {v}")
+                self.line(f"<info>{key}</> = <comment>{v!r}</>")
 
     def handle(self):
         import confuse
@@ -43,18 +43,18 @@ class ConfigSetCommand(Command):
 
 Eg:
 
-    <comment>trakts config set players.monitored mpv vlc mpc-be</comment>
+    <question>trakts config set players.monitored mpv vlc mpc-be</>
 
 For values containing space(s), surround them with double-quotes. Eg:
 
-    <comment>trakts config set fileinfo.whitelist D:\\Media\\Movies "C:\\Users\\My Name\\Shows"</comment>
+    <question>trakts config set fileinfo.whitelist D:\\Media\\Movies "C:\\Users\\My Name\\Shows"</>
 
 Use --add to avoid overwriting the previous list values (whitelist, monitored, etc.):
 
-    <comment>trakts config set players.monitored mpv vlc</comment>
-    <comment>trakts config set --add players.monitored plex mpc-hc</comment>
+    <question>trakts config set players.monitored mpv vlc</>
+    <question>trakts config set --add players.monitored plex mpc-hc</>
 
-will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']"""
+will have final value: <info>players.monitored</> = <comment>['mpv', 'vlc', 'plex', 'mpc-hc']</>"""
 
     TRUTHY_BOOL = ("true", "yes", "1")
 
@@ -72,13 +72,13 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']"""
             categories = Notifier.CATEGORIES
             for sub_category in heirarchy:  # traverse down the heirarchy
                 if sub_category not in categories:
-                    raise KeyError(f"{sub_category} is not a valid category name.")
+                    raise KeyError(f"<info>{sub_category}</> is not a valid category name.")
                 categories = categories[sub_category]
                 view = view[sub_category]
         view.set(value)
 
         ConfigCommand.save_config(config)
-        self.line(f'User config updated with "<info>{key}</info> = <comment>{value}</comment>"')
+        self.line(f'User config updated with <info>{key}</> = <comment>{value!r}</>')
         self.line("Don't forget to restart the service for the changes to take effect.")
 
     def handle(self):
@@ -104,7 +104,10 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']"""
             if isinstance(orig_val, dict):
                 raise confuse.ConfigTypeError
         except confuse.ConfigTypeError:
-            raise KeyError(f"{key} is not a valid parameter name.")
+            self.line(f"Leaf key <info>{key}</> not found in user config.", "error")
+            self.line(f"Run <question>{CMD_NAME} config list --all</> to see all "
+                       "possible keys and their current values.")
+            return 1
         except confuse.NotFoundError:
             value = values[0] if len(values) == 1 else values
             view.add(value)
@@ -120,11 +123,12 @@ will have final value: players.monitored = ['mpv', 'vlc', 'plex', 'mpc-hc']"""
                 else:
                     value = orig_val.__class__(values[0])
             else:
-                raise ValueError("Given parameter only accepts a single value")
+                self.line("Given parameter only accepts a single value", "error")
+                return 1
             view.set(value)
 
         ConfigCommand.save_config(config)
-        self.line(f'User config updated with "<info>{key}</info> = <comment>{value}</comment>"')
+        self.line(f'User config updated with <info>{key}</> = <comment>{value!r}</>')
         self.line("Don't forget to restart the service for the changes to take effect.")
 
 
@@ -151,8 +155,8 @@ class ConfigUnsetCommand(Command):
         try:
             view.get()
         except confuse.NotFoundError:
-            self.line(f"<info>{key}</info> not found in user config.", "error")
-            self.line(f"Run <question>{CMD_NAME} config list</question> to see all user-defined values.")
+            self.line(f"<info>{key}</> not found in user config.", "error")
+            self.line(f"Run <question>{CMD_NAME} config list</> to see all user-defined values.")
             return 1
 
         for src in temp_root.sources:
@@ -163,7 +167,7 @@ class ConfigUnsetCommand(Command):
 
         ConfigCommand.save_config(config)
 
-        self.line(f"Successfully unset {key}")
+        self.line(f"Successfully unset <info>{key}</>")
 
 
 class ConfigCommand(Command):
