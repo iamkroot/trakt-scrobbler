@@ -33,7 +33,7 @@ class LookupCommand(Command):
     Performs a search for the given media title
 
     lookup
-        {name : Search term}
+        {name* : Search term}
         {--type=* : Type of media (show/movie)}
         {--year= : Specific year}
         {--brief : Only print trakt ID of top result}
@@ -83,7 +83,7 @@ class LookupCommand(Command):
 
     def handle(self):
         from trakt_scrobbler.trakt_interface import search
-        name = self.argument("name")
+        name = " ".join(self.argument("name"))
         year = self.option("year")
         media_types = set(self.option("type"))
         brief = self.option("brief")
