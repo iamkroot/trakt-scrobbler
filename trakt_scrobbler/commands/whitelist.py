@@ -15,6 +15,29 @@ class WhitelistAddCommand(Command):
         {path* : path to be whitelisted}
     """
 
+    help = """The paths can either point to a local directory, or a remote url.
+
+<fg=yellow>Remote URL patterns</>
+For remote urls, we only support http(s) for now, and they can be of the form
+    <info>https://www.example.org/path/to/directory/</>
+and this will match all files under this directory. Example:
+    <comment>https://www.example.org/path/to/directory/Season 1/S01E03.mp4</>
+
+You can also specify a <fg=yellow>*</> to enable wildcard matching:
+    <info>https://*.example.org/path/</>
+    <info>*://www.example.org/path/</>
+    <info>https://*.example.org/*</>
+will all match the url <comment>https://www.example.org/path/to/directory/Season 1/S01E03.mp4</>
+
+Finally, we also allow http authentication fields in the url pattern:
+    <info>https://username:password@example.org/path/</>
+is ok (useful for some self-hosted servers).
+
+See <question>https://github.com/jessepollak/urlmatch#examples</> for more examples.
+
+For extracting media info, we use the path portion of the url only, ignoring the domain name.
+So in the above example, we use <comment>path/to/directory/Season 1/S01E03.mp4</> for figuring out the media info."""
+
     def _parse_local(self, folder: str):
         try:
             fold = Path(folder)
