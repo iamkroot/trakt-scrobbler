@@ -90,12 +90,8 @@ class LookupCommand(Command):
         limit = int(self.option("limit"))
         page = int(self.option("page"))
 
-        if limit < 1:
-            self.line_error(f"Invalid limit {limit}!")
-            return 1
-        if page < 1:
-            self.line_error(f"Invalid page {page}!")
-            return 1
+        assert limit >= 1, "Invalid limit"
+        assert page >= 1, "Invalid page"
 
         if limit > 10:
             self.info("At most 10 results can be fetched in a page. "
@@ -140,3 +136,6 @@ class LookupCommand(Command):
         for info in infos:
             self.print_info(info)
             self.line("")
+
+        self.line("There may be more results available. "
+                  f"Add <comment>--page={page+1}</> to the command to see them.")
