@@ -9,7 +9,7 @@ from .config import ConfigCommand
 
 class WhitelistAddCommand(Command):
     """
-    Add path(s) to whitelist.
+    Add path to whitelist.
 
     add
         {path* : path to be whitelisted}
@@ -69,17 +69,13 @@ So in the above example, we use <comment>path/to/directory/Season 1/S01E03.mp4</
             return self._parse_local(path)
 
     def handle(self):
-        changed = False
-        for path in self.argument("path"):
-            parsed = self._parse_single(path)
-            if parsed:
-                changed = True
-                self.call_sub("config set", f'--add fileinfo.whitelist "{parsed}"',
-                              silent=True)
-                self.line(f"<comment>{path}</> added to whitelist.")
-        if changed:
-            self.line("Don't forget to restart the service for the changes "
-                      "to take effect.", "info")
+        path = " ".join(self.argument("path"))
+        parsed = self._parse_single(path)
+        if parsed is None:
+            return
+        self.call_sub("config set", f'--add fileinfo.whitelist "{parsed}"', silent=True)
+        self.line(f"<comment>{path}</> added to whitelist.")
+        self.info("Don't forget to restart the service for the changes to take effect.")
 
 
 class WhitelistShowCommand(Command):
@@ -141,10 +137,10 @@ class WhitelistRemoveCommand(Command):
 
 class WhitelistTestCommand(Command):
     """
-    Check whether the given file/folder is whitelisted.
+    Check whether the given path is whitelisted.
 
     test
-        {path : File/folder to be tested}
+        {path : path to be tested}
     """
 
     def handle(self):
