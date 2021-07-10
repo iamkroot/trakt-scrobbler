@@ -40,8 +40,11 @@ def get_trakt_id(title, item_type, year=None):
 
     logger.debug(f'Searching trakt: Title: "{title}"{year and f", Year: {year}" or ""}')
     results = search(title, [required_type], year)
-    if results == []: # no match
-        results = search(title, [required_type]) # possible mismatch in metadata, retry without 'year'
+    if (results == [] and year is not None): # no match, possibly a mismatch in year metadata
+        msg = f'Trakt search yielded no results for the {required_type}, {title}, Year: {year}. Retrying search without filtering by year'
+        logger.warning(msg)
+        notify(msg, category="trakt")
+        results = search(title, [required_type]) # retry without 'year'
 
     if results is None:  # Connection error
         return 0  # Dont store in cache
