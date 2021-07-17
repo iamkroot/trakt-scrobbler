@@ -6,7 +6,6 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 import confuse
 import guessit
 from trakt_scrobbler import config, logger
-from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.utils import RegexPat, cleanup_encoding, is_url
 from urlmatch import BadMatchPattern, urlmatch
 
@@ -89,6 +88,11 @@ def use_guessit(file_path: str):
     try:
         return guessit.guessit(file_path)
     except guessit.api.GuessitException:
+        # lazy import the notifier module
+        # This codepath will not be executed 99.99% of the time, and importing notify
+        # in the outer scope is expensive due to the categories parsing
+        # It is unneeded when using the "trakts whitelist" command
+        from trakt_scrobbler.notifier import notify
         logger.exception("Encountered guessit error.")
         notify("Encountered guessit error. File a bug report!", category="exception")
         return {}
