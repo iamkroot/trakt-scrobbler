@@ -1,4 +1,3 @@
-import re
 from functools import lru_cache
 from typing import Union, List
 from urllib.parse import unquote, urlsplit, urlunsplit
@@ -11,9 +10,12 @@ from urlmatch import BadMatchPattern, urlmatch
 
 cfg = config["fileinfo"]
 whitelist = cfg["whitelist"].get(confuse.StrSeq())
-regexes = cfg['include_regexes'].get()
-exclude_patterns = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
+regexes: dict = cfg['include_regexes'].get({
+    "movie": confuse.Sequence(RegexPat()),
+    "episode": confuse.Sequence(RegexPat()),
+})
 use_regex = any(regexes.values())
+exclude_patterns: list = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
 
 
 def split_whitelist(whitelist: List[str]):
@@ -68,7 +70,7 @@ def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[boo
 def exclude_file(file_path: str) -> bool:
     for pattern in exclude_patterns:
         if pattern.match(file_path):
-            logger.debug(f"Matched exclude pattern '{pattern}'")
+            logger.debug(f"Matched exclude pattern {pattern!r}")
             return True
     return False
 
@@ -76,9 +78,9 @@ def exclude_file(file_path: str) -> bool:
 def custom_regex(file_path: str):
     for item_type, patterns in regexes.items():
         for pattern in patterns:
-            m = re.match(pattern, file_path)
+            m = pattern.match(file_path)
             if m:
-                logger.debug(f"Matched regex pattern '{pattern}'")
+                logger.debug(f"Matched regex pattern {pattern!r}")
                 guess = m.groupdict()
                 guess['type'] = item_type
                 return guess
