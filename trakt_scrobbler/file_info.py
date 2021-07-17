@@ -1,6 +1,6 @@
 import re
 from functools import lru_cache
-from typing import Union
+from typing import Union, List
 from urllib.parse import unquote, urlsplit, urlunsplit
 
 import confuse
@@ -17,30 +17,50 @@ exclude_patterns = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
 use_regex = any(regexes.values())
 
 
-def matches_url(path, file_path) -> bool:
-    try:
-        if urlmatch(path, file_path, path_required=False, fuzzy_scheme=True):
-            return True
-    except BadMatchPattern:
-        return False
-    return False
+def split_whitelist(whitelist: List[str]):
+    """Split whitelist into local and remote urls"""
+    local, remote = [], []
+    for path in whitelist:
+        try:
+            urlmatch(path, "<dummy_path>", path_required=False, fuzzy_scheme=True)
+            # ignore result
+        except BadMatchPattern:
+            # local paths will raise BadMatchPattern error
+            local.append(path)
+        else:
+            remote.append(path)
+    return local, remote
 
 
-def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[bool, str]:
-    """Check if the played media file is in the allowed list of paths.
+local_paths, remote_paths = split_whitelist(whitelist)
 
-    Simply checks that some whitelist path should be prefix of file_path.
+
+def whitelist_local(local_path: str, file_path: str) -> bool:
+    """
+    Simply checks that the whitelist path should be prefix of file_path.
 
     An edge case that is deliberately not handled:
     Suppose user has whitelisted "path/to/tv" directory
     and the user also has another directory "path/to/tv shows".
     If the user plays something from the latter, it will still be whitelisted.
     """
+    return file_path.startswith(local_path)
+
+
+def whitelist_remote(whitelist_path: str, file_path: str) -> bool:
+    return urlmatch(whitelist_path, file_path, path_required=False, fuzzy_scheme=True)
+
+
+def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[bool, str]:
+    """Check if the played media file is in the allowed list of paths"""
     if not whitelist:
         return True
-    for path in whitelist:
-        if is_url and matches_url(path, file_path) or file_path.startswith(path):
-            logger.debug(f"Matched whitelist entry '{path}'")
+    is_whitelisted = whitelist_remote if is_url else whitelist_local
+    whitelist_paths = remote_paths if is_url else local_paths
+
+    for path in whitelist_paths:
+        if is_whitelisted(path, file_path):
+            logger.debug(f"Matched whitelist entry {path!r}")
             return path if return_path else True
 
     return False
