@@ -44,15 +44,16 @@ class LookupCommand(Command):
 
     @staticmethod
     def extract_media_info(media: dict):
-        media = DefaultAttrDict(media)
+        type_ = media['type']
+        info = DefaultAttrDict(media[type_])
         return {
-            "Title": media.title,
-            "Year": media.year,
-            "Status": media.status and media.status.title(),
-            "Overview": media.overview,
-            "Trakt ID": media.ids.trakt,
-            "Trakt URL": media.ids.slug and f"https://trakt.tv/shows/{media.ids.slug}",
-            "IMDB URL": media.ids.imdb and f"https://imdb.com/title/{media.ids.imdb}",
+            "Title": info.title,
+            "Year": info.year,
+            "Status": info.status and info.status.title(),
+            "Overview": info.overview,
+            "Trakt ID": info.ids.trakt,
+            "Trakt URL": info.ids.slug and f"https://trakt.tv/{type_}s/{info.ids.slug}",
+            "IMDB URL": info.ids.imdb and f"https://imdb.com/title/{info.ids.imdb}",
         }
 
     def print_info(self, info: dict):
@@ -116,7 +117,7 @@ class LookupCommand(Command):
             return
         infos = []
         for media in res:
-            info = self.extract_media_info(media[media["type"]])
+            info = self.extract_media_info(media)
 
             if brief:
                 self.line(info["Trakt ID"], style="fg=default")
