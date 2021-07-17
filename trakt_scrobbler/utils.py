@@ -189,4 +189,7 @@ class RegexPat(confuse.Template):
         try:
             return re.compile(value)
         except re.error as e:
-            self.fail(u"malformed regex: '{}' error: {}".format(e.pattern, e), view)
+            self.fail(u"malformed regex: '{}'. Error: {}".format(e.pattern, e), view)
+        except TypeError as e:
+            self.fail(u"Couldn't compile regex from '{}'. Error: {}".format(value, e),
+                      view, type_error=True)
