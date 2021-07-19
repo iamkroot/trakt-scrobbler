@@ -19,18 +19,18 @@ class WhitelistAddCommand(Command):
 
 <fg=yellow>Remote URL patterns</>
 For remote urls, we only support http(s) for now, and they can be of the form
-    <info>https://www.example.org/path/to/directory/</>
+    <info>https://www.example.org/path/to/directory</>
 and this will match all files under this directory. Example:
     <comment>https://www.example.org/path/to/directory/Season 1/S01E03.mp4</>
 
 You can also specify a <fg=yellow>*</> to enable wildcard matching:
-    <info>https://*.example.org/path/</>
-    <info>*://www.example.org/path/</>
-    <info>https://*.example.org/*</>
+    <info>https://www.example.org/path/*</>
+    <info>https://*.example.org/path</>
+    <info>*://www.example.org/path</>
 will all match the url <comment>https://www.example.org/path/to/directory/Season 1/S01E03.mp4</>
 
 Finally, we also allow http authentication fields in the url pattern:
-    <info>https://username:password@example.org/path/</>
+    <info>https://username:password@example.org/path</>
 is ok (useful for some self-hosted servers).
 
 See <question>https://github.com/jessepollak/urlmatch#examples</> for more examples.
@@ -54,13 +54,19 @@ So in the above example, we use <comment>path/to/directory/Season 1/S01E03.mp4</
         return folder
 
     def _parse_url(self, path: str):
+        if path.endswith("/"):
+            self.info("Found a trailing '/' in the pattern. This is probably NOT what "
+                      "you want, since it will only match the exact path, and won't "
+                      "match any files under the path.")
+            if self.confirm("Should I add a <fg=yellow>*</> wildcard at the end to make"
+                            " it match all sub-paths?", default=True):
+                path += "*"
         try:
             urlmatch(path, "<fake path>")
         except BadMatchPattern as e:
             self.line_error(f"Could not add <comment>{path}</> as url:\n<error>{e}</>")
             return
         return path
-        
 
     def _parse_single(self, path: str):
         if is_url(path):
@@ -74,7 +80,7 @@ So in the above example, we use <comment>path/to/directory/Season 1/S01E03.mp4</
         if parsed is None:
             return
         self.call_sub("config set", f'--add fileinfo.whitelist "{parsed}"', silent=True)
-        self.line(f"<comment>{path}</> added to whitelist.")
+        self.line(f"<comment>{parsed}</> added to whitelist.")
         self.info("Don't forget to restart the service for the changes to take effect.")
 
 
@@ -153,7 +159,7 @@ class WhitelistTestCommand(Command):
         elif whitelist_path:
             self.info(f"The path is whitelisted through <comment>{whitelist_path}</>")
         else:
-            self.line_error(f"The path is not in whitelist!")
+            self.line_error("The path is not in whitelist!")
 
 
 class WhitelistCommand(Command):
