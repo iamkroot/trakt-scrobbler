@@ -38,7 +38,7 @@ class LogLocationCommand(Command):
     def handle(self):
         from trakt_scrobbler.log_config import file_path
 
-        self.line(f'"{file_path}"')
+        self.line(f'{file_path}')
 
 
 class LogCommand(Command):
