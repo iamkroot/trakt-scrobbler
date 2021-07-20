@@ -149,8 +149,11 @@ def cleanup_guess(guess):
             # if we don't find a season, default to 1
             season = 1  # TODO: Add proper support for absolute-numbered episodes
         if isinstance(season, list):
-            logger.warning(f"Multiple probable seasons found: ({','.join(season)}). "
-                           "Consider renaming the folder.")
+            from trakt_scrobbler.notifier import notify
+            msg = f"Multiple probable seasons found: ({','.join(map(str, season))}). "
+            msg += "Consider renaming the folder."
+            logger.warning(msg)
+            notify(msg)
             return None
         guess['season'] = int(season)
         req_keys += ['season', 'episode']
