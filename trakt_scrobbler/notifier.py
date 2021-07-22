@@ -87,6 +87,8 @@ if enabled_categories:
                                    bus_name='org.freedesktop.Notifications',
                                    interface='org.freedesktop.Notifications')
             notif_id = 0
+            updatable_notifs = (config["general"]["updatable_notifs"]
+                                .as_choice((True, False)))
 
 
 def dbus_notify(title, body, timeout):
@@ -102,9 +104,12 @@ def dbus_notify(title, body, timeout):
                               timeout,
                           ))
     reply = dbus_connection.send_and_get_reply(msg)
-    notif_id = reply.body[0]
-    if not isinstance(notif_id, int):
-        notif_id = 0  # reset if some weird error occurred
+    if updatable_notifs:
+        notif_id = reply.body[0]
+        if not isinstance(notif_id, int):
+            notif_id = 0  # reset if some weird error occurred
+    else:
+        notif_id = 0
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False, category="misc"):
