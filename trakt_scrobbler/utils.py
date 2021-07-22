@@ -58,7 +58,7 @@ def safe_request(verb, params):
     """ConnectionError handling for requests methods."""
     try:
         resp = sess.request(verb, **params)
-    except (requests.ConnectionError, requests.Timeout) as e:
+    except (requests.ConnectionError, requests.Timeout, requests.RetryError) as e:
         logger.error(f"Failed to connect: {e}")
         logger.debug(f'Request: {verb} {params}')
         return None
