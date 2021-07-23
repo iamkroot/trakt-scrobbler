@@ -10,7 +10,6 @@ general:
       resume: yes
       stop: yes
     trakt: yes
-  updatable_notifs: true  # only for Linux: replace an older notification with new one (don't spam too many notif bubbles in a short duration)
   proxies: {}
 
 fileinfo:

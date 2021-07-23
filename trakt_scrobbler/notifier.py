@@ -86,30 +86,20 @@ if enabled_categories:
             notifier = DBusAddress('/org/freedesktop/Notifications',
                                    bus_name='org.freedesktop.Notifications',
                                    interface='org.freedesktop.Notifications')
-            notif_id = 0
-            updatable_notifs = (config["general"]["updatable_notifs"]
-                                .as_choice((True, False)))
 
 
 def dbus_notify(title, body, timeout):
-    global notif_id
     msg = new_method_call(notifier, 'Notify', 'susssasa{sv}i',
                           (
                               APP_NAME,
-                              notif_id,  # replace notif
+                              0,  # do not replace notif
                               'dialog-information',
                               title,
                               body,
                               [], {},  # actions, hints
                               timeout,
                           ))
-    reply = dbus_connection.send_and_get_reply(msg)
-    if updatable_notifs:
-        notif_id = reply.body[0]
-        if not isinstance(notif_id, int):
-            notif_id = 0  # reset if some weird error occurred
-    else:
-        notif_id = 0
+    dbus_connection.send_and_get_reply(msg)
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False, category="misc"):
