@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import webbrowser
@@ -113,7 +114,14 @@ class TraktAuth:
             "Open {verification_url} in your browser and enter this code: "
             "{user_code}".format(**code_data), timeout=30, stdout=True,
             category="trakt")
+
+        # automatically open the url in the default browser
+        # but we don't want to use terminal-based browsers - most likely not
+        # what the user wants
+        term_bak = os.environ.pop("TERM", None)
         webbrowser.open(code_data['verification_url'])
+        if term_bak is not None:
+            os.environ["TERM"] = term_bak
 
         start = time.time()
         while time.time() - start < code_data['expires_in']:
