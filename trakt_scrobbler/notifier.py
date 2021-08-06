@@ -82,10 +82,17 @@ if enabled_categories:
             import subprocess as sp
             notifier = None
         else:
-            dbus_connection = open_dbus_connection(bus='SESSION')
-            notifier = DBusAddress('/org/freedesktop/Notifications',
-                                   bus_name='org.freedesktop.Notifications',
-                                   interface='org.freedesktop.Notifications')
+            try:
+                dbus_connection = open_dbus_connection(bus='SESSION')
+            except KeyError as e:
+                logger.warning(f"Could not connect to DBUS: {e}")
+                logger.warning("Disabling notifications")
+                enabled_categories.clear()
+                notifier = None
+            else:
+                notifier = DBusAddress('/org/freedesktop/Notifications',
+                                       bus_name='org.freedesktop.Notifications',
+                                       interface='org.freedesktop.Notifications')
 
 
 def dbus_notify(title, body, timeout):
@@ -99,7 +106,7 @@ def dbus_notify(title, body, timeout):
                               [], {},  # actions, hints
                               timeout,
                           ))
-    dbus_connection.send_and_get_reply(msg)
+    dbus_connection.send(msg)
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False, category="misc"):
