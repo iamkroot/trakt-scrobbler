@@ -128,12 +128,16 @@ class AutoloadError(Exception):
     def __str__(self):
         msg = "Failed to autoload value"
         if self.param:
-            msg += f" for '{self.param}'"
+            if isinstance(self.param, Iterable) and not isinstance(self.param, str):
+                param = ", ".join(map(lambda s: f"'{s}'", self.param))
+            else:
+                param = self.param
+            msg += f" for {param}"
         if self.src:
             if isinstance(self.src, Iterable) and not isinstance(self.src, str):
                 src = "any of " + ", ".join(map(lambda s: f"'{s}'", self.src))
             else:
-                src = f"'{self.src!s}'"
+                src = repr(self.src)
             msg += f" from {src}"
         if self.extra_msg:
             msg += ": " + self.extra_msg

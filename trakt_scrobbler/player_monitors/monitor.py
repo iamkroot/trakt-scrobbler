@@ -111,23 +111,23 @@ class Monitor(Thread):
         try:
             loaders = getattr(cls, "read_player_cfg")(auto_keys)
         except AttributeError:
-            logger.debug(f"Auto val not found for {', '.join(auto_keys)}")
-            logger.error(f"Autoload not supported for {cls.name}.")
-            raise AutoloadError
+            raise AutoloadError(param=auto_keys,
+                                extra_msg=f"Autoload not supported for {cls.name}.")
         except FileNotFoundError as e:
-            raise AutoloadError(src=e.filename)
+            raise AutoloadError(src=e.filename, extra_msg="File not found")
+
         while auto_keys:
             param = auto_keys.pop()
             try:
                 param_loader = loaders[param]
             except KeyError:
-                logger.error(f"Autoload not supported for '{param}'.")
-                raise AutoloadError(param)
+                raise AutoloadError(param,
+                                    extra_msg="Autoload not supported for this param")
             try:
                 monitor_cfg[param] = param_loader()
                 logger.debug(f"Autoloaded {cls.name} {param} = {monitor_cfg[param]}")
             except FileNotFoundError as e:
-                raise AutoloadError(src=e.filename)
+                raise AutoloadError(param, src=e.filename, extra_msg="File not found")
         return monitor_cfg
 
     def __init__(self, scrobble_queue):
