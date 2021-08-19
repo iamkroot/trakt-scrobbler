@@ -1,8 +1,11 @@
 # Contribution Guidelines
 
-## Creating an Issue
-*   Found a bug? Want a feature added? Looking for help understanding the code? Feel free to create an [issue](https://github.com/iamkroot/trakt-scrobbler/issues/new/choose).
+## Using the Discussions forum
+*   If you need help with something, feel free to create a thread in the Discussions forum.
 *   But first, make sure you have read through the [FAQs](https://github.com/iamkroot/trakt-scrobbler/wiki/FAQs).
+
+## Creating an Issue
+*   Found a bug? Feel free to create an [issue](https://github.com/iamkroot/trakt-scrobbler/issues/new/choose).
 *   Search the existing [list](https://github.com/iamkroot/trakt-scrobbler/issues?q=is%3Aissue) of open (or closed) issues for duplicates.
 *   When creating a bug report, ensure that you have attached the relevant portions of the [log file](https://github.com/iamkroot/trakt-scrobbler/wiki/FAQs#where-is-the-log-fileother-data-stored). Use the `trakts log` command to know its location.
 
@@ -16,7 +19,8 @@ If you wish to contribute by submitting code, please first discuss the change yo
 3. Add a new remote using `git remote add upstream https://github.com/iamkroot/trakt-scrobbler.git`.
 4. Create a new feature branch with `git checkout -b my-feature`.
 5. Make your changes.
-6. Commit your changes (See [Guidelines](#commit-message-guidelines)).
+    *   Ensure that your code conforms to the [PEP8 guidelines](https://www.python.org/dev/peps/pep-0008/) (with max line length = 88). See [How to Write Beautiful Python Code With PEP 8](https://realpython.com/python-pep8/) for a good introduction.
+6. Commit your changes (See [Commit Message Guidelines](#commit-message-guidelines)).
 7. Rebase your commits with `upstream/master`:
     - `git checkout master`
     - `git fetch upstream master`
