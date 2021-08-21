@@ -16,7 +16,7 @@ assignees: ''
 Briefly describe the error you are facing
 
 ### Command line output
-<-- Paste the output of the error message here or upload a screenshot -->
+<!-- Paste the output of the error message here or upload a screenshot -->
 
 ```
 Paste output here
@@ -24,9 +24,24 @@ Paste output here
 
 ### Log file
 
-<-- Paste the contents of `trakt_scrobbler.log` file here. Open using `trakts log open` or see [FAQ](https://github.com/iamkroot/trakt-scrobbler/wiki/FAQs#where-is-the-log-fileother-data-stored). If the file doesn't exist, leave this section blank. -->
+<!--If the file doesn't exist, leave this section blank. -->
 
+<!--
+WARNING: The log file may contain passwords and other personally identifiable 
+information like media file paths. If you are privacy-conscious (which you should be), 
+only paste the relevant parts, and take care to redact out the personal info.
+In case that info is required for fixing the issue, we can later discuss how to get it.
+-->
 
+<details>
+  <summary>Click to see log contents</summary> <!--DO NOT REMOVE THIS LINE--> 
+<p>
+
+```<!--DO NOT REMOVE THE THREE BACKTICKS. Replace only the following lines between the three backticks (`)-->
+(replace these lines) *PASTE LOG FILE CONTENTS HERE*
+  Command: "trakts log open" or "trakts log path" or
+  see [FAQ](https://github.com/iamkroot/trakt-scrobbler/wiki/FAQs#where-is-the-log-fileother-data-stored).
 ```
-Paste log file contents here
-```
+</p>
+</details>
+
