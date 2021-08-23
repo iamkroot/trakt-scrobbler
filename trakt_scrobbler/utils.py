@@ -13,7 +13,7 @@ from urllib.request import url2pathname
 
 import confuse
 import requests
-from requests.packages.urllib3.util.retry import Retry
+from urllib3.util.retry import Retry
 from trakt_scrobbler import config
 
 logger = logging.getLogger('trakt_scrobbler')
