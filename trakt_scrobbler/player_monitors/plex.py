@@ -1,52 +1,39 @@
-from getpass import getpass
-
 import confuse
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.file_info import cleanup_guess
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
-from trakt_scrobbler.utils import read_json, safe_request, write_json
-
-PLEX_TOKEN_PATH = DATA_DIR / "plex_token.json"
-token_data = {}
 
 
-def plex_token_auth(login, password):
-    auth_params = {
-        "url": "https://plex.tv/users/sign_in.json",
-        "data": {"user[login]": login, "user[password]": password},
-        "headers": {
-            "X-Plex-Client-Identifier": "com.iamkroot.trakt_scrobbler",
-            "X-Plex-Product": "Trakt Scrobbler",
-            "Accept": "application/json",
-        },
-    }
-    return safe_request("post", auth_params)
+class PlexToken:
+    """A simple wrapper for plex token file
+
+    TODO: Use some form of OS-provided encrypted storage
+    """
+    PATH = DATA_DIR / "plex_token.txt"
+
+    @property
+    def data(self):
+        try:
+            return self.PATH.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            pass
+
+    @data.setter
+    def data(self, token_data):
+        self.PATH.write_text(token_data, encoding="utf-8")
+
+    @data.deleter
+    def data(self):
+        self.PATH.unlink(missing_ok=True)
+
+    # TODO: Add a is_valid method?
+
+    def __bool__(self):
+        return bool(self.data)
 
 
-def get_token():
-    global token_data
-    token_data = read_json(PLEX_TOKEN_PATH) or {}
-
-    if not token_data:
-        logger.info("Retrieving plex token")
-        login = input("Plex login ID: ")
-        pwd = getpass()
-        resp = plex_token_auth(login, pwd)
-        if resp:
-            token_data = {"token": resp.json()["user"]["authToken"]}
-            write_json(token_data, PLEX_TOKEN_PATH)
-            logger.info(f"Saved plex token to {PLEX_TOKEN_PATH}")
-        elif resp is not None:
-            print(resp.json().get("error", resp.text))
-            return None
-        else:
-            logger.error(
-                "Unable to get access token. "
-                f"Try deleting {PLEX_TOKEN_PATH!s} and retry."
-            )
-            return None
-    return token_data['token']
+token = PlexToken()
 
 
 class PlexMon(WebInterfaceMon):
@@ -63,11 +50,11 @@ class PlexMon(WebInterfaceMon):
 
     def __init__(self, scrobble_queue):
         try:
-            self.token = get_token()
             self.URL = self.URL.format(**self.config)
         except KeyError:
             logger.exception("Check config for correct Plex params.")
             return
+        self.token = token.data
         if not self.token:
             logger.error("Unable to retrieve plex token.")
             return
