@@ -61,7 +61,7 @@ will have final value: <info>players.monitored</> = <comment>['mpv', 'vlc', 'ple
     def handle_enable_notifs(self, config, view, key, values):
         if len(values) != 1:
             raise ValueError("Given parameter only accepts a single value")
-        from trakt_scrobbler.notifier import Notifier
+        from trakt_scrobbler.notifier import CATEGORIES
 
         value = values[0].lower() in self.TRUTHY_BOOL
 
@@ -69,7 +69,7 @@ will have final value: <info>players.monitored</> = <comment>['mpv', 'vlc', 'ple
         user_cat = key.replace("general.enable_notifs", "").lstrip(".")
         if user_cat:
             heirarchy = user_cat.split('.')
-            categories = Notifier.CATEGORIES
+            categories = CATEGORIES
             for sub_category in heirarchy:  # traverse down the heirarchy
                 if sub_category not in categories:
                     raise KeyError(f"<info>{sub_category}</> is not a valid category name.")
