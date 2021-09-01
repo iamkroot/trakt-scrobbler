@@ -94,6 +94,8 @@ def file_uri_to_path(file_uri: str) -> str:
     """Convert a file uri to absolute path."""
     try:
         parsed = urlparse(file_uri)
+        if parsed.scheme != 'file':
+            return file_uri
         host = "{0}{0}{mnt}{0}".format(os.path.sep, mnt=parsed.netloc)
         return os.path.abspath(os.path.join(host, url2pathname(parsed.path)))
     except ValueError:
