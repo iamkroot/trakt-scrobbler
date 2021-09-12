@@ -13,6 +13,7 @@ from urllib.request import url2pathname
 
 import confuse
 import requests
+from requests.exceptions import RetryError
 from urllib3.util.retry import Retry
 from trakt_scrobbler import config
 
@@ -58,7 +59,7 @@ def safe_request(verb, params):
     """ConnectionError handling for requests methods."""
     try:
         resp = sess.request(verb, **params)
-    except (requests.ConnectionError, requests.Timeout, requests.RetryError) as e:
+    except (requests.ConnectionError, requests.Timeout, RetryError) as e:
         logger.error(f"Failed to connect: {e}")
         logger.debug(f'Request: {verb} {params}')
         return None
