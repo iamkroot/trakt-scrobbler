@@ -48,10 +48,6 @@ class AutostartEnableCommand(Command):
                 </array>
                 <key>RunAtLoad</key>
                 <true />
-                <key>LaunchOnlyOnce</key>
-                <true />
-                <key>KeepAlive</key>
-                <true />
             </dict>
             </plist>
             """
