@@ -3,6 +3,7 @@ from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.file_info import cleanup_guess
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
+from trakt_scrobbler.notifier import notify
 
 
 class PlexToken:
@@ -57,6 +58,8 @@ class PlexMon(WebInterfaceMon):
         self.token = token.data
         if not self.token:
             logger.error("Unable to retrieve plex token.")
+            notify("Unable to retrieve plex token. Rerun plex auth.",
+                   category="exception")
             return
         super().__init__(scrobble_queue)
         self.sess.headers["Accept"] = "application/json"
