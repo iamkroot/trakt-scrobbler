@@ -20,30 +20,37 @@ class Scrobbler(Thread):
             self.scrobble(*scrobble_item)
             self.scrobble_queue.task_done()
 
-    def is_resume(self, verb, data):
+    def _is_resume(self, verb, media_info):
         if not self.prev_scrobble or verb != "start":
             return False
         prev_verb, prev_data = self.prev_scrobble
-        return prev_verb == "pause" and prev_data['media_info'] == data['media_info']
+        return prev_verb == "pause" and prev_data['media_info'] == media_info
+
+    def _determine_category(self, verb, media_info, trakt_action):
+        verb = verb if trakt_action == "scrobble" else trakt_action
+        return 'resume' if self._is_resume(verb, media_info) else verb
+
+    def handle_successful_scrobble(self, verb, data, resp):
+        if 'movie' in resp:
+            name = resp['movie']['title']
+        else:
+            name = (resp['show']['title'] +
+                    " S{season:02}E{number:02}".format(**resp['episode']))
+        category = self._determine_category(verb, data['media_info'], resp['action'])
+        msg = f"Scrobble {category} successful for {name} at {resp['progress']:.2f}%"
+        logger.info(msg)
+        notify(msg, category=f"scrobble.{category}")
+        self.backlog_cleaner.clear()
 
     def scrobble(self, verb, data):
         logger.debug(f"Scrobbling {verb} at {data['progress']:.2f}% for "
                      f"{data['media_info']['title']}")
         resp = trakt.scrobble(verb, **data)
         if resp:
-            if 'movie' in resp:
-                name = resp['movie']['title']
-            else:
-                name = (resp['show']['title'] +
-                        " S{season:02}E{number:02}".format(**resp['episode']))
-            category = 'resume' if self.is_resume(verb, data) else verb
-            msg = f"Scrobble {category} successful for {name}"
-            logger.info(msg)
-            notify(msg, category=f"scrobble.{category}")
-            self.backlog_cleaner.clear()
+            self.handle_successful_scrobble(verb, data, resp)
         elif resp is False and verb == 'stop' and data['progress'] > 80:
             logger.warning('Scrobble unsuccessful. Will try again later.')
             self.backlog_cleaner.add(data)
         else:
-            logger.warning('Scrobble unsuccessful.')
+            logger.warning('Scrobble unsuccessful. Discarding it.')
         self.prev_scrobble = (verb, data)
