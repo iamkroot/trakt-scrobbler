@@ -9,7 +9,7 @@ class PlexAuthCommand(Command):
 
     plex
         {--f|force : Force run the flow, ignoring already existing credentials}
-        {--t|token : Enter plex token directly instead of password (Implies <c1>-f</>)}
+        {--t|token=? : Enter plex token directly instead of password. Implies <c1>-f</>}
     """
 
     @staticmethod
@@ -48,8 +48,10 @@ class PlexAuthCommand(Command):
             del token.data
             self.line("Forcing plex authentication")
 
-        if self.option("token"):
-            token_data = self.ask("Enter token:")
+        token_data = self.option("token")
+        if token_data is not None:
+            if token_data == 'null':
+                token_data = self.ask("Enter token:")
             # TODO: Verify that token is valid
             token.data = token_data
         elif not token:
