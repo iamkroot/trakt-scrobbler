@@ -253,14 +253,17 @@ class MPVWinMon(MPVMon):
     def __init__(self, scrobble_queue):
         super().__init__(scrobble_queue)
         self.file_handle = None
+        self.is_running = False
+        self._read_buf = win32file.AllocateReadBuffer(1024)
+        self._transact_buf = win32file.AllocateReadBuffer(512)
+        self._read_all_buf = win32file.AllocateReadBuffer(512)
 
     def can_connect(self):
-        return win32file.GetFileAttributes((self.ipc_path)) == \
-            win32file.FILE_ATTRIBUTE_NORMAL
+        return win32file.GetFileAttributes(self.ipc_path) == win32file.FILE_ATTRIBUTE_NORMAL
 
     def _transact(self, write_data):
         """Wrapper over TransactNamedPipe"""
-        read_buf = win32file.AllocateReadBuffer(512)
+        read_buf = self._transact_read_buf
         err, data = win32pipe.TransactNamedPipe(self.file_handle, write_data, read_buf)
         while err == ERROR_MORE_DATA:
             err, d = win32file.ReadFile(self.file_handle, read_buf)
@@ -270,7 +273,7 @@ class MPVWinMon(MPVMon):
     def _read_all_data(self):
         """Read all the remaining data on the pipe"""
         data = b""
-        read_buf = win32file.AllocateReadBuffer(512)
+        read_buf = self._read_all_buf
         while win32file.GetFileSize(self.file_handle):
             _, d = win32file.ReadFile(self.file_handle, read_buf)
             data += d
@@ -304,6 +307,11 @@ class MPVWinMon(MPVMon):
             win32file.FILE_FLAG_OVERLAPPED,
             None
         )
+        if self.file_handle == win32file.INVALID_HANDLE_VALUE:
+            err = win32api.FormatMessage(win32api.GetLastError())
+            logging.error(f"Failed to connect to pipe: {err}")
+            self.file_handle = None
+            return
 
         # needed for blocking on read
         overlapped = win32file.OVERLAPPED()
@@ -312,10 +320,9 @@ class MPVWinMon(MPVMon):
         # needed for transactions
         win32pipe.SetNamedPipeHandleState(
             self.file_handle, win32pipe.PIPE_READMODE_MESSAGE, None, None)
-        read_buf = win32file.AllocateReadBuffer(1024)
         self.is_running = True
         while self.is_running:
-            val = self._call(win32file.ReadFile, self.file_handle, read_buf, overlapped)
+            val = self._call(win32file.ReadFile, self.file_handle, self._read_buf, overlapped)
             if not self.is_running:
                 break
             err, data = val
