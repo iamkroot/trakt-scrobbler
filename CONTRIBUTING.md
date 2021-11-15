@@ -1,12 +1,7 @@
 # Contribution Guidelines
-
-## Using the Discussions forum
-*   If you need help with something, feel free to create a thread in the Discussions forum.
-*   But first, make sure you have read through the [FAQs](https://github.com/iamkroot/trakt-scrobbler/wiki/FAQs).
-
 ## Creating an Issue
-*   Found a bug? Feel free to create an [issue](https://github.com/iamkroot/trakt-scrobbler/issues/new/choose).
-*   Search the existing [list](https://github.com/iamkroot/trakt-scrobbler/issues?q=is%3Aissue) of open (or closed) issues for duplicates.
+*   Found a bug? Want a feature added? Looking for help understanding the code? Feel free to create an [issue](https://github.com/iamkroot/trakt-scrobbler/issues/new/choose).
+*   But first, make sure you have read through the [FAQs](https://github.com/iamkroot/trakt-scrobbler/wiki/FAQs).
 *   When creating a bug report, ensure that you have attached the relevant portions of the [log file](https://github.com/iamkroot/trakt-scrobbler/wiki/FAQs#where-is-the-log-fileother-data-stored). Use the `trakts log` command to know its location.
 
 ## Pull Request flow
