@@ -4,6 +4,7 @@ from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.file_info import cleanup_guess
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
 from trakt_scrobbler.notifier import notify
+from trakt_scrobbler.utils import read_json
 
 
 class PlexToken:
@@ -12,13 +13,24 @@ class PlexToken:
     TODO: Use some form of OS-provided encrypted storage
     """
     PATH = DATA_DIR / "plex_token.txt"
+    OLD_PATH = DATA_DIR / "plex_token.json"
 
     @property
     def data(self):
         try:
             return self.PATH.read_text(encoding="utf-8")
         except FileNotFoundError:
-            pass
+            return self.try_migrate_old_file()
+
+    def try_migrate_old_file(self):
+        token = read_json(self.OLD_PATH)
+        if not token:
+            # we really don't have the token
+            return None
+        # we got the token from old file- move to new
+        self.OLD_PATH.unlink()
+        self.data = token["token"]
+        return token["token"]
 
     @data.setter
     def data(self, token_data):
