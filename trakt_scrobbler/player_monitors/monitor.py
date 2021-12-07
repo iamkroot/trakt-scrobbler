@@ -361,6 +361,8 @@ class WebInterfaceMon(Monitor):
                 self.status = {}
             except requests.HTTPError as e:
                 logger.error(f"Error while getting data from {self.name}: {e}")
+                notify(f"Error while getting data from {self.name}: {e}",
+                       category="exception")
                 break
             if not self.status.get("filepath") and not self.status.get("media_info"):
                 self.status = {}
