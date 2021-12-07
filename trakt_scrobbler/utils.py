@@ -36,9 +36,6 @@ def init_sess():
     return sess
 
 
-sess = init_sess()
-
-
 def read_json(file_path):
     try:
         with open(file_path) as f:
@@ -55,7 +52,7 @@ def write_json(data, file_path):
         json.dump(data, f, indent=4)
 
 
-def safe_request(verb, params):
+def safe_request(verb, params, sess=init_sess()):
     """ConnectionError handling for requests methods."""
     try:
         resp = sess.request(verb, **params)

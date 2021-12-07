@@ -4,7 +4,7 @@ from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.file_info import cleanup_guess
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
 from trakt_scrobbler.notifier import notify
-from trakt_scrobbler.utils import read_json
+from trakt_scrobbler.utils import read_json, safe_request
 
 
 class PlexToken:
@@ -80,7 +80,9 @@ class PlexMon(WebInterfaceMon):
         self.media_info_cache = {}
 
     def get_data(self, url):
-        resp = self.sess.get(url)
+        resp = safe_request("get", {"url": url}, self.sess)
+        if resp is None:
+            return
         # TODO: If we get a 401, clear token and restart plex auth flow
         resp.raise_for_status()
         data = resp.json()["MediaContainer"]
