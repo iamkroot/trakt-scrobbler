@@ -84,7 +84,7 @@ if enabled_categories:
         else:
             try:
                 dbus_connection = open_dbus_connection(bus='SESSION')
-            except KeyError as e:
+            except Exception as e:
                 logger.warning(f"Could not connect to DBUS: {e}")
                 logger.warning("Disabling notifications")
                 enabled_categories.clear()
