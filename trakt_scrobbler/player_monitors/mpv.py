@@ -173,7 +173,8 @@ class MPVMon(Monitor):
 
     def on_line(self, line: bytes):
         try:
-            mpv_json = json.loads(line)
+            line_str = line.decode(encoding='utf-8', errors='ignore')
+            mpv_json = json.loads(line_str)
         except json.JSONDecodeError:
             logger.warning('Invalid JSON received. Skipping.', exc_info=True)
             logger.debug(line)
