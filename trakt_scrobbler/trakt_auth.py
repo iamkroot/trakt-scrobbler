@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import webbrowser
-from datetime import datetime as dt, timedelta as td
+from datetime import datetime as dt
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler import logger, trakt_key_holder
 from trakt_scrobbler.notifier import notify
@@ -13,7 +13,6 @@ API_URL = "https://api.trakt.tv"
 
 class TraktAuth:
     TRAKT_TOKEN_PATH = DATA_DIR / 'trakt_token.json'
-    TOKEN_EXPIRY_BUFFER = td(days=1)
     _CODE_FETCH_FAILS_LIMIT = 3
     _REFRESH_RETRIES_LIMIT = 3
 
@@ -167,10 +166,11 @@ class TraktAuth:
             logger.error("Error refreshing token.")
 
     def token_expires_at(self) -> dt:
-        return dt.fromtimestamp(self.token_data['created_at'] + self.token_data['expires_in'])
+        return dt.utcfromtimestamp(self.token_data['created_at'] +
+                                   self.token_data['expires_in'])
 
     def is_token_expired(self) -> bool:
-        return self.token_expires_at() - dt.now() < self.TOKEN_EXPIRY_BUFFER
+        return self.token_expires_at() <= dt.utcnow()
 
     def clear_token(self):
         self.token_data = {}
