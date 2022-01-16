@@ -49,10 +49,13 @@ class VLCMon(WebInterfaceMon):
     @classmethod
     def read_player_cfg(cls, auto_keys=None):
         if sys.platform == "darwin":
-            prefs_dir = Path("~/Library/Preferences/org.videolan.vlc").expanduser()
+            prefs_dirs = (Path("~/Library/Preferences/org.videolan.vlc").expanduser(),)
+        elif sys.platform == "win32":
+            prefs_dirs = (Path(appdirs.user_config_dir("vlc", False, roaming=True)),)
         else:
-            prefs_dir = Path(appdirs.user_config_dir("vlc", False, roaming=True))
-        vlcrc_path = prefs_dir / "vlcrc"
+            prefs_dirs = (Path(appdirs.user_config_dir("vlc", False, roaming=True)),
+                          Path("~/snap/vlc/common/").expanduser(),)
+        vlcrc_path = tuple(prefs_dir / "vlcrc" for prefs_dir in prefs_dirs)
         vlcrc = ConfigParser(strict=False, inline_comment_prefixes="#")
         vlcrc.optionxform = lambda option: option
         if not vlcrc.read(vlcrc_path, encoding="utf-8-sig"):
