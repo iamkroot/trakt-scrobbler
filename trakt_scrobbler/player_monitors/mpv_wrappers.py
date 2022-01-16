@@ -61,7 +61,8 @@ class SyncplayMPVMon(MPVMon):
     def read_player_cfg(cls, auto_keys=None):
         file_names = ["syncplay.ini", ".syncplay"]
         if sys.platform == "win32":
-            paths = (Path(appdirs.user_data_dir()),)
+            paths = (Path(appdirs.user_data_dir(roaming=True)),
+                     Path(appdirs.user_data_dir()),)
         else:
             paths = (Path(os.getenv('XDG_CONFIG_HOME', "~/.config")).expanduser(),
                      Path.home())
