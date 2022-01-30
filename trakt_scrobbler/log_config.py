@@ -1,6 +1,8 @@
 import logging.config
+import sys
 from trakt_scrobbler.app_dirs import DATA_DIR
 file_path = DATA_DIR / "trakt_scrobbler.log"
+IS_DEV = "trakts" not in sys.argv[0]
 
 
 class DuplicateMessageFilter(logging.Filter):
@@ -84,11 +86,17 @@ LOGGING_CONF = {
             'level': 'DEBUG',
             'formatter': 'verbose',
             'filters': ['duplicatemessagefilter', 'modulesfilter']
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'DEBUG',
+            'formatter': 'verbose',
+            'filters': ['duplicatemessagefilter', 'modulesfilter']
         }
     },
     'loggers': {
         'trakt_scrobbler': {
-            'handlers': ['file'],
+            'handlers': ['console' if IS_DEV else 'file'],
             'level': 'DEBUG'
         }
     }
