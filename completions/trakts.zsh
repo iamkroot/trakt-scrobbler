@@ -10,12 +10,12 @@ _trakts_args() {
     local -a options
     options=(
         {-h,--help}"[Display help message]"
-        {-q,--quiet}"[Do not output any message]"
-        {-v,--verbose}"[Increase the verbosity of messages]"
+        "(-v --verbose)"{-q,--quiet}"[Do not output any message]"
+        "(-q --quiet)"{-v,--verbose}"[Increase the verbosity of messages]"
         {-V,--version}"[Display this application version]"
         {-n,--no-interaction}"[Do not ask any interactive question]"
-        "--ansi[Force ANSI output]"
-        "--no-ansi[Disable ANSI output]"
+        "(--no-ansi)--ansi[Force ANSI output]"
+        "(--ansi)--no-ansi[Disable ANSI output]"
     )
     [[ $1 == opts ]] && set "$@" ': :' && shift
     _arguments "${options[@]}" "$@"
@@ -53,22 +53,22 @@ _trakts_plex()
 ### command run
 _trakts_run()
 {
-    _trakts_args
+    _trakts_args opts
 }
 ### command start
 _trakts_start()
 {
-    _arguments -s {-r,--restart}'[Restart the service]'
+    _trakts_args opts -s {-r,--restart}'[Restart the service]'
 }
 ### command status
 _trakts_status()
 {
-    _trakts_args
+    _trakts_args opts
 }
 ### command stop
 _trakts_stop()
 {
-    _trakts_args
+    _trakts_args opts
 }
 ## Section @simpleCommands ##
 
@@ -206,7 +206,7 @@ _trakts_whitelist_commands()
 ### command whitelist
 _trakts_whitelist()
 {
-    _arguments ':action:_trakts_whitelist_commands'
+    _trakts_args ':action:_trakts_whitelist_commands'
 }
 ### command whitelist add
 _trakts_whitelist_add()
@@ -248,7 +248,7 @@ _trakts_arguments() {
     # shellcheck disable=SC1087,SC1105,SC2211,SC2288,SC2086
 	case $line[1] in
 		(help)
-		    local cmdfunc
+		    local cmdfunc shifted
 		    cmdfunc=$(printf '_%s' "${line[@]:1:-1}") shifted=0
 		    if [[ $cmdfunc != _ ]] ;then
                 until [[ $cmdfunc == _ ]] || ((shifted++));do
