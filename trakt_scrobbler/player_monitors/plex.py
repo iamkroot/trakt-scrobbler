@@ -104,7 +104,7 @@ class PlexMon(WebInterfaceMon):
             if metadata["User"]["title"] == self.config["scrobble_user"]:
                 return metadata
 
-    def update_status(self):
+    def _update_status(self):
         status_data = self.get_data(self.session_url)
         if not status_data:
             self.status = {}
@@ -113,6 +113,14 @@ class PlexMon(WebInterfaceMon):
         self.status["position"] = int(status_data["viewOffset"]) / 1000
         self.status["state"] = self.STATES.get(status_data["Player"]["state"], 0)
         self.status["media_info"] = self.get_media_info(status_data)
+
+    def update_status(self):
+        try:
+            return self._update_status()
+        except KeyError:
+            logger.exception("Weird key error in plex. Resetting status.")
+            self.status = {}
+            return
 
     def get_media_info(self, status_data):
         media_info = self.media_info_cache.get(status_data["ratingKey"])
