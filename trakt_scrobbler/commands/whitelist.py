@@ -7,6 +7,12 @@ from .command import Command
 from .config import ConfigCommand
 
 
+def fmt(path: str) -> str:
+    """Return a formatted version of the path"""
+    # Clean up trailing slashes so it doesn't escape the '<'
+    return "<comment>{}</>".format(path.strip('\\'))
+
+
 class WhitelistAddCommand(Command):
     """
     Add path to whitelist.
@@ -64,7 +70,8 @@ So in the above example, we use <comment>path/to/directory/Season 1/S01E03.mp4</
         try:
             urlmatch(path, "<fake path>")
         except BadMatchPattern as e:
-            self.line_error(f"Could not add <comment>{path}</> as url:\n<error>{e}</>")
+            e = str(e).strip('\\')
+            self.line_error(f"Could not add {fmt(path)} as url:\n<error>{e}</>")
             return
         return path
 
@@ -80,7 +87,7 @@ So in the above example, we use <comment>path/to/directory/Season 1/S01E03.mp4</
         if parsed is None:
             return
         self.call_sub("config set", f'--add fileinfo.whitelist "{parsed}"', silent=True)
-        self.line(f"<comment>{parsed}</> added to whitelist.")
+        self.line(f"{fmt(parsed)} added to whitelist.")
         self.info("Don't forget to restart the service for the changes to take effect.")
 
 
@@ -126,8 +133,9 @@ class WhitelistRemoveCommand(Command):
         choices = self.choice(
             "Select the paths to be removed from whitelist", whitelist, multiple=True
         )
+        paths = ', '.join(fmt(c) for c in choices)
         if not self.confirm(
-            f"This will remove {', '.join(f'<comment>{c}</>' for c in choices)} from whitelist. Continue?",
+            f"This will remove {paths} from whitelist. Continue?",
             default=True,
         ):
             self.line("Aborted", "error")
@@ -157,7 +165,7 @@ class WhitelistTestCommand(Command):
         if whitelist_path is True:
             self.info("Whitelist is empty, so given path is trivially whitelisted.")
         elif whitelist_path:
-            self.info(f"The path is whitelisted through <comment>{whitelist_path}</>")
+            self.info(f"The path is whitelisted through {fmt(whitelist_path)}")
         else:
             self.line_error("The path is not in whitelist!")
 
