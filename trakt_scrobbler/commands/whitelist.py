@@ -54,7 +54,7 @@ So in the above example, we use <comment>path/to/directory/Season 1/S01E03.mp4</
             f"Path <comment>{fold}</> does not exist. Are you sure you want to add it?"
         ):
             return
-        folder = str(fold.absolute().resolve())
+        folder = str(fold.absolute())
         if folder.endswith("\\"):  # fix string escaping
             folder += "\\"
         return folder
