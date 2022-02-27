@@ -264,7 +264,7 @@ class MPVWinMon(MPVMon):
 
     def _transact(self, write_data):
         """Wrapper over TransactNamedPipe"""
-        read_buf = self._transact_read_buf
+        read_buf = self._transact_buf
         err, data = win32pipe.TransactNamedPipe(self.file_handle, write_data, read_buf)
         while err == ERROR_MORE_DATA:
             err, d = win32file.ReadFile(self.file_handle, read_buf)
