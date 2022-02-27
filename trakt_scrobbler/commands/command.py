@@ -1,5 +1,3 @@
-import re
-import subprocess as sp
 import sys
 from cleo import Command as BaseCommand
 from clikit.args import StringArgs
@@ -23,22 +21,13 @@ class Command(BaseCommand):
 
 
 def _get_win_pid():
-    op = sp.check_output(
-        [
-            "wmic",
-            "process",
-            "where",
-            f"name='{CMD_NAME}.exe'",
-            "get",
-            "CommandLine,ProcessID",
-        ],
-        text=True,
-    )
-    for line in op.split("\n"):
-        match = re.search(r" run.*?(?P<pid>\d+)", line)
-        if match:
-            return match["pid"]
+    from psutil import pids, Process
+    for pid in pids():
+        proc = Process(pid)
+        if proc.name() == f'{CMD_NAME}.exe' and "run" in proc.cmdline():
+            return pid
 
 
 def _kill_task_win(pid):
-    sp.check_call(["taskkill", "/pid", pid, "/f", "/t"])
+    import psutil
+    psutil.Process(pid).kill()
