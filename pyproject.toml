@@ -13,11 +13,9 @@ classifiers = [
     "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
     "Operating System :: OS Independent",
 ]
-
-packages = [
-	{include = "trakt_scrobbler"},
-	{include = "tests", format = "sdist"},
-	{include = "completions/**/*.*?sh", format = "sdist"}
+include = [
+	{path = "tests", format = "sdist"},
+	{path = "completions/**/*.*?sh", format = "sdist"}
 ]
 
 [tool.poetry.dependencies]
