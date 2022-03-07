@@ -31,7 +31,7 @@ class SMPlayerMPVMon(MPVMon):
             )
         mpv_conf = ConfigParser(allow_no_value=True, strict=False)
         mpv_conf.optionxform = lambda option: option
-        mpv_conf.read_string(conf_path.read_text())
+        mpv_conf.read_string(conf_path.read_text(encoding="utf-8"))
 
         def read_ipc():
             opts = mpv_conf.get("advanced", "mplayer_additional_options")
