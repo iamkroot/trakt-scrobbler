@@ -68,7 +68,7 @@ class MPVMon(Monitor):
             allow_no_value=True, strict=False, inline_comment_prefixes="#"
         )
         mpv_conf.optionxform = lambda option: option
-        mpv_conf.read_string("[root]\n" + conf_path.read_text())
+        mpv_conf.read_string("[root]\n" + conf_path.read_text(encoding="utf-8"))
         return {
             "ipc_path": lambda: mpv_conf.get("root", "input-ipc-server")
         }
