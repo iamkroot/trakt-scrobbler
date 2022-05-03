@@ -2,7 +2,6 @@ import json
 import locale
 import logging.config
 import os
-import re
 import sys
 import threading
 import time
@@ -11,7 +10,6 @@ from functools import lru_cache, singledispatch
 from urllib.parse import ParseResult, urlparse
 from urllib.request import url2pathname
 
-import confuse
 import requests
 from requests.exceptions import RetryError
 from urllib3.util.retry import Retry
@@ -182,18 +180,3 @@ class ResumableTimer:
     def cancel(self):
         if self.timer is not None:
             self.timer.cancel()
-
-
-class RegexPat(confuse.Template):
-    """A regex configuration value template"""
-
-    def convert(self, value, view) -> re.Pattern:
-        """Check that the value is an regex.
-        """
-        try:
-            return re.compile(value)
-        except re.error as e:
-            self.fail(u"malformed regex: '{}'. Error: {}".format(e.pattern, e), view)
-        except TypeError as e:
-            self.fail(u"Couldn't compile regex from '{}'. Error: {}".format(value, e),
-                      view, type_error=True)
