@@ -1,39 +1,43 @@
 from functools import lru_cache
-from typing import Union, List
+from typing import Tuple, Union, List
 from urllib.parse import unquote, urlsplit, urlunsplit
 
 import confuse
 import guessit
 from trakt_scrobbler import config, logger
-from trakt_scrobbler.utils import RegexPat, cleanup_encoding, is_url
+from trakt_scrobbler.configuration import AnyDictValTemplate, BoolTemplate, RegexPat
+from trakt_scrobbler.utils import cleanup_encoding, is_url
 from urlmatch import BadMatchPattern, urlmatch
 
+
+class WhitelistTemplate(confuse.Template):
+    """Parse the whitelist comprising of local and remote patterns."""
+    def convert(self, value, view) -> Tuple[List[str], List[str]]:
+        whitelist = confuse.StrSeq(split=False).convert(value, view)
+        local, remote = [], []
+        for path in whitelist:
+            try:
+                urlmatch(path, "<dummy_path>", path_required=False, fuzzy_scheme=True)
+                # ignore result
+            except BadMatchPattern:
+                # local paths will raise BadMatchPattern error
+                local.append(path)
+            else:
+                remote.append(path)
+        return local, remote
+
+
+# set up the config variable handles
 cfg = config["fileinfo"]
-whitelist = cfg["whitelist"].get(confuse.StrSeq())
-regexes: dict = cfg['include_regexes'].get({
+split_whitelist = cfg["whitelist"].get_handle(WhitelistTemplate())
+any_whitelist = cfg["whitelist"].get_handle(BoolTemplate())
+regexes = cfg['include_regexes'].get_handle({
     "movie": confuse.Sequence(RegexPat()),
     "episode": confuse.Sequence(RegexPat()),
 })
-use_regex = any(regexes.values())
-exclude_patterns: list = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
 
-
-def split_whitelist(whitelist: List[str]):
-    """Split whitelist into local and remote urls"""
-    local, remote = [], []
-    for path in whitelist:
-        try:
-            urlmatch(path, "<dummy_path>", path_required=False, fuzzy_scheme=True)
-            # ignore result
-        except BadMatchPattern:
-            # local paths will raise BadMatchPattern error
-            local.append(path)
-        else:
-            remote.append(path)
-    return local, remote
-
-
-local_paths, remote_paths = split_whitelist(whitelist)
+use_regex = cfg['include_regexes'].get_handle(AnyDictValTemplate({'movie', 'episode'}))
+exclude_patterns = cfg["exclude_patterns"].get_handle(confuse.Sequence(RegexPat()))
 
 
 def whitelist_local(local_path: str, file_path: str) -> bool:
@@ -54,9 +58,10 @@ def whitelist_remote(whitelist_path: str, file_path: str) -> bool:
 
 def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[bool, str]:
     """Check if the played media file is in the allowed list of paths"""
-    if not whitelist:
+    if not any_whitelist.get():
         return True
     is_whitelisted = whitelist_remote if is_url else whitelist_local
+    local_paths, remote_paths = split_whitelist.get()
     whitelist_paths = remote_paths if is_url else local_paths
 
     for path in whitelist_paths:
@@ -68,7 +73,7 @@ def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[boo
 
 
 def exclude_file(file_path: str) -> bool:
-    for pattern in exclude_patterns:
+    for pattern in exclude_patterns.get():
         if pattern.match(file_path):
             logger.debug(f"Matched exclude pattern {pattern!r}")
             return True
@@ -76,7 +81,7 @@ def exclude_file(file_path: str) -> bool:
 
 
 def custom_regex(file_path: str):
-    for item_type, patterns in regexes.items():
+    for item_type, patterns in regexes.get().items():
         for pattern in patterns:
             m = pattern.match(file_path)
             if m:
@@ -124,7 +129,7 @@ def get_media_info(file_path: str):
     if exclude_file(file_path):
         logger.info("Ignoring file.")
         return None
-    guess = use_regex and custom_regex(file_path) or use_guessit(guessit_path)
+    guess = use_regex.get() and custom_regex(file_path) or use_guessit(guessit_path)
     logger.debug(f"Guess: {guess}")
     return cleanup_guess(guess)
 

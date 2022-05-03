@@ -12,12 +12,19 @@ class BacklogCleaner:
 
     def __init__(self, manual=False):
         self.backlog = read_json(self.BACKLOG_PATH) or []
-        self.clear_interval = config["backlog"]["clear_interval"].get(confuse.Number())
-        self.expiry = config["backlog"]["expiry"].get(confuse.Number())
+        self.config = config["backlog"]
         self.timer_enabled = not manual
         if self.timer_enabled:
             self._make_timer()
             self.clear()
+
+    @property
+    def clear_interval(self):
+        return self.config['clear_interval'].get(confuse.Number())
+
+    @property
+    def expiry(self):
+        return self.config['expiry'].get(confuse.Number())
 
     def save_backlog(self):
         write_json(self.backlog, self.BACKLOG_PATH)
