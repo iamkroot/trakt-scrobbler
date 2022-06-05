@@ -47,3 +47,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pyright]
 reportGeneralTypeIssues = false
+reportImplicitStringConcatenation = false
