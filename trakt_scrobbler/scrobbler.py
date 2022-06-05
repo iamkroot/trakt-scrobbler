@@ -1,7 +1,23 @@
 from threading import Thread
+
+import confuse
 from trakt_scrobbler import logger
 from trakt_scrobbler import trakt_interface as trakt
 from trakt_scrobbler.notifier import notify
+from trakt_scrobbler import config
+
+
+_inner_templ = confuse.Choice({
+    'all': ("start", "pause", "stop"),
+    'none': tuple(),
+    'stop-only': ("stop",),
+})
+ALLOWED_SCROBBLES_TEMPLATE = confuse.MappingTemplate(
+    {'episode': _inner_templ, 'movie': _inner_templ}
+)
+allowed_scrobbles: dict = config["general"]["allowed_scrobbles"].get(
+    ALLOWED_SCROBBLES_TEMPLATE
+)
 
 
 class Scrobbler(Thread):
@@ -16,9 +32,15 @@ class Scrobbler(Thread):
 
     def run(self):
         while True:
-            scrobble_item = self.scrobble_queue.get()
-            self.scrobble(*scrobble_item)
+            verb, data = self.scrobble_queue.get()
+            if self.filter_scrobble(verb, data):
+                self.scrobble(verb, data)
+            else:
+                logger.debug(f"Filtered out {verb} scrobble")
             self.scrobble_queue.task_done()
+
+    def filter_scrobble(self, verb, data):
+        return verb in allowed_scrobbles[data['media_info']['type']]
 
     def _is_resume(self, verb, media_info):
         if not self.prev_scrobble or verb != "start":

@@ -11,6 +11,10 @@ general:
       stop: yes
     trakt: yes
   proxies: {}
+  allowed_scrobbles:
+    episode: all  # all, stop-only, none
+    movie: all  # all, stop-only, none
+
 
 fileinfo:
 
