@@ -1,3 +1,5 @@
+import re
+import subprocess as sp
 import sys
 from cleo import Command as BaseCommand
 from clikit.args import StringArgs
@@ -20,14 +22,20 @@ class Command(BaseCommand):
         return command.run(args, silent and NullIO() or self.io)
 
 
-def _get_win_pid():
-    from psutil import pids, Process
-    for pid in pids():
-        proc = Process(pid)
-        if proc.name() == f'{CMD_NAME}.exe' and "run" in proc.cmdline():
-            return pid
+def _get_win_pid():    
+    op = sp.check_output(
+        [
+            "powershell",
+            "-Command",
+            "gwmi -Query \"select processid from win32_process where name='trakts.exe' and commandline like '%run%'\""
+        ],
+        text=True,
+    )
+    for line in op.split("\n"):
+        match = re.search(r"ProcessId\s*:\s*(?P<pid>\d+)", line)
+        if match:
+            return match["pid"]
 
 
 def _kill_task_win(pid):
-    import psutil
-    psutil.Process(pid).kill()
+    sp.check_call(["taskkill", "/pid", pid, "/f", "/t"])
