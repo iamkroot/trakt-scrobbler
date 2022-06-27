@@ -22,17 +22,35 @@ class Command(BaseCommand):
         return command.run(args, silent and NullIO() or self.io)
 
 
-def _get_win_pid():    
-    op = sp.check_output(
-        [
-            "powershell",
-            "-Command",
-            "gwmi -Query \"select processid from win32_process where name='trakts.exe' and commandline like '%run%'\""
-        ],
-        text=True,
-    )
+def _get_win_pid():
+    try:
+        op = sp.check_output(
+            [
+                "wmic",
+                "process",
+                "where",
+                f"name='{CMD_NAME}.exe'",
+                "get",
+                "CommandLine,ProcessID",
+            ],
+            text=True,
+        )
+        pattern = re.compile(r" run.*?(?P<pid>\d+)")
+    except FileNotFoundError:
+        op = sp.check_output(
+            [
+                "powershell",
+                "-NonInteractive",
+                "-NoLogo",
+                "-NoProfile",
+                "-Command",
+                "gwmi -Query \"select processid from win32_process where name='trakts.exe' and commandline like '%run%'\""
+            ],
+            text=True,
+        )
+        pattern = re.compile(r"ProcessId\s*:\s*(?P<pid>\d+)")
     for line in op.split("\n"):
-        match = re.search(r"ProcessId\s*:\s*(?P<pid>\d+)", line)
+        match = pattern.search(line)
         if match:
             return match["pid"]
 
