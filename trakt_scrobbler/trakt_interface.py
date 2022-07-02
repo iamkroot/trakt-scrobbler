@@ -19,7 +19,8 @@ def search(query, types=None, year=None, extended=False, page=1, limit=1):
         "params": {'query': query, 'extended': extended,
                    'field': 'title', 'years': year, 
                    'page': page, 'limit': limit},
-        "headers": trakt_auth.headers
+        "headers": trakt_auth.headers,
+        "timeout": 30,
     }
     r = safe_request('get', search_params)
     return r.json() if r else None
