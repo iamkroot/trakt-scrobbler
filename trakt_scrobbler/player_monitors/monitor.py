@@ -81,7 +81,7 @@ class Monitor(Thread):
             cls.inject_base_config()
             cls.config = cls.autoload_cfg()
         except AutoloadError as e:
-            logger.debug(str(e))
+            logger.warning(str(e))
             logger.error(f"Config value autoload failed for {cls.name}.")
             notify(f"Check log file. {e!s}", category="exception")
         except Exception:
@@ -148,6 +148,9 @@ class Monitor(Thread):
         self.lock = Lock()
         self.preview_timer: ResumableTimer = None
         self.fast_pause_timer: ResumableTimer = None
+
+    def can_connect(self) -> bool:
+        raise NotImplementedError
 
     @staticmethod
     def parse_status(status):

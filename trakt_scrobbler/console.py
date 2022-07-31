@@ -13,6 +13,7 @@ from trakt_scrobbler.commands.run import RunCommand
 from trakt_scrobbler.commands.start import StartCommand
 from trakt_scrobbler.commands.status import StatusCommand
 from trakt_scrobbler.commands.stop import StopCommand
+from trakt_scrobbler.commands.test import TestCommand
 from trakt_scrobbler.commands.trakt import TraktAuthCommand
 from trakt_scrobbler.commands.whitelist import WhitelistCommand
 
@@ -30,6 +31,7 @@ def main():
     application.add(StartCommand())
     application.add(StatusCommand())
     application.add(StopCommand())
+    application.add(TestCommand())
     application.add(TraktAuthCommand())
     application.add(WhitelistCommand())
     application.run()
