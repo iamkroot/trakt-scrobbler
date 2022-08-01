@@ -72,7 +72,17 @@ class TestCommand(Command):
             pi.finish("Timed out", reset_indicator=True)
             raise SystemExit(1)
 
-    def handle(self):
+    def pretty_print_status(self, status):
+        _, data = status
+        media_info = data['media_info']
+        progress = data['progress']
+        self.write("Playing ")
+        self.write(media_info['title'], "info")
+        if media_info['type'] == 'episode':
+            self.write(" S{season:02}E{episode:02}".format(**media_info), "info")
+        self.line(f" at {progress:.2f}%")
+
+    def _handle(self):
         name = self.argument("player")
         Mon = self.get_monitor(name)
 
@@ -92,6 +102,16 @@ class TestCommand(Command):
             with self.spin("Waiting for events", "Got info"):
                 status = dummy_queue.get(block=True, timeout=15)
         except queue.Empty:
-            self.line_error("Timed out fetching events from player", "error")
+            self.line("Timed out fetching events from player", "error")
+            raise SystemExit(1)
         else:
-            self.line(f"Playing {status}")
+            self.pretty_print_status(status)
+
+    def handle(self):
+        try:
+            return self._handle()
+        except SystemExit as e:
+            if not self.io.is_debug():
+                self.line("<info>Hint:</> Try re-running <comment>trakts test</> with"
+                          " '<comment>-vvv</>' to enable more debug logging.")
+            return e.code
