@@ -349,6 +349,21 @@ class WebInterfaceMon(Monitor):
         self.sess = requests.Session()
         self.poll_interval = self.config['poll_interval']
 
+    def can_connect(self) -> bool:
+        try:
+            self.update_status()
+        except requests.ConnectionError:
+            logger.debug(
+                f'Unable to connect to {self.name}. Ensure that '
+                f'the web interface is running.'
+            )
+            return False
+        except requests.HTTPError as e:
+            logger.debug(f"Error while getting data from {self.name}: {e}")
+            return False
+        else:
+            return True
+
     def update_status(self):
         raise NotImplementedError
 
