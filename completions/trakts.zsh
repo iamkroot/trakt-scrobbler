@@ -191,6 +191,18 @@ _trakts_lookup()
 }
 ## endSection lookup ##
 
+## Section test ##
+### command test
+_trakts_test()
+{
+    local -a opts
+    opts=(
+        '*:player:'
+    )
+    _trakts_args "${opts[@]}"
+}
+## endSection test ##
+
 ## Section whitelist ##
 _trakts_whitelist_commands()
 {
@@ -239,6 +251,7 @@ _trakts_commands()
         "start:Start the trakt-scrobbler service"
         "status:Show the status trakt-scrobbler service"
         "stop:Stop the trakt-scrobbler service"
+        "test:Test player-monitor connection"
         "whitelist:Add the given folder(s) to whitelist"
     )
     _describe 'commands' commands
