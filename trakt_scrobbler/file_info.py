@@ -131,6 +131,13 @@ def get_media_info(file_path: str):
     return guess
 
 
+@lru_cache(maxsize=None)
+def get_media_info_from_title(title: str):
+    guess = use_guessit(title)
+    logger.debug(f"Title Guess: {guess}")
+    return cleanup_guess(guess)
+
+
 def cleanup_guess(guess):
     if not guess:
         return None

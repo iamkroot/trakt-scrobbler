@@ -5,7 +5,7 @@ from threading import Lock, Thread
 import confuse
 import requests
 from trakt_scrobbler import config, logger
-from trakt_scrobbler.file_info import get_media_info
+from trakt_scrobbler.file_info import get_media_info, get_media_info_from_title
 from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.utils import AutoloadError, ResumableTimer
 
@@ -161,6 +161,8 @@ class Monitor(Thread):
 
         if 'filepath' in status:
             media_info = get_media_info(status['filepath'])
+            if 'title' in status:
+                title_info = get_media_info_from_title(status['title'])
         else:
             media_info = status['media_info']
 
