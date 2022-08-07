@@ -78,7 +78,7 @@ class BacklogClearCommand(Command):
 
         cleaner = BacklogCleaner(manual=True)
         if any(cleaner.backlog.values()):
-            success, added, invalid = cleaner.clear()
+            success, added, invalid, not_found = cleaner.clear()
             if not success:
                 self.line(
                     "Failed to clear backlog! Check log file for information.", "error"
@@ -96,8 +96,14 @@ class BacklogClearCommand(Command):
                     msg += f"{pluralize(episodes, 'episode')}"
                 self.line(msg, "info")
             if any(invalid.values()):
-                self.line("Invalid media info: ", "error")
+                self.line("Invalid media info (could not find Trakt ID):", "error")
                 for category, items in invalid.items():
+                    if items:
+                        self.line(pluralize(len(items), category[:-1].upper()), "error")
+                        self.render_table(rows=items, style="compact")
+            if any(not_found.values()):
+                self.line("Invalid media info (no such episode on Trakt):", "error")
+                for category, items in not_found.items():
                     if items:
                         self.line(pluralize(len(items), category[:-1].upper()), "error")
                         self.render_table(rows=items, style="compact")

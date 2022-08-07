@@ -122,7 +122,7 @@ class BacklogCleaner:
     @with_lock
     def clear(self):
         result = trakt.bulk_add_to_history(self.backlog)
-        added, invalid = {}, {}
+        added, invalid, not_found = {}, {}, {}
         if result is not False:
             invalid, resp = result
             for category, keys in invalid.items():
@@ -131,15 +131,16 @@ class BacklogCleaner:
             added = resp.get("added", {})
             if any(added.values()):
                 logger.info(f"Added to history: {added}")
-            if any(resp.get("not_found", {}).values()):
-                logger.warning(f"Not found on trakt: {resp['not_found']}")
+            not_found = resp.get("not_found", {})
+            if any(not_found.values()):
+                logger.warning(f"Not found on trakt: {not_found}")
             self.backlog = deepcopy(self.DEFAULT_BACKLOG)
 
         if self.timer_enabled:
             self.timer.cancel()
             self._make_timer()
 
-        return result is not False, added, invalid
+        return result is not False, added, invalid, not_found
 
     @with_lock
     def purge(self):
