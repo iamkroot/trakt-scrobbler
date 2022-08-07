@@ -1,12 +1,14 @@
 from queue import Queue
+import time
 import confuse
+import argparse
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.backlog_cleaner import BacklogCleaner
 from trakt_scrobbler.player_monitors import collect_monitors
 from trakt_scrobbler.scrobbler import Scrobbler
 
 
-def main():
+def start():
     scrobble_queue = Queue()
     backlog_cleaner = BacklogCleaner()
     scrobbler = Scrobbler(scrobble_queue, backlog_cleaner)
@@ -27,6 +29,20 @@ def main():
             logger.warning(f"Could not start monitor for {Mon.name}")
             continue
         mon.start()
+
+
+def run(start_paused):
+    if start_paused:
+        print(start_paused)
+        time.sleep(100)
+    start()
+
+
+def main():
+    parser = argparse.ArgumentParser("trakts")
+    parser.add_argument("--start-paused", type=str, metavar="DURATION", help="Start the monitors after given duration")
+    args = parser.parse_args()
+    run(args.start_paused)
 
 
 if __name__ == '__main__':
