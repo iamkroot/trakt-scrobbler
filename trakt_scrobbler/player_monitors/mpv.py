@@ -6,6 +6,7 @@ import time
 import appdirs
 import confuse
 from configparser import ConfigParser
+from io import StringIO
 from pathlib import Path
 from queue import Queue
 from trakt_scrobbler import logger
@@ -27,7 +28,8 @@ class MPVMon(Monitor):
     name = 'mpv'
     exclude_import = True
     WATCHED_PROPS = frozenset(('pause', 'path', 'working-directory',
-                               'duration', 'time-pos'))
+                               'duration', 'time-pos', 'media-title', 'idle-active'))
+    MEDIA_PROPS = frozenset(('path', 'duration', 'time-pos', 'media-title'))
     CONFIG_TEMPLATE = {
         "ipc_path": confuse.String(default="auto-detect"),
         "poll_interval": confuse.Number(default=10),
@@ -107,6 +109,7 @@ class MPVMon(Monitor):
         self.status = {
             'state': self.vars['state'],
             'filepath': fpath,
+            'title': self.vars['media-title'],
             'position': pos,
             'duration': self.vars['duration'],
             'time': time.time()
@@ -142,7 +145,8 @@ class MPVMon(Monitor):
     def handle_cmd_response(self, resp):
         command = self.sent_commands.pop(resp['request_id'])
         if resp['error'] != 'success':
-            logger.error(f'Error with command {command!s}. Response: {resp!s}')
+            if not self.vars.get('idle-active'):
+                logger.warning(f'Error with command {command}. Response: {resp}')
             return
         elif command[0] != 'get_property':
             return
@@ -170,7 +174,6 @@ class MPVMon(Monitor):
                 partial_line = line
         self.buffer = partial_line
 
-
     def on_line(self, line: bytes):
         try:
             line_str = line.decode(encoding='utf-8', errors='ignore')
@@ -189,7 +192,7 @@ class MPVMon(Monitor):
             command = {'command': elements, 'request_id': self.command_counter}
             self.sent_commands[self.command_counter] = elements
             self.command_counter += 1
-            self.write_queue.put(str.encode(json.dumps(command) + '\n'))
+            self.write_queue.put(str.encode(json.dumps(command)) + b'\n')
 
 
 class MPVPosixMon(MPVMon):
