@@ -12,15 +12,12 @@ def get_autostart_serv_path() -> Path:
     elif platform == "linux":
         return Path(f"~/.config/systemd/user/{APP_NAME}.service").expanduser()
     else:
-        return (
-            Path(os.getenv("APPDATA"))
-            / "Microsoft"
-            / "Windows"
-            / "Start Menu"
-            / "Programs"
-            / "Startup"
-            / (APP_NAME + ".vbs")
-        )
+        from winreg import OpenKey, ConnectRegistry, QueryValueEx, HKEY_CURRENT_USER
+        key = OpenKey(
+            ConnectRegistry(None, HKEY_CURRENT_USER),
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders")
+        path = QueryValueEx(key, "Startup")[0]
+        return Path(path) / (APP_NAME + ".vbs")
 
 
 class AutostartEnableCommand(Command):
