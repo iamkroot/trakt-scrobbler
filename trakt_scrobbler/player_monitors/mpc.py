@@ -43,7 +43,8 @@ class MPCMon(WebInterfaceMon):
 
     def get_vars(self):
         response = self.sess.get(self.URL)
-        matches = self.PATTERN.findall(response.text)
+        text = response.content.decode("utf-8")
+        matches = self.PATTERN.findall(text)
         return dict(matches)
 
     def update_status(self):
