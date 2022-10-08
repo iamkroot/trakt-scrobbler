@@ -1,17 +1,26 @@
 """
-This module contains a parser and applier for metadata remap rules.
+This module contains a parser and applier for mediainfo remap rules.
 
 It should be called at the end of get_media_info.
 """
 
-from enum import Enum
 import re
-from typing import Literal, Optional, Union
-from pydantic import BaseModel, Field, root_validator, validator, Extra
+from copy import deepcopy
+from enum import Enum
+from pathlib import Path
+from typing import List, Optional, Union
+
+import toml
+from pydantic import BaseModel, Extra, Field, root_validator, validator
+from trakt_scrobbler import logger
+from trakt_scrobbler.app_dirs import CFG_DIR
+
+REMAP_FILE_PATH = CFG_DIR / "remap_rules.toml"
 
 
 class NumOrRange:
     """Single number, or a range (inclusive on both ends)"""
+
     __slots__ = ("start", "end")
     RANGE_REGEX = re.compile(r"(?P<start>\d+)(:(?P<end>\d+))?")
 
@@ -63,7 +72,9 @@ class RemapMatch(BaseModel):
 
     @root_validator
     def check_atleast_one(cls, values):
-        assert any(k in values for k in ("path", "title"))
+        assert any(
+            values.get(k) is not None for k in ("path", "title")
+        ), f"Expected either path or title in match. Got {values}"
         return values
 
     @validator('path')
@@ -118,19 +129,24 @@ class Title(BaseModel):
     title: str
 
 
-class MediaId(Union[TraktId, TraktSlug, Title]):
-    def format(self, *args, **kwargs):
-        if isinstance(self, TraktId):
-            return TraktId(trakt_id=self.trakt_id.format(*args, **kwargs))
-        elif isinstance(self, TraktSlug):
-            return TraktSlug(trakt_slug=self.trakt_slug.format(*args, **kwargs))
-        elif isinstance(self, Title):
-            return Title(title=self.title.format(*args, **kwargs))
+MediaId = Union[TraktId, TraktSlug, Title]
+
+
+def format(media_id: MediaId, *args, **kwargs) -> MediaId:
+    if isinstance(media_id, TraktId):
+        return TraktId(trakt_id=media_id.trakt_id.format(*args, **kwargs))
+    elif isinstance(media_id, TraktSlug):
+        return TraktSlug(trakt_slug=media_id.trakt_slug.format(*args, **kwargs))
+    elif isinstance(media_id, Title):
+        return Title(title=media_id.title.format(*args, **kwargs))
 
 
 class MediaType(str, Enum):
     episode = "episode"
     movie = "movie"
+
+    def __str__(self) -> str:
+        return "episode" if self == MediaType.episode else "movie"
 
 
 class RemapRule(BaseModel, extra=Extra.forbid):
@@ -142,7 +158,60 @@ class RemapRule(BaseModel, extra=Extra.forbid):
 
     @root_validator
     def check_no_ep_with_movie(cls, values):
-        if values["media_id"] == MediaId.movie:
-            assert "season" not in values
-            assert "episode_delta" not in values
+        if values["media_type"] == MediaType.movie:
+            assert values.get("season") is None, "Got season in movie rule"
         return values
+
+    def apply(self, path: str, media_info: dict):
+        """If the rule matches, apply it to guess"""
+        orig = deepcopy(media_info)
+        match = self.match.match(path, media_info)
+        if match is None:
+            return False
+
+        media_info.update(match)
+        media_info['type'] = str(self.media_type)
+        if self.media_type == MediaType.episode:
+            media_info['season'] = (
+                self.season if self.season is not None else int(media_info['season'])
+            )
+            media_info['episode'] = int(media_info['episode']) + self.episode_delta
+            if media_info['episode'] < 0:
+                raise ValueError(
+                    f"Negative episode {media_info['episode']}! delta={self.episode_delta}"
+                )
+
+        new_id = format(self.media_id, media_info)
+        if isinstance(new_id, TraktId):
+            media_info['trakt_id'] = new_id.trakt_id
+        elif isinstance(new_id, TraktSlug):
+            media_info['trakt_slug'] = new_id.trakt_slug
+        elif isinstance(new_id, Title):
+            media_info['title'] = new_id.title
+
+        logger.debug(f"Applied remap rule {self} on {orig} to get {media_info}")
+        return True
+
+
+class RemapFile(BaseModel):
+    rules: List[RemapRule]
+
+
+def read_file(file: Path) -> List[RemapRule]:
+    try:
+        data = toml.load(file)
+    except FileNotFoundError:
+        return []
+    except toml.TomlDecodeError:
+        logger.exception("Invalid TOML in remap_rules file. Ignoring.")
+        return []
+    return RemapFile.parse_obj(data).rules
+
+
+rules = read_file(REMAP_FILE_PATH)
+
+
+def apply_remap_rules(path, media_info):
+    for rule in rules:
+        if rule.apply(path, media_info):
+            break

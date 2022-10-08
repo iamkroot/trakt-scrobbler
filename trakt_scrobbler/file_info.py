@@ -5,6 +5,7 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 import confuse
 import guessit
 from trakt_scrobbler import config, logger
+from trakt_scrobbler.mediainfo_remap import apply_remap_rules
 from trakt_scrobbler.utils import RegexPat, cleanup_encoding, is_url
 from urlmatch import BadMatchPattern, urlmatch
 
@@ -126,7 +127,9 @@ def get_media_info(file_path: str):
         return None
     guess = use_regex and custom_regex(file_path) or use_guessit(guessit_path)
     logger.debug(f"Guess: {guess}")
-    return cleanup_guess(guess)
+    guess = cleanup_guess(guess)
+    apply_remap_rules(file_path, guess)
+    return guess
 
 
 def cleanup_guess(guess):
