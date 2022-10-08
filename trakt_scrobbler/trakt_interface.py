@@ -66,25 +66,41 @@ def get_trakt_id(title, item_type, year=None):
     return trakt_id
 
 
-def prepare_scrobble_data(title, type, year=None, *args, **kwargs):
-    trakt_id = get_trakt_id(title, type, year)
-    if trakt_id < 1:
-        logger.warning(f"Invalid trakt id for {title}")
-        return None
-    if type == 'movie':
-        return {'movie': {'ids': {'trakt': trakt_id}}}
-    elif type == 'episode':
+def get_ids(media_info):
+    try:
+        trakt_id = media_info['trakt_id']
+    except KeyError:
+        try:
+            trakt_slug = media_info['trakt_slug']
+        except KeyError:
+            title = media_info["title"]
+            trakt_id = get_trakt_id(title, media_info['type'], media_info.get('year'))
+            if trakt_id < 1:
+                logger.warning(f"Invalid trakt id for {title}")
+                return None
+            return {'trakt': trakt_id}
+        else:
+            return {'slug': trakt_slug}
+    else:
+        return {'trakt': trakt_id}
+
+
+def prepare_scrobble_data(media_info):
+    ids = get_ids(media_info)
+    if media_info['type'] == 'movie':
+        return {'movie': {"ids": ids}}
+    elif media_info['type'] == 'episode':
         return {
-            'show': {'ids': {'trakt': trakt_id}},
+            'show': {"ids": ids},
             'episode': {
-                'season': kwargs['season'],
-                'number': kwargs['episode']
+                'season': media_info['season'],
+                'number': media_info['episode']
             }
         }
 
 
 def scrobble(verb, media_info, progress, *args, **kwargs):
-    scrobble_data = prepare_scrobble_data(**media_info)
+    scrobble_data = prepare_scrobble_data(media_info)
     if not scrobble_data:
         return None
     scrobble_data['progress'] = progress
@@ -107,18 +123,15 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     return scrobble_resp.json() if scrobble_resp else False
 
 
-def prepare_history_data(watched_at, title, type, year=None, *args, **kwargs):
-    trakt_id = get_trakt_id(title, type, year)
-    if trakt_id < 1:
-        return None
+def prepare_history_data(watched_at, media_info):
+    ids = get_ids(media_info)
     if type == 'movie':
-        return {'movies': [{'ids': {'trakt': trakt_id},
-                            'watched_at': watched_at}]}
+        return {'movies': [{'ids': ids, 'watched_at': watched_at}]}
     else:  # TODO: Group data by show instead of sending episode-wise
         return {'shows': [
-            {'ids': {'trakt': trakt_id}, 'seasons': [
-                {'number': kwargs['season'], 'episodes': [
-                    {'number': kwargs['episode'], 'watched_at': watched_at}]
+            {'ids': ids, 'seasons': [
+                {'number': media_info['season'], 'episodes': [
+                    {'number': media_info['episode'], 'watched_at': watched_at}]
                  }]
              }]
         }
@@ -126,7 +139,7 @@ def prepare_history_data(watched_at, title, type, year=None, *args, **kwargs):
 
 def add_to_history(media_info, updated_at, *args, **kwargs):
     watched_at = dt.utcfromtimestamp(updated_at).isoformat() + 'Z'
-    history = prepare_history_data(watched_at=watched_at, **media_info)
+    history = prepare_history_data(watched_at, media_info)
     if not history:
         return
     params = {
