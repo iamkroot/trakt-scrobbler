@@ -103,4 +103,4 @@ class BacklogCommand(Command):
     commands = [BacklogListCommand(), BacklogClearCommand(), BacklogPurgeCommand()]
 
     def handle(self):
-        return self.call("help", self._config.name)
+        return self.call("help", self.name)

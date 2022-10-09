@@ -122,4 +122,4 @@ class AutostartCommand(Command):
     commands = [AutostartEnableCommand(), AutostartDisableCommand()]
 
     def handle(self):
-        return self.call("help", self._config.name)
+        return self.call("help", self.name)

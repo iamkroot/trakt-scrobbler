@@ -185,4 +185,4 @@ class WhitelistCommand(Command):
     ]
 
     def handle(self):
-        return self.call("help", self._config.name)
+        return self.call("help", self.name)

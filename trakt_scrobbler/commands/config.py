@@ -185,4 +185,4 @@ class ConfigCommand(Command):
             f.write(config.dump(full=False))
 
     def handle(self):
-        return self.call("help", self._config.name)
+        return self.call("help", self.name)
