@@ -1,7 +1,7 @@
 import re
 import subprocess as sp
 import sys
-from cleo import Command as BaseCommand
+from trakt_scrobbler._cleo import Command as BaseCommand
 from clikit.args import StringArgs
 from clikit.io import NullIO
 

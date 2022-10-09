@@ -1,5 +1,5 @@
 from trakt_scrobbler import __version__
-from cleo import Application
+from trakt_scrobbler._cleo import Application
 
 from trakt_scrobbler.commands.command import CMD_NAME
 from trakt_scrobbler.commands.autostart import AutostartCommand
