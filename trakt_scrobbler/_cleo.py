@@ -4,7 +4,11 @@ if cleo_version.startswith('1.0.0'):
     from cleo.application import Application
     from cleo.commands.command import Command
     from cleo.io.outputs.output import Verbosity as output
+    from cleo.io.inputs.string_input import StringInput as StringArgs
+    from cleo.io.null_io import NullIO
 else:
+    from clikit.io import NullIO
+    from clikit.args import StringArgs
     from clikit.api.io import output
     from cleo import Application
     from cleo import Command
