@@ -2,7 +2,7 @@ import logging
 import queue
 import time
 
-from clikit.api.io.output import VERBOSE
+from trakt_scrobbler._cleo import output
 
 from .command import Command
 
@@ -95,7 +95,7 @@ class TestCommand(Command):
         mon = self.init_monitor(Mon, dummy_queue)
         self.wait_for_connection(mon)
 
-        self.line("Starting monitor", "info", verbosity=VERBOSE)
+        self.line("Starting monitor", "info", verbosity=output.VERBOSE)
         mon.start()
 
         try:
