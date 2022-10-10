@@ -1,7 +1,9 @@
 from copy import deepcopy as _deepcopy
 from cleo import __version__ as cleo_version
 
-if cleo_version.startswith('1.0.0'):
+use_v1_unstable = cleo_version.startswith("1.0.0")
+
+if use_v1_unstable:
     from cleo.application import Application
     from cleo.commands.command import Command
     from cleo.io.outputs.output import Verbosity as output
@@ -27,9 +29,8 @@ else:
 
 class Table(_Table):
     def __init__(self, io):
-        if cleo_version.startswith('1.0.0'):
+        if use_v1_unstable:
             super().__init__(io, "compact")
-
             style = _deepcopy(self.column_style(0))
             style.set_pad_type("left")
             self.set_column_style(0, style)
@@ -40,11 +41,11 @@ class Table(_Table):
             super().__init__(style)
 
     def render(self):
-        if cleo_version.startswith('1.0.0'):
+        if use_v1_unstable:
             return super().render()
         return super().render(self._io)
 
-if cleo_version.startswith('1.0.0'):
+if use_v1_unstable:
     def _line_cleanup(line: str):
         return '\n'.join([
             n.strip() for n in line.splitlines() if n.strip()
@@ -65,7 +66,7 @@ if cleo_version.startswith('1.0.0'):
         return _line_cleanup(' '.join(words))
 
 def Row(name: str, data: str):
-    if cleo_version.startswith('1.0.0'):
+    if use_v1_unstable:
         width = _Terminal().width - _line_length(name) - 4
         if width < _line_length(data):
             data = _wrap_lines(data, width)
