@@ -1,8 +1,5 @@
-from copy import deepcopy
 from trakt_scrobbler.utils import pluralize
-from clikit.ui.style.table_style import TableStyle
-from clikit.ui.components.table import Table
-from clikit.ui.style.alignment import Alignment
+from trakt_scrobbler._cleo import Table, Row
 from .command import Command
 
 
@@ -75,12 +72,10 @@ class LookupCommand(Command):
             if not v:
                 style = "error"
                 v = "Not available"
-            rows.append((f"<info>{k}</>",f"<{style}>{v}</>"))
-        table_style = deepcopy(TableStyle.borderless())
-        table_style.set_column_alignment(0, Alignment.RIGHT)
-        table = Table(table_style)
+            rows.append(Row(f"<info>{k}</>",f"<{style}>{v}</>"))
+        table = Table(self.io)
         table.set_rows(rows)
-        table.render(self._io)
+        table.render()
 
     def handle(self):
         from trakt_scrobbler.trakt_interface import search
