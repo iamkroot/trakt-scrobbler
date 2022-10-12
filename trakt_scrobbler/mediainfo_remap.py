@@ -228,7 +228,9 @@ class RemapRule(BaseModel, extra=Extra.forbid):
                 # single episode, directly apply delta
                 ep = int(media_info['episode']) + self.episode_delta
 
-            if (isinstance(ep, int) and ep < 0) or any(epnum < 0 for epnum in ep):
+            if (isinstance(ep, int) and ep < 0) or (
+                isinstance(ep, list) and any(epnum < 0 for epnum in ep)
+            ):
                 logger.error(f"Negative episode {ep} in {media_info}! rule={self}")
                 return None
             media_info['episode'] = ep
