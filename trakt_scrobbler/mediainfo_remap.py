@@ -62,6 +62,12 @@ class NumOrRange:
         else:
             raise TypeError("Expected int or string range")
 
+    def __str__(self) -> str:
+        if self.start == self.end:
+            return str(self.start)
+        else:
+            return f"{self.start}:{self.end}"
+
 
 class RemapMatch(BaseModel):
     path: Optional[re.Pattern]
@@ -116,17 +122,40 @@ class RemapMatch(BaseModel):
 
         return path_match.groupdict() if path_match is not None else {}
 
+    def __str__(self):
+        s = []
+        if self.path is not None:
+            s.append(f"path={self.path.pattern!r}")
+        if self.title is not None:
+            s.append(f"title={self.title}")
+        if self.episode is not None:
+            s.append(f"episode={self.episode}")
+        if self.season is not None:
+            s.append(f"season={self.season}")
+        if self.year is not None:
+            s.append(f"year={self.year}")
+        return f"RemapMatch({' && '.join(s)})"
+
 
 class TraktId(BaseModel):
     trakt_id: str
+
+    def __str__(self):
+        return f"trakt_id={self.trakt_id}"
 
 
 class TraktSlug(BaseModel):
     trakt_slug: str
 
+    def __str__(self):
+        return f"trakt_slug={self.trakt_slug}"
+
 
 class Title(BaseModel):
     title: str
+
+    def __str__(self):
+        return f"title={self.title}"
 
 
 MediaId = Union[TraktId, TraktSlug, Title]
@@ -191,6 +220,15 @@ class RemapRule(BaseModel, extra=Extra.forbid):
 
         logger.debug(f"Applied remap rule {self} on {orig} to get {media_info}")
         return True
+
+    def __str__(self):
+        s = [f"type={self.media_type}", f"id.{self.media_id}"]
+        if self.season is not None:
+            s.append(f"season={self.season}")
+        if self.episode_delta:
+            s.append(f"episode_delta={self.episode_delta}")
+
+        return f"RemapRule({self.match} -> {{{', '.join(s)}}})"
 
 
 class RemapFile(BaseModel):
