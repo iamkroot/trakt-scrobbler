@@ -34,6 +34,16 @@ class NumOrRange:
     def match(self, val: int) -> bool:
         return self.start <= val and val <= self.end
 
+    def to_val(self) -> Union[int, List[int]]:
+        """Convert to either a bare int, or a list of ints"""
+        if self.end != self.start:
+            return list(range(self.start, self.end + 1))
+        else:
+            return self.start
+
+    def apply_delta(self, delta: int) -> "NumOrRange":
+        return NumOrRange(self.start + delta, self.end + delta)
+
     @classmethod
     def __get_validators__(cls):
         yield cls.validate
@@ -184,6 +194,7 @@ class RemapRule(BaseModel, extra=Extra.forbid):
     media_type: MediaType = Field(alias="type")
     media_id: MediaId = Field(alias="id")
     season: Optional[int]
+    episode: Optional[NumOrRange]
     episode_delta: int = 0
 
     @root_validator
@@ -192,12 +203,12 @@ class RemapRule(BaseModel, extra=Extra.forbid):
             assert values.get("season") is None, "Got season in movie rule"
         return values
 
-    def apply(self, path: str, media_info: dict):
-        """If the rule matches, apply it to guess"""
-        orig = deepcopy(media_info)
+    def apply(self, path: str, orig_info: dict):
+        """If the rule matches, apply it to orig_info and return modified media_info"""
+        media_info = deepcopy(orig_info)
         match = self.match.match(path, media_info)
         if match is None:
-            return False
+            return None
 
         media_info.update(match)
         media_info['type'] = str(self.media_type)
@@ -205,11 +216,22 @@ class RemapRule(BaseModel, extra=Extra.forbid):
             media_info['season'] = (
                 self.season if self.season is not None else int(media_info['season'])
             )
-            media_info['episode'] = int(media_info['episode']) + self.episode_delta
-            if media_info['episode'] < 0:
-                raise ValueError(
-                    f"Negative episode {media_info['episode']}! delta={self.episode_delta}"
-                )
+            if self.episode is not None:
+                # completely override the episode
+                ep = self.episode.apply_delta(self.episode_delta).to_val()
+            elif isinstance(media_info['episode'], list):
+                # got multi-episode file, apply delta to each one
+                ep = [
+                    int(epnum) + self.episode_delta for epnum in media_info['episode']
+                ]
+            else:
+                # single episode, directly apply delta
+                ep = int(media_info['episode']) + self.episode_delta
+
+            if (isinstance(ep, int) and ep < 0) or any(epnum < 0 for epnum in ep):
+                logger.error(f"Negative episode {ep} in {media_info}! rule={self}")
+                return None
+            media_info['episode'] = ep
 
         new_id = format(self.media_id, media_info)
         if isinstance(new_id, TraktId):
@@ -219,8 +241,8 @@ class RemapRule(BaseModel, extra=Extra.forbid):
         elif isinstance(new_id, Title):
             media_info['title'] = new_id.title
 
-        logger.debug(f"Applied remap rule {self} on {orig} to get {media_info}")
-        return True
+        logger.debug(f"Applied remap rule {self} on {orig_info} to get {media_info}")
+        return media_info
 
     def __str__(self):
         s = [f"type={self.media_type}", f"id.{self.media_id}"]
@@ -250,7 +272,9 @@ def read_file(file: Path) -> List[RemapRule]:
 rules = read_file(REMAP_FILE_PATH)
 
 
-def apply_remap_rules(path, media_info):
+def apply_remap_rules(path: str, media_info: dict):
     for rule in rules:
-        if rule.apply(path, media_info):
-            break
+        upd = rule.apply(path, media_info)
+        if upd is not None:
+            return upd
+    return media_info  # unchanged

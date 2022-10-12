@@ -128,7 +128,7 @@ def get_media_info(file_path: str):
     guess = use_regex and custom_regex(file_path) or use_guessit(guessit_path)
     logger.debug(f"Guess: {guess}")
     guess = cleanup_guess(guess)
-    apply_remap_rules(file_path, guess)
+    guess = apply_remap_rules(file_path, guess)
     return guess
 
 
