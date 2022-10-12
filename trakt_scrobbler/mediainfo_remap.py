@@ -40,10 +40,11 @@ class NumOrRange:
 
     @classmethod
     def __modify_schema__(cls, field_schema):
-        # field_schema.update(pattern=)
-        # TODO: Update schema
         # this class is a union of int and string "(\d+(:\d+)?)"
-        pass
+        field_schema['type'] = {
+            "anyOf": [{"pattern": "^[0-9]+(:[0-9]+)?$"}, {"type": "integer"}]
+        }
+        field_schema['examples'] = ["1", "2:4"]
 
     @classmethod
     def validate(cls, v):
