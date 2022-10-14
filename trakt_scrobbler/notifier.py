@@ -1,6 +1,8 @@
 import asyncio
 import threading
 from copy import deepcopy
+from dataclasses import dataclass
+from typing import Any, Callable, Optional, Sequence
 
 from desktop_notifier.main import DesktopNotifier
 from trakt_scrobbler import config, logger
@@ -85,10 +87,37 @@ notif_thread = threading.Thread(target=notify_loop, name="notify_loop", daemon=T
 notif_thread.start()
 
 
-def notify(body, title=APP_NAME, timeout=5, stdout=False, category="misc"):
+NotifActionCallback = Optional[Callable[[], Any]]
+
+
+@dataclass
+class Button:
+    """
+    A button for interactive notifications
+    """
+
+    title: str
+    """The button title."""
+
+    on_pressed: NotifActionCallback = None
+    """Callback to invoke when the button is pressed. This is called
+        without any arguments."""
+
+
+def notify(
+    body,
+    title=APP_NAME,
+    timeout=5,
+    stdout=False,
+    category="misc",
+    onclick: NotifActionCallback = None,
+    actions: Sequence[Button] = (),
+):
     if stdout:
         print("ASDF", body)
     if category not in enabled_categories:
         return
-    notif_task = notifier.send(title, body, icon="")
+    notif_task = notifier.send(
+        title, body, icon="", on_clicked=onclick, buttons=actions
+    )
     asyncio.run_coroutine_threadsafe(notif_task, notif_loop)
