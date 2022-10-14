@@ -1,11 +1,10 @@
+import webbrowser
 from threading import Thread
 
 import confuse
-from trakt_scrobbler import logger
+from trakt_scrobbler import config, logger
 from trakt_scrobbler import trakt_interface as trakt
-from trakt_scrobbler.notifier import notify
-from trakt_scrobbler import config
-
+from trakt_scrobbler.notifier import Button, notify
 
 _inner_templ = confuse.Choice({
     'all': ("start", "pause", "stop"),
@@ -55,13 +54,18 @@ class Scrobbler(Thread):
     def handle_successful_scrobble(self, verb, data, resp):
         if 'movie' in resp:
             name = resp['movie']['title']
+            url = f"https://trakt.tv/movies/{resp['movie']['ids']['slug']}"
         else:
             name = (resp['show']['title'] +
                     " S{season:02}E{number:02}".format(**resp['episode']))
+            url = f"https://trakt.tv/episodes/{resp['episode']['ids']['trakt']}"
+
         category = self._determine_category(verb, data['media_info'], resp['action'])
         msg = f"Scrobble {category} successful for {name} at {resp['progress']:.2f}%"
+
+        action = Button("Open in Browser", lambda: webbrowser.open(url))
         logger.info(msg)
-        notify(msg, category=f"scrobble.{category}")
+        notify(msg, category=f"scrobble.{category}", onclick=action.on_pressed)
         self.backlog_cleaner.clear()
 
     def scrobble(self, verb, data):
