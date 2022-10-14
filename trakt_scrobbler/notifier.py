@@ -1,19 +1,16 @@
-import sys
+import asyncio
+import threading
 from copy import deepcopy
 
+from desktop_notifier.main import DesktopNotifier
 from trakt_scrobbler import config, logger
 
 APP_NAME = 'Trakt Scrobbler'
 CATEGORIES = {
     "exception": {},
     "misc": {},
-    "scrobble": {
-        "start": {},
-        "pause": {},
-        "resume": {},
-        "stop": {}
-    },
-    "trakt": {}
+    "scrobble": {"start": {}, "pause": {}, "resume": {}, "stop": {}},
+    "trakt": {},
 }
 
 
@@ -67,71 +64,31 @@ merge_categories(categories, user_notif_categories)
 enabled_categories = set(flatten_categories(categories))
 
 if enabled_categories:
-    logger.debug("Notifications enabled for categories: "
-                 f"{', '.join(sorted(enabled_categories))}")
-    if sys.platform == 'win32':
-        from win10toast import ToastNotifier
-        toaster = ToastNotifier()
-    elif sys.platform == 'darwin':
-        import subprocess as sp
-    else:
-        try:
-            from jeepney import DBusAddress, new_method_call
-            from jeepney.io.blocking import open_dbus_connection
-        except (ImportError, ModuleNotFoundError):
-            import subprocess as sp
-            notifier = None
-        else:
-            try:
-                dbus_connection = open_dbus_connection(bus='SESSION')
-            except Exception as e:
-                logger.warning(f"Could not connect to DBUS: {e}")
-                logger.warning("Disabling notifications")
-                enabled_categories.clear()
-                notifier = None
-            else:
-                notifier = DBusAddress('/org/freedesktop/Notifications',
-                                       bus_name='org.freedesktop.Notifications',
-                                       interface='org.freedesktop.Notifications')
+    logger.debug(
+        "Notifications enabled for categories: "
+        f"{', '.join(sorted(enabled_categories))}"
+    )
 
 
-def dbus_notify(title, body, timeout):
-    msg = new_method_call(notifier, 'Notify', 'susssasa{sv}i',
-                          (
-                              APP_NAME,
-                              0,  # do not replace notif
-                              'dialog-information',
-                              title,
-                              body,
-                              [], {},  # actions, hints
-                              timeout,
-                          ))
-    dbus_connection.send(msg)
+notifier = DesktopNotifier(APP_NAME)
+notif_loop = asyncio.new_event_loop()
+
+
+def notify_loop():
+    logger.info("Starting notif loop")
+    asyncio.set_event_loop(notif_loop)
+    notif_loop.run_forever()
+    logger.info("Ending notif loop")
+
+
+notif_thread = threading.Thread(target=notify_loop, name="notify_loop", daemon=True)
+notif_thread.start()
 
 
 def notify(body, title=APP_NAME, timeout=5, stdout=False, category="misc"):
     if stdout:
-        print(body)
+        print("ASDF", body)
     if category not in enabled_categories:
         return
-    if sys.platform == 'win32':
-        toaster.show_toast(title, body, duration=timeout, threaded=True)
-    elif sys.platform == 'darwin':
-        osa_cmd = f'display notification "{body}" with title "{title}"'
-        sp.run(["osascript", "-e", osa_cmd], check=False)
-    elif notifier is not None:
-        dbus_notify(title, body, timeout * 1000)
-    else:
-        try:
-            sp.run([
-                "notify-send",
-                "-a", title,
-                "-i", 'dialog-information',
-                "-t", str(timeout * 1000),
-                title,
-                body
-            ], check=False)
-        except FileNotFoundError:
-            logger.exception("Unable to send notification")
-            # disable all future notifications until app restart
-            enabled_categories.clear()
+    notif_task = notifier.send(title, body, icon="")
+    asyncio.run_coroutine_threadsafe(notif_task, notif_loop)

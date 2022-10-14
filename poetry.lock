@@ -77,6 +77,33 @@ optional = false
 python-versions = ">=3.6,<4.0"
 
 [[package]]
+name = "dbus-next"
+version = "0.2.3"
+description = "A zero-dependency DBus library for Python with asyncio support"
+category = "main"
+optional = false
+python-versions = ">=3.6.0"
+
+[[package]]
+name = "desktop-notifier"
+version = "3.4.1"
+description = "Python library for cross-platform desktop notifications"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+dbus-next = {version = "*", markers = "sys_platform == \"linux\""}
+importlib-resources = {version = "*", markers = "python_version < \"3.9\""}
+packaging = "*"
+rubicon-objc = {version = "*", markers = "sys_platform == \"darwin\""}
+winsdk = {version = "*", markers = "sys_platform == \"win32\""}
+
+[package.extras]
+dev = ["black", "bump2version", "flake8", "mypy", "pre-commit", "pytest", "pytest-cov"]
+docs = ["m2r2", "sphinx", "sphinx-autoapi", "sphinx-rtd-theme"]
+
+[[package]]
 name = "guessit"
 version = "3.4.3"
 description = "GuessIt - a library for guessing information from video filenames."
@@ -130,6 +157,17 @@ test = ["async-timeout", "pytest", "pytest-asyncio (>=0.17)", "pytest-trio", "te
 trio = ["async_generator", "trio"]
 
 [[package]]
+name = "packaging"
+version = "21.3"
+description = "Core utilities for Python packages"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
+
+[[package]]
 name = "pastel"
 version = "0.2.1"
 description = "Bring colors to your terminal."
@@ -159,6 +197,17 @@ description = "A pure Python Levenshtein implementation that's not freaking GPL'
 category = "main"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "pyparsing"
+version = "3.0.9"
+description = "pyparsing module - Classes and methods to define and execute parsing grammars"
+category = "main"
+optional = false
+python-versions = ">=3.6.8"
+
+[package.extras]
+diagrams = ["jinja2", "railroad-diagrams"]
 
 [[package]]
 name = "pypiwin32"
@@ -238,6 +287,14 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "rubicon-objc"
+version = "0.4.2"
+description = "A bridge between an Objective C runtime environment and Python."
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
 name = "setuptools"
 version = "65.4.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -308,6 +365,14 @@ pypiwin32 = "*"
 setuptools = "*"
 
 [[package]]
+name = "winsdk"
+version = "1.0.0b7"
+description = "Python bindings for the Windows SDK"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "zipp"
 version = "3.8.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
@@ -325,7 +390,7 @@ socks = ["pysocks"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "22cbe29c5b507fe39bc43110d64eec6e2f83c1e5a8a49f8b23f7c6adcedae719"
+content-hash = "384233e90f509acf0418e1def01b619e501208a27dd7a2b1b522ae9dcc0403a9"
 
 [metadata.files]
 appdirs = [
@@ -360,6 +425,14 @@ crashtest = [
     {file = "crashtest-0.3.1-py3-none-any.whl", hash = "sha256:300f4b0825f57688b47b6d70c6a31de33512eb2fa1ac614f780939aa0cf91680"},
     {file = "crashtest-0.3.1.tar.gz", hash = "sha256:42ca7b6ce88b6c7433e2ce47ea884e91ec93104a4b754998be498a8e6c3d37dd"},
 ]
+dbus-next = [
+    {file = "dbus_next-0.2.3-py3-none-any.whl", hash = "sha256:58948f9aff9db08316734c0be2a120f6dc502124d9642f55e90ac82ffb16a18b"},
+    {file = "dbus_next-0.2.3.tar.gz", hash = "sha256:f4eae26909332ada528c0a3549dda8d4f088f9b365153952a408e28023a626a5"},
+]
+desktop-notifier = [
+    {file = "desktop-notifier-3.4.1.tar.gz", hash = "sha256:5a88515c4c1d9d958e9534a324ec46943d2ee4e404f48749406c22d478f811f3"},
+    {file = "desktop_notifier-3.4.1-py3-none-any.whl", hash = "sha256:c8306823ef1ebe06d272ca87999cc4df18594214d541f79b59463735be447bb7"},
+]
 guessit = [
     {file = "guessit-3.4.3-py3-none-any.whl", hash = "sha256:f7f790c9e55a7bcc8ff887d3146e089c65a23eff72edfb6684ac5fedb47488a5"},
     {file = "guessit-3.4.3.tar.gz", hash = "sha256:731e96e6a1f3b065d05accc8c19f35d4485d880b77ab8dc4b262cc353df294f7"},
@@ -375,6 +448,10 @@ importlib-resources = [
 jeepney = [
     {file = "jeepney-0.8.0-py3-none-any.whl", hash = "sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755"},
     {file = "jeepney-0.8.0.tar.gz", hash = "sha256:5efe48d255973902f6badc3ce55e2aa6c5c3b3bc642059ef3a91247bcfcc5806"},
+]
+packaging = [
+    {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
+    {file = "packaging-21.3.tar.gz", hash = "sha256:dd47c42927d89ab911e606518907cc2d3a1f38bbd026385970643f9c5b8ecfeb"},
 ]
 pastel = [
     {file = "pastel-0.2.1-py2.py3-none-any.whl", hash = "sha256:4349225fcdf6c2bb34d483e523475de5bb04a5c10ef711263452cb37d7dd4364"},
@@ -421,6 +498,10 @@ pydantic = [
 pylev = [
     {file = "pylev-1.4.0-py2.py3-none-any.whl", hash = "sha256:7b2e2aa7b00e05bb3f7650eb506fc89f474f70493271a35c242d9a92188ad3dd"},
     {file = "pylev-1.4.0.tar.gz", hash = "sha256:9e77e941042ad3a4cc305dcdf2b2dec1aec2fbe3dd9015d2698ad02b173006d1"},
+]
+pyparsing = [
+    {file = "pyparsing-3.0.9-py3-none-any.whl", hash = "sha256:5026bae9a10eeaefb61dab2f09052b9f4307d44aee4eda64b309723d8d206bbc"},
+    {file = "pyparsing-3.0.9.tar.gz", hash = "sha256:2b020ecf7d21b687f219b71ecad3631f644a47f01403fa1d1036b0c6416d70fb"},
 ]
 pypiwin32 = [
     {file = "pypiwin32-223-py3-none-any.whl", hash = "sha256:67adf399debc1d5d14dffc1ab5acacb800da569754fafdc576b2a039485aa775"},
@@ -501,6 +582,10 @@ requests = [
     {file = "requests-2.28.1-py3-none-any.whl", hash = "sha256:8fefa2a1a1365bf5520aac41836fbee479da67864514bdb821f31ce07ce65349"},
     {file = "requests-2.28.1.tar.gz", hash = "sha256:7c5599b102feddaa661c826c56ab4fee28bfd17f5abca1ebbe3e7f19d7c97983"},
 ]
+rubicon-objc = [
+    {file = "rubicon-objc-0.4.2.tar.gz", hash = "sha256:6fbc8e12bd66c84427cfb95634c4bd10ade356ae2b2ae0d2b51dcbf5810d2602"},
+    {file = "rubicon_objc-0.4.2-py3-none-any.whl", hash = "sha256:c8780b9d6c3c906642080a9f8b710f5823a498c17e9bbea7f70781ea6ede7962"},
+]
 setuptools = [
     {file = "setuptools-65.4.1-py3-none-any.whl", hash = "sha256:1b6bdc6161661409c5f21508763dc63ab20a9ac2f8ba20029aaaa7fdb9118012"},
     {file = "setuptools-65.4.1.tar.gz", hash = "sha256:3050e338e5871e70c72983072fe34f6032ae1cdeeeb67338199c2f74e083a80e"},
@@ -526,6 +611,19 @@ urlmatch = [
 ]
 win10toast = [
     {file = "win10toast-0.9-py2.py3-none-any.whl", hash = "sha256:44e5afa1001de88a0ee533872231521fa67c7d144f39974089af242d9c4620a4"},
+]
+winsdk = [
+    {file = "winsdk-1.0.0b7-cp310-cp310-win32.whl", hash = "sha256:b90367c2fda2f649cf2fa16dd49511d7c74db11fc0abac4a46e773d97fb340e2"},
+    {file = "winsdk-1.0.0b7-cp310-cp310-win_amd64.whl", hash = "sha256:ccff00afe526a77f88b7f32e3a3924f3b7c83f2ea168665af449d2c0acfb4e4f"},
+    {file = "winsdk-1.0.0b7-cp311-cp311-win32.whl", hash = "sha256:e059d13117e6c57e95c6e0b3a6b67b432769b5301b89676a20d76452afdd213b"},
+    {file = "winsdk-1.0.0b7-cp311-cp311-win_amd64.whl", hash = "sha256:a653eca5a0e83f8e35f2d706a67160705ba7ac3200d29684e0821a61b00ab66c"},
+    {file = "winsdk-1.0.0b7-cp37-cp37m-win32.whl", hash = "sha256:141f40a6a7819df0fe9511b7d31bebc7119cb4c643ee695e7069cea198868efc"},
+    {file = "winsdk-1.0.0b7-cp37-cp37m-win_amd64.whl", hash = "sha256:d2b389c3252774e5cef432e0236e7880fff1bff1a237724f9ed1ae0fc2635352"},
+    {file = "winsdk-1.0.0b7-cp38-cp38-win32.whl", hash = "sha256:955421aace349ef26cfc8dccbfaa716917a0f3c5043aaef3b1534ad7efd86bf6"},
+    {file = "winsdk-1.0.0b7-cp38-cp38-win_amd64.whl", hash = "sha256:873ef6fd47f78830ccbe4fc47482056b881c6ae05eaca5ba5ddabef6fe32582e"},
+    {file = "winsdk-1.0.0b7-cp39-cp39-win32.whl", hash = "sha256:0e3a07cbd1d63f046e11e87144a5d7fc592a0baf7518ed90c40d29efe1dd4708"},
+    {file = "winsdk-1.0.0b7-cp39-cp39-win_amd64.whl", hash = "sha256:a49606148b3ecac1860e7fc17d31d7149925c0387c41e85be1c655572a3b24f6"},
+    {file = "winsdk-1.0.0b7.tar.gz", hash = "sha256:51875edb889a94dbe24357277f56270eae0e3a1436acf5e596d36c95aef09977"},
 ]
 zipp = [
     {file = "zipp-3.8.1-py3-none-any.whl", hash = "sha256:47c40d7fe183a6f21403a199b3e4192cca5774656965b0a4988ad2f8feb5f009"},

@@ -33,6 +33,7 @@ jeepney = {version = "^0.8", platform = "linux"}
 urlmatch = "^1.0.1"
 pydantic = "^1.10.2"
 toml = "^0.10.2"
+desktop-notifier = "^3.4.1"
 
 [tool.poetry.dev-dependencies]
 
