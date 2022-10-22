@@ -10,6 +10,8 @@ general:
       resume: yes
       stop: yes
     trakt: yes
+  notif_actions: # yes, no or object
+    scrobble: # stop-only: yes/no, action_position: "mouseclick/button"
   proxies: {}
   allowed_scrobbles:
     episode: all  # all, stop-only, none
