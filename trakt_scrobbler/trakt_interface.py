@@ -82,11 +82,15 @@ def get_ids(media_info):
         else:
             return {'slug': trakt_slug}
     else:
-        return {'trakt': trakt_id}
+        if trakt_id < 1:
+            logger.warning(f"Invalid trakt id for {media_info}")    
+        return None
 
 
 def prepare_scrobble_data(media_info):
     ids = get_ids(media_info)
+    if ids is None:
+        return
     if media_info['type'] == 'movie':
         return {'movie': {"ids": ids}}
     elif media_info['type'] == 'episode':
@@ -125,6 +129,8 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
 
 def prepare_history_data(watched_at, media_info):
     ids = get_ids(media_info)
+    if ids is None:
+        return
     if type == 'movie':
         return {'movies': [{'ids': ids, 'watched_at': watched_at}]}
     else:  # TODO: Group data by show instead of sending episode-wise
