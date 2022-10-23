@@ -46,7 +46,7 @@ jobs:
     - name: Setup Python 3
       uses: actions/setup-python@v4
       with:
-         python-version: ${{ matrix.python-version }}
+         python-version: '3.x'
          cache: 'poetry'
 
     - name: Build
@@ -73,7 +73,7 @@ jobs:
     - name: Setup Python 3
       uses: actions/setup-python@v4
       with:
-         python-version: ${{ matrix.python-version }}
+         python-version: '3.x'
          cache: 'poetry'
 
     - uses: actions/download-artifact@v2
@@ -88,6 +88,8 @@ jobs:
         owner: iamkroot
         ignorePreReleases: true
         commitMode: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Release(github)
       if: ${{ ! env.ACT }}
