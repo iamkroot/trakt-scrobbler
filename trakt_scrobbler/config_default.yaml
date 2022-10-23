@@ -1,7 +1,7 @@
 version: '1.0'
 
 general:
-  enable_notifs:
+  enable_notifs:  # yes, no, or object
     exception: yes
     misc: yes
     scrobble:
@@ -10,8 +10,14 @@ general:
       resume: yes
       stop: yes
     trakt: yes
-  notif_actions: # yes, no or object
-    scrobble: # stop-only: yes/no, action_position: "mouseclick/button"
+  notif_actions:
+    enabled: no  # yes, no, or object similar to enable_notifs
+    # how to interact with the first (most prominent) action
+    # * button => Show a button in the notification popup. Supported everywhere but looks ugly.
+    # * click => Entire notification is clickable, will hide the button.
+    #            Only on supported environments; user should manually verify that it works.
+    # if there are multiple actions they will still show up as buttons
+    primary_interface: button
   proxies: {}
   allowed_scrobbles:
     episode: all  # all, stop-only, none
