@@ -199,7 +199,7 @@ class RemapRule(BaseModel, extra=Extra.forbid):
 
     @root_validator
     def check_no_ep_with_movie(cls, values):
-        if values["media_type"] == MediaType.movie:
+        if values.get("media_type") == MediaType.movie:
             assert values.get("season") is None, "Got season in movie rule"
         return values
 
