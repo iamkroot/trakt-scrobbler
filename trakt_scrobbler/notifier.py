@@ -120,4 +120,14 @@ def notify(
     notif_task = notifier.send(
         title, body, icon="", on_clicked=onclick, buttons=actions
     )
-    asyncio.run_coroutine_threadsafe(notif_task, notif_loop)
+    fut = asyncio.run_coroutine_threadsafe(notif_task, notif_loop)
+    try:
+        # wait for the notification to be _sent_
+        # this timeout is _not_ the same as the duration for which notif is shown
+        fut.result(timeout=1.0)
+    except TimeoutError:
+        logger.warning("Timed out trying to send notification")
+    except asyncio.CancelledError:
+        logger.warning("Notification future cancelled")
+    except Exception as e:
+        logger.error(f"Error when sending notification {e}")
