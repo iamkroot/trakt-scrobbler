@@ -106,14 +106,13 @@ def get_media_info(file_path: str):
     logger.debug(f"Raw filepath {file_path!r}")
     file_path = cleanup_encoding(file_path)
     parsed = urlsplit(file_path)
-    file_is_url = False
+    file_is_url = is_url(parsed)
     guessit_path = file_path
-    if is_url(parsed):
-        file_is_url = True
-        # remove the query and fragment from the url, keeping only important parts
-        scheme, netloc, path, _, _ = parsed
+    if file_is_url:
+        # remove the fragment from the url, keeping only important parts
+        scheme, netloc, path, query, _ = parsed
         path = unquote(path)  # quoting should only be applied to the path
-        file_path = urlunsplit((scheme, netloc, path, "", ""))
+        file_path = urlunsplit((scheme, netloc, path, query, ""))
         logger.debug(f"Converted to url {file_path!r}")
         # only use the actual path for guessit, skipping other parts
         guessit_path = path
