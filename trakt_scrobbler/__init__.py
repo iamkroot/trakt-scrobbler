@@ -23,30 +23,34 @@ def register_exception_handler():
         except Exception:
             logger.exception("Exception while notifying user.")
 
+    def thread_excepthook(args: threading.ExceptHookArgs):
+        if args.exc_type == SystemExit:
+            # ignore SystemExit
+            return
+        error_logger(*args)
+
     sys.excepthook = error_logger
 
-    # from http://stackoverflow.com/a/31622038
-    """
-    Workaround for `sys.excepthook` thread bug from:
-    http://bugs.python.org/issue1230540
-    """
+    if sys.version_info >= (3, 8):
+        threading.excepthook = thread_excepthook
+    else:
+        # monkey-patch the excepthook mechanism into Thread class
+        # from http://stackoverflow.com/a/31622038
+        init_original = threading.Thread.__init__
 
-    init_original = threading.Thread.__init__
+        def init(self, *args, **kwargs):
+            init_original(self, *args, **kwargs)
+            run_original = self.run
 
-    def init(self, *args, **kwargs):
-        init_original(self, *args, **kwargs)
-        run_original = self.run
+            def run_with_except_hook(*args2, **kwargs2):
+                try:
+                    run_original(*args2, **kwargs2)
+                except Exception:
+                    thread_excepthook((*sys.exc_info(), self))
 
-        def run_with_except_hook(*args2, **kwargs2):
-            try:
-                run_original(*args2, **kwargs2)
-            except Exception:
-                sys.excepthook(*sys.exc_info())
-                return
+            self.run = run_with_except_hook
 
-        self.run = run_with_except_hook
-
-    threading.Thread.__init__ = init
+        threading.Thread.__init__ = init
 
 
 register_exception_handler()
