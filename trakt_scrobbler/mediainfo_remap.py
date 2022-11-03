@@ -172,13 +172,13 @@ class Title(BaseModel):
 MediaId = Union[TraktId, TraktSlug, Title]
 
 
-def format(media_id: MediaId, *args, **kwargs) -> MediaId:
+def format(media_id: MediaId, mediainfo) -> MediaId:
     if isinstance(media_id, TraktId):
-        return TraktId(trakt_id=media_id.trakt_id.format(*args, **kwargs))
+        return TraktId(trakt_id=media_id.trakt_id.format(**mediainfo))
     elif isinstance(media_id, TraktSlug):
-        return TraktSlug(trakt_slug=media_id.trakt_slug.format(*args, **kwargs))
+        return TraktSlug(trakt_slug=media_id.trakt_slug.format(**mediainfo))
     elif isinstance(media_id, Title):
-        return Title(title=media_id.title.format(*args, **kwargs))
+        return Title(title=media_id.title.format(**mediainfo))
 
 
 class MediaType(str, Enum):
