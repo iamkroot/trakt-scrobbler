@@ -11,7 +11,7 @@ general:
       stop: yes
     trakt: yes
   notif_actions:
-    enabled: no  # yes, no, or object similar to enable_notifs
+    enabled: yes  # yes, no, or object similar to enable_notifs
     # how to interact with the first (most prominent) action
     # * button => Show a button in the notification popup. Supported everywhere but looks ugly.
     # * click => Entire notification is clickable, will hide the button.

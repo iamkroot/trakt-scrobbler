@@ -63,9 +63,13 @@ class Scrobbler(Thread):
         category = self._determine_category(verb, data['media_info'], resp['action'])
         msg = f"Scrobble {category} successful for {name} at {resp['progress']:.2f}%"
 
-        action = Button("Open in Browser", lambda: logger.info(f"clicked {url} {webbrowser.open(url)}"))
         logger.info(msg)
-        notify(msg, category=f"scrobble.{category}", onclick=action.on_pressed)
+        action = Button(
+            "Open on trakt.tv",
+            lambda: not webbrowser.open(url)
+            and logger.warning("Failed to open browser"),
+        )
+        notify(msg, category=f"scrobble.{category}", actions=(action,))
         self.backlog_cleaner.clear()
 
     def scrobble(self, verb, data):

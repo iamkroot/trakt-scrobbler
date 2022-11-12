@@ -1,10 +1,10 @@
 import asyncio
 import threading
 from copy import deepcopy
-from dataclasses import dataclass
 from typing import Any, Callable, Optional, Sequence
 
-from desktop_notifier.main import DesktopNotifier
+import confuse
+from desktop_notifier.main import Button, DesktopNotifier
 from trakt_scrobbler import config, logger
 
 APP_NAME = 'Trakt Scrobbler'
@@ -86,22 +86,14 @@ def notify_loop():
 notif_thread = threading.Thread(target=notify_loop, name="notify_loop", daemon=True)
 notif_thread.start()
 
+notif_action_categories = config['general']['notif_actions']['enabled'].get()
+categories = deepcopy(CATEGORIES)
+merge_categories(categories, notif_action_categories)
+enabled_notif_action_categories = set(flatten_categories(categories))
 
-NotifActionCallback = Optional[Callable[[], Any]]
-
-
-@dataclass
-class Button:
-    """
-    A button for interactive notifications
-    """
-
-    title: str
-    """The button title."""
-
-    on_pressed: NotifActionCallback = None
-    """Callback to invoke when the button is pressed. This is called
-        without any arguments."""
+notif_action_interface = config['general']['notif_actions']['primary_interface'].get(
+    confuse.Choice(['button', 'click'], default='button')
+)
 
 
 def notify(
@@ -110,15 +102,23 @@ def notify(
     timeout=5,
     stdout=False,
     category="misc",
-    onclick: NotifActionCallback = None,
     actions: Sequence[Button] = (),
 ):
     if stdout:
-        print("ASDF", body)
+        print(body)
     if category not in enabled_categories:
         return
+    if category in enabled_notif_action_categories:
+        if notif_action_interface == 'click':
+            primary_action, *actions = actions
+            on_clicked = primary_action.on_pressed
+        else:
+            on_clicked = None
+    else:
+        on_clicked = None
+        actions = ()
     notif_task = notifier.send(
-        title, body, icon="", on_clicked=onclick, buttons=actions
+        title, body, icon="", on_clicked=on_clicked, buttons=actions
     )
     fut = asyncio.run_coroutine_threadsafe(notif_task, notif_loop)
     try:
