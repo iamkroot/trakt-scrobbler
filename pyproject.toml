@@ -30,7 +30,7 @@ confuse = "^2.0"
 pysocks = {version = "^1.7.1", optional = true}
 urlmatch = "^1.0.1"
 pydantic = "^1.10.2"
-toml = "^0.10.2"
+tomli = {version = "^2.0.1", python = "<3.11"}
 desktop-notifier = "^3.4.1"
 
 [tool.poetry.dev-dependencies]

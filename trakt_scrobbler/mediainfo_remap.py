@@ -5,12 +5,16 @@ It should be called at the end of get_media_info.
 """
 
 import re
+import sys
 from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Union
 
-import toml
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 from pydantic import BaseModel, Extra, Field, root_validator, validator
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import CFG_DIR
@@ -262,10 +266,11 @@ class RemapFile(BaseModel):
 
 def read_file(file: Path) -> List[RemapRule]:
     try:
-        data = toml.load(file)
+        with open(file, "rb") as f:
+            data = tomllib.load(f)
     except FileNotFoundError:
         return []
-    except toml.TomlDecodeError:
+    except tomllib.TomlDecodeError:
         logger.exception("Invalid TOML in remap_rules file. Ignoring.")
         return []
     return RemapFile.parse_obj(data).rules
