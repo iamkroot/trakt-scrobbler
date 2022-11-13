@@ -1,7 +1,7 @@
 import asyncio
 import threading
 from copy import deepcopy
-from typing import Any, Callable, Optional, Sequence
+from typing import Sequence
 
 import confuse
 from desktop_notifier.main import Button, DesktopNotifier
@@ -94,6 +94,10 @@ enabled_notif_action_categories = set(flatten_categories(categories))
 notif_action_interface = config['general']['notif_actions']['primary_interface'].get(
     confuse.Choice(['button', 'click'], default='button')
 )
+logger.debug(
+    "Notif actions enabled for categories: "
+    f"{', '.join(sorted(enabled_notif_action_categories))}"
+)
 
 
 def notify(
@@ -108,7 +112,7 @@ def notify(
         print(body)
     if category not in enabled_categories:
         return
-    if category in enabled_notif_action_categories:
+    if actions and category in enabled_notif_action_categories:
         if notif_action_interface == 'click':
             primary_action, *actions = actions
             on_clicked = primary_action.on_pressed
