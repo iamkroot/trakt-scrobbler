@@ -86,7 +86,7 @@ python-versions = ">=3.6.0"
 
 [[package]]
 name = "desktop-notifier"
-version = "3.4.1"
+version = "3.4.2.dev0"
 description = "Python library for cross-platform desktop notifications"
 category = "main"
 optional = false
@@ -97,7 +97,7 @@ dbus-next = {version = "*", markers = "sys_platform == \"linux\""}
 importlib-resources = {version = "*", markers = "python_version < \"3.9\""}
 packaging = "*"
 rubicon-objc = {version = "*", markers = "sys_platform == \"darwin\""}
-winsdk = {version = "*", markers = "sys_platform == \"win32\""}
+winsdk = {version = "1.0.0b7", markers = "sys_platform == \"win32\""}
 
 [package.extras]
 dev = ["black", "bump2version", "flake8", "mypy", "pre-commit", "pytest", "pytest-cov"]
@@ -355,7 +355,7 @@ socks = ["pysocks"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "d3a085dba251557b39ad3463b2ff05c65d57606972268c5f1eb5bf815f5bf151"
+content-hash = "2535f047731c81a31796b0ab6727507cba023f2672de45a56e1d7ae0dbf265ec"
 
 [metadata.files]
 appdirs = [
@@ -395,8 +395,8 @@ dbus-next = [
     {file = "dbus_next-0.2.3.tar.gz", hash = "sha256:f4eae26909332ada528c0a3549dda8d4f088f9b365153952a408e28023a626a5"},
 ]
 desktop-notifier = [
-    {file = "desktop-notifier-3.4.1.tar.gz", hash = "sha256:5a88515c4c1d9d958e9534a324ec46943d2ee4e404f48749406c22d478f811f3"},
-    {file = "desktop_notifier-3.4.1-py3-none-any.whl", hash = "sha256:c8306823ef1ebe06d272ca87999cc4df18594214d541f79b59463735be447bb7"},
+    {file = "desktop-notifier-3.4.2.dev0.tar.gz", hash = "sha256:9085e6a07699617f799bdb436a745072aca8a34a37e5362f9d8e08d8bab9ebdf"},
+    {file = "desktop_notifier-3.4.2.dev0-py3-none-any.whl", hash = "sha256:92cdc26b066cc2bd9eb19e007ca2f8031a83143e62c7382580ac8db92f912c30"},
 ]
 guessit = [
     {file = "guessit-3.5.0-py3-none-any.whl", hash = "sha256:616040afb9430941659da47f8d5d2b9db1e2e587db8627d57e711ea4888f9561"},
