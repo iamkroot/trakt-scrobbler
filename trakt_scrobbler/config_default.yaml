@@ -28,6 +28,7 @@ fileinfo:
 
   # if defined, only files from these directories will be scrobbled
   whitelist: []  # Keep as [] to allow all
+  title_whitelist: []  # use player-provided title instead of extracting from file path
 
   exclude_patterns: []  # ignore files matching these regex patterns
 

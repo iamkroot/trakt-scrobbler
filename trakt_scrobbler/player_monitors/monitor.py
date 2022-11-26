@@ -159,12 +159,17 @@ class Monitor(Thread):
         ) or not status.get('duration'):
             return {}
 
-        if 'filepath' in status:
-            media_info = get_media_info(status['filepath'])
-            if 'title' in status:
-                title_info = get_media_info_from_title(status['title'])
-        else:
-            media_info = status['media_info']
+        media_info = None
+        if 'title' in status:
+            # give first priority to title from media player
+            # will be used if it is present in title_whitelist config
+            media_info = get_media_info_from_title(status['title'])
+
+        if media_info is None:
+            if 'filepath' in status:
+                media_info = get_media_info(status['filepath'])
+            else:
+                media_info = status['media_info']
 
         if media_info is None:
             return {}

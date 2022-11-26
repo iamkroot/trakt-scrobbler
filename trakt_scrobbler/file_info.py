@@ -11,6 +11,7 @@ from urlmatch import BadMatchPattern, urlmatch
 
 cfg = config["fileinfo"]
 whitelist = cfg["whitelist"].get(confuse.StrSeq())
+title_whitelist: list = cfg["title_whitelist"].get(confuse.Sequence(RegexPat()))
 regexes: dict = cfg['include_regexes'].get({
     "movie": confuse.Sequence(RegexPat()),
     "episode": confuse.Sequence(RegexPat()),
@@ -65,6 +66,16 @@ def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[boo
             logger.debug(f"Matched whitelist entry {path!r}")
             return path if return_path else True
 
+    return False
+
+
+def whitelist_title(title: str, return_entry=False) -> Union[bool, str]:
+    """Check if the given title string matches any entry in title_whitelist"""
+    for pattern in title_whitelist:
+        match = pattern.search(title)
+        if match:
+            logger.debug(f"Matched title whitelist entry {pattern!r}")
+            return pattern if return_entry else True
     return False
 
 
@@ -133,8 +144,19 @@ def get_media_info(file_path: str):
 
 @lru_cache(maxsize=None)
 def get_media_info_from_title(title: str):
+    if not whitelist_title(title):
+        logger.info("Title not in whitelist.")
+        return None
+    # TODO: Do we want to have separate config key for title_exclude?
+    if exclude_file(title):
+        logger.info("Ignoring title.")
+        return None
+
+    # we don't allow custom regexes on titles
     guess = use_guessit(title)
     logger.debug(f"Title Guess: {guess}")
+    # TODO: perform mediainfo_remap on this guess
+    # maybe provide "match.playertitle" property for matching?
     return cleanup_guess(guess)
 
 
