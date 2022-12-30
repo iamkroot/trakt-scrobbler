@@ -31,7 +31,8 @@ pysocks = {version = "^1.7.1", optional = true}
 urlmatch = "^1.0.1"
 pydantic = "^1.10.2"
 tomli = {version = "^2.0.1", python = "<3.11"}
-desktop-notifier = "^3.4.2-dev0"
+desktop-notifier = {version = "^3.4.2", markers = "sys_platform != 'win32'"}
+win10toast = {version = "^0.9", platform = "win32"}
 setuptools = "^65.5.1"
 
 [tool.poetry.dev-dependencies]

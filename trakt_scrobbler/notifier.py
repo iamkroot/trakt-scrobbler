@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Sequence
 
 import confuse
-from desktop_notifier.main import Button, DesktopNotifier
+import sys
 from trakt_scrobbler import config, logger
 
 APP_NAME = 'Trakt Scrobbler'
@@ -72,32 +72,37 @@ if enabled_categories:
     )
 
 
-notifier = DesktopNotifier(APP_NAME)
-notif_loop = asyncio.new_event_loop()
+if sys.platform != 'win32':
+    from desktop_notifier.main import Button, DesktopNotifier
 
+    notifier = DesktopNotifier(APP_NAME)
+    notif_loop = asyncio.new_event_loop()
 
-def notify_loop():
-    logger.info("Starting notif loop")
-    asyncio.set_event_loop(notif_loop)
-    notif_loop.run_forever()
-    logger.info("Ending notif loop")
+    def notify_loop():
+        logger.info("Starting notif loop")
+        asyncio.set_event_loop(notif_loop)
+        notif_loop.run_forever()
+        logger.info("Ending notif loop")
 
+    notif_thread = threading.Thread(target=notify_loop, name="notify_loop", daemon=True)
+    notif_thread.start()
 
-notif_thread = threading.Thread(target=notify_loop, name="notify_loop", daemon=True)
-notif_thread.start()
+    notif_action_categories = config['general']['notif_actions']['enabled'].get()
+    categories = deepcopy(CATEGORIES)
+    merge_categories(categories, notif_action_categories)
+    enabled_notif_action_categories = set(flatten_categories(categories))
 
-notif_action_categories = config['general']['notif_actions']['enabled'].get()
-categories = deepcopy(CATEGORIES)
-merge_categories(categories, notif_action_categories)
-enabled_notif_action_categories = set(flatten_categories(categories))
+    notif_action_interface = config['general']['notif_actions']['primary_interface'].get(
+        confuse.Choice(['button', 'click'], default='button')
+    )
+    logger.debug(
+        "Notif actions enabled for categories: "
+        f"{', '.join(sorted(enabled_notif_action_categories))}"
+    )
 
-notif_action_interface = config['general']['notif_actions']['primary_interface'].get(
-    confuse.Choice(['button', 'click'], default='button')
-)
-logger.debug(
-    "Notif actions enabled for categories: "
-    f"{', '.join(sorted(enabled_notif_action_categories))}"
-)
+else:
+    from win10toast import ToastNotifier
+    toaster = ToastNotifier()
 
 
 def notify(
@@ -111,6 +116,9 @@ def notify(
     if stdout:
         print(body)
     if category not in enabled_categories:
+        return
+    if sys.platform == 'win32':
+        toaster.show_toast(title, body, duration=timeout, threaded=True)
         return
     if actions and category in enabled_notif_action_categories:
         if notif_action_interface == 'click':
