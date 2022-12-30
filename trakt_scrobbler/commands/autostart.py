@@ -58,6 +58,7 @@ class AutostartEnableCommand(Command):
             f"""
             [Unit]
             Description=Trakt Scrobbler Service
+            After=default.target
 
             [Service]
             ExecStart="{self.cmd_path}" run
