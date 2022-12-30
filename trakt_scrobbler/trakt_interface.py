@@ -1,5 +1,9 @@
 from datetime import datetime as dt
 from http import HTTPStatus
+from functools import wraps
+
+import requests
+from requests.sessions import merge_setting
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.notifier import notify
@@ -9,8 +13,50 @@ from trakt_scrobbler.utils import safe_request, read_json, write_json
 trakt_auth = TraktAuth()
 TRAKT_CACHE_PATH = DATA_DIR / 'trakt_cache.json'
 trakt_cache = {}
+sess = requests.Session()
 
 
+def trakt_endpoint(func):
+    _AUTH_RETRIES_LIMIT = 3
+    _auth_retries = 0
+
+    def handle_params(verb, params):
+        nonlocal _auth_retries
+        params['headers'] = merge_setting(params.get('headers', {}), trakt_auth.headers)
+        params.setdefault('timeout', 30)
+        resp = safe_request(verb, params)
+        if resp is not None and resp.status_code == HTTPStatus.UNAUTHORIZED:
+            if _auth_retries < _AUTH_RETRIES_LIMIT:
+                _auth_retries += 1
+                logger.info("Forcing trakt authentication")
+                trakt_auth.clear_token()
+                if not trakt_auth.get_access_token():
+                    logger.error("Failed to retrieve trakt token.")
+                    return None
+                else:
+                    return handle_params(verb, params)
+            else:
+                logger.critical("Failed to retrieve trakt token. Max retries exceeded.")
+                raise SystemExit(1)
+        else:
+            _auth_retries = 0
+            return resp
+
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        coro = func(*args, **kwargs)
+        verb, params = next(coro)
+        resp = handle_params(verb, params)
+        try:
+            coro.send(resp)
+        except StopIteration as i:
+            return i.value
+        else:
+            raise Exception("We only support endpoints with single yield")
+    return wrapped
+
+
+@trakt_endpoint
 def search(query, types=None, year=None, extended=False, page=1, limit=1):
     if not types:
         types = ['movie', 'show', 'episode']
@@ -19,10 +65,8 @@ def search(query, types=None, year=None, extended=False, page=1, limit=1):
         "params": {'query': query, 'extended': extended,
                    'field': 'title', 'years': year, 
                    'page': page, 'limit': limit},
-        "headers": trakt_auth.headers,
-        "timeout": 30,
     }
-    r = safe_request('get', search_params)
+    r = yield 'get', search_params
     return r.json() if r else None
 
 
@@ -104,6 +148,7 @@ def prepare_scrobble_data(media_info):
         }
 
 
+@trakt_endpoint
 def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_data = prepare_scrobble_data(media_info)
     if not scrobble_data:
@@ -111,11 +156,9 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_data['progress'] = progress
     scrobble_params = {
         "url": API_URL + '/scrobble/' + verb,
-        "headers": trakt_auth.headers,
         "json": scrobble_data,
-        "timeout": 30,
     }
-    scrobble_resp = safe_request('post', scrobble_params)
+    scrobble_resp = yield 'post', scrobble_params
 
     if scrobble_resp is not None:
         if scrobble_resp.status_code == HTTPStatus.NOT_FOUND:
@@ -144,6 +187,7 @@ def prepare_history_data(watched_at, media_info):
         }
 
 
+@trakt_endpoint
 def add_to_history(media_info, updated_at, *args, **kwargs):
     watched_at = dt.utcfromtimestamp(updated_at).isoformat() + 'Z'
     history = prepare_history_data(watched_at, media_info)
@@ -151,11 +195,9 @@ def add_to_history(media_info, updated_at, *args, **kwargs):
         return
     params = {
         "url": API_URL + '/sync/history',
-        "headers": trakt_auth.headers,
         "json": history,
-        "timeout": 30,
     }
-    resp = safe_request('post', params)
+    resp = yield 'post', params
     if not resp:
         return False
     added = resp.json()['added']
