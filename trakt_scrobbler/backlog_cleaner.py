@@ -47,7 +47,7 @@ class BacklogCleaner:
         failed = []
         for item in self.backlog:
             logger.debug(f'Adding item to history {item}')
-            if trakt.add_to_history(**item):
+            if trakt.add_to_history(**item) is True:
                 logger.info("Successfully added media to history.")
             else:
                 failed.append(item)
