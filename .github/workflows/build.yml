@@ -3,10 +3,11 @@ on: push
 
 jobs:
   test:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.7', '3.8', '3.9', '3.10']
+    runs-on: ${{ matrix.os }}
     steps:
     #----------------------------------------------
     #   check-out repo and set-up python and poetry
