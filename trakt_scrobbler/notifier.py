@@ -103,7 +103,11 @@ if sys.platform != 'win32':
 else:
     from win10toast import ToastNotifier
     toaster = ToastNotifier()
-    Button = object  # dummy type
+
+    class Button:
+        """dummy"""
+        def __init__(self, *args, **kwargs) -> None:
+            pass
 
 
 def notify(
