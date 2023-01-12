@@ -123,7 +123,7 @@ def get_ids(media_info):
             title = media_info["title"]
             trakt_id = get_trakt_id(title, media_info['type'], media_info.get('year'))
             if trakt_id < 1:
-                logger.warning(f"Invalid trakt id for {title}")
+                logger.warning(f"Invalid trakt id for title {title}")
                 return None
             return {'trakt': trakt_id}
         else:
