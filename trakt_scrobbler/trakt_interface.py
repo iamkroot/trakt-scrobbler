@@ -45,7 +45,10 @@ def trakt_endpoint(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
         coro = func(*args, **kwargs)
-        verb, params = next(coro)
+        try:
+            verb, params = next(coro)
+        except StopIteration as i:
+            return i.value
         resp = handle_params(verb, params)
         try:
             coro.send(resp)
