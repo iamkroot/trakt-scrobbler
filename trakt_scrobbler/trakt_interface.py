@@ -84,7 +84,8 @@ def get_ids(media_info):
     else:
         if trakt_id < 1:
             logger.warning(f"Invalid trakt id for {media_info}")    
-        return None
+            return None
+        return {'trakt': trakt_id}
 
 
 def prepare_scrobble_data(media_info):

@@ -153,7 +153,7 @@ class RemapMatch(BaseModel):
 
 
 class TraktId(BaseModel):
-    trakt_id: str
+    trakt_id: int
 
     def __str__(self):
         return f"trakt_id={self.trakt_id}"
@@ -178,7 +178,7 @@ MediaId = Union[TraktId, TraktSlug, Title]
 
 def format(media_id: MediaId, mediainfo) -> MediaId:
     if isinstance(media_id, TraktId):
-        return TraktId(trakt_id=media_id.trakt_id.format(**mediainfo))
+        return TraktId(trakt_id=int(media_id.trakt_id))
     elif isinstance(media_id, TraktSlug):
         return TraktSlug(trakt_slug=media_id.trakt_slug.format(**mediainfo))
     elif isinstance(media_id, Title):
