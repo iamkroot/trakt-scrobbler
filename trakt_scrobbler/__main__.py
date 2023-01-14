@@ -1,6 +1,6 @@
 import sys
 
 if __name__ == "__main__":
-    from .console import main
+    from trakt_scrobbler.console import main
 
     sys.exit(main())

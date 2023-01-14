@@ -1,3 +1,53 @@
+[project]
+name = "trakt-scrobbler"
+version = "1.6.3"
+description = "Scrobbler for trakt.tv that supports VLC, Plex, MPC-HC, and MPV"
+authors = [{name="iamkroot",email="kroot.patel@gmail.com"}]
+readme = "README.md"
+license = {file="LICENSE"}
+keywords = ["trakt", "scrobbler"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.7"
+
+dependencies = [
+    "requests",
+    "urllib3",
+    "guessit",
+    "appdirs",
+    "pywin32; sys_platform == 'win32'",
+    "cleo",
+    "confuse",
+    "urlmatch",
+    "pydantic",
+    "tomli; python_version < '3.11'",
+    "desktop-notifier; sys_platform != 'win32'",
+    "win10toast; sys_platform == 'win32'"
+]
+[project.optional-dependencies]
+socks = ["pysocks"]
+
+[project.scripts]
+trakts = "trakt_scrobbler.console:main"
+
+[tool.setuptools]
+packages = ["trakt_scrobbler"]
+
+# include = [
+#     {path = "tests", format = "sdist"},
+#     {path = "completions/**/*.*?sh", format = "sdist"}
+# ]
+# packages = [
+#     {include = "trakt_scrobbler"}
+# ]
+[project.urls]
+repository = "https://github.com/iamkroot/trakt-scrobbler"
+
+
 [tool.poetry]
 name = "trakt-scrobbler"
 version = "1.6.3"
@@ -16,6 +66,9 @@ classifiers = [
 include = [
 	{path = "tests", format = "sdist"},
 	{path = "completions/**/*.*?sh", format = "sdist"}
+]
+packages = [
+    {include = "trakt_scrobbler"}
 ]
 
 [tool.poetry.dependencies]
@@ -43,9 +96,13 @@ socks = ["pysocks"]
 [tool.poetry.scripts]
 trakts = "trakt_scrobbler.console:main"
 
+# [build-system]
+# requires = ["poetry-core>=1.0.0"]
+# build-backend = "poetry.core.masonry.api"
+
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=42", "wheel", "nuitka", "toml"]
+build-backend = "nuitka.distutils.Build"
 
 [tool.pyright]
 reportGeneralTypeIssues = false
