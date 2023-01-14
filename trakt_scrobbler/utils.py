@@ -187,11 +187,15 @@ class ResumableTimer:
 class RegexPat(confuse.Template):
     """A regex configuration value template"""
 
+    def __init__(self, flags=0):
+        super().__init__()
+        self.flags = flags
+
     def convert(self, value, view) -> re.Pattern:
         """Check that the value is an regex.
         """
         try:
-            return re.compile(value)
+            return re.compile(value, self.flags)
         except re.error as e:
             self.fail(u"malformed regex: '{}'. Error: {}".format(e.pattern, e), view)
         except TypeError as e:

@@ -1,5 +1,6 @@
+import re
 from functools import lru_cache
-from typing import Union, List
+from typing import List, Union
 from urllib.parse import unquote, urlsplit, urlunsplit
 
 import confuse
@@ -11,7 +12,9 @@ from urlmatch import BadMatchPattern, urlmatch
 
 cfg = config["fileinfo"]
 whitelist = cfg["whitelist"].get(confuse.StrSeq())
-title_whitelist: list = cfg["title_whitelist"].get(confuse.Sequence(RegexPat()))
+title_whitelist: list = cfg["title_whitelist"].get(
+    confuse.Sequence(RegexPat(flags=re.IGNORECASE))
+)
 regexes: dict = cfg['include_regexes'].get({
     "movie": confuse.Sequence(RegexPat()),
     "episode": confuse.Sequence(RegexPat()),
