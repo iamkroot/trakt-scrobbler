@@ -1,21 +1,29 @@
 import inspect
-from pathlib import Path
+from pkgutil import iter_modules
 from importlib import import_module
-from .monitor import Monitor
+from .monitor import Monitor, WebInterfaceMon
+import os
+
+
+pkgname = __package__
+pkgpath = os.path.dirname(__file__)
 
 
 def collect_monitors():
     """Collect the monitors from 'player_monitors' package."""
-    modules = Path(__file__).parent.glob("*.py")
     monitors = set()
-
-    for module_path in modules:
-        if module_path.stem == "__init__":
-            continue  # exclude this file
-
-        monitor_module = import_module(__name__ + "." + module_path.stem)
+    for mod in iter_modules([pkgpath], prefix=f"{pkgname}."):
+        if mod.name.endswith(".monitor"):
+            # exclude the base package
+            continue
+        monitor_module = import_module(mod.name)
         # get the required Monitor subclasses
-        for _, mon in inspect.getmembers(monitor_module, inspect.isclass):
-            if issubclass(mon, Monitor) and not getattr(mon, "exclude_import", False):
-                monitors.add(mon)
+        for _, Mon in inspect.getmembers(monitor_module, inspect.isclass):
+            if (
+                issubclass(Mon, Monitor)
+                and Mon != Monitor
+                and Mon != WebInterfaceMon
+                and not getattr(Mon, "exclude_import", False)
+            ):
+                monitors.add(Mon)
     return monitors
