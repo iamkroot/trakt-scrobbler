@@ -10,12 +10,14 @@ from copy import deepcopy
 from enum import Enum
 from pathlib import Path
 from typing import List, Optional, Union
+from pydantic_core import CoreSchema, core_schema
+from pydantic import GetCoreSchemaHandler, field_validator, model_validator
 
 if sys.version_info >= (3, 11):
     import tomllib
 else:
     import tomli as tomllib
-from pydantic import BaseModel, Extra, Field, root_validator, validator
+from pydantic import BaseModel, Field
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import CFG_DIR
 
@@ -49,16 +51,22 @@ class NumOrRange:
         return NumOrRange(self.start + delta, self.end + delta)
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def __modify_schema__(cls, field_schema):
-        # this class is a union of int and string "(\d+(:\d+)?)"
-        field_schema['type'] = {
-            "anyOf": [{"pattern": "^[0-9]+(:[0-9]+)?$"}, {"type": "integer"}]
-        }
-        field_schema['examples'] = ["1", "2:4"]
+    def __get_pydantic_core_schema__(
+        cls, _source_type, _handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        int_or_str = core_schema.union_schema([
+            core_schema.int_schema(ge=0),
+            core_schema.str_schema(pattern="^[0-9]+(:[0-9]+)?$"),
+        ])
+        return core_schema.no_info_after_validator_function(
+            cls.validate,
+            int_or_str,
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda v: v.start if v.start == v.end else f"{v.start}:{v.end}",
+                info_arg=False,
+                return_schema=int_or_str
+            )
+        )
 
     @classmethod
     def validate(cls, v):
@@ -73,6 +81,7 @@ class NumOrRange:
                 end = int(m["end"])
             except KeyError:
                 end = start
+            assert start <= end, f"Got {start=} > {end=}"
             return cls(start, end)
         else:
             raise TypeError("Expected int or string range")
@@ -83,22 +92,28 @@ class NumOrRange:
         else:
             return f"{self.start}:{self.end}"
 
+    def __repr__(self) -> str:
+        return f"NumOrRange(start={self.start},end={self.end})"        
+
 
 class RemapMatch(BaseModel):
-    path: Optional[re.Pattern]
-    episode: Optional[NumOrRange]
-    season: Optional[NumOrRange]
-    title: Optional[str]
-    year: Optional[int]
+    path: Optional[re.Pattern] = None
+    episode: Optional[NumOrRange] = None
+    season: Optional[NumOrRange] = None
+    title: Optional[str] = None
+    year: Optional[int] = None
 
-    @root_validator
+    @model_validator(mode='before')
+    @classmethod
     def check_atleast_one(cls, values):
-        assert any(
-            values.get(k) is not None for k in ("path", "title")
-        ), f"Expected either path or title in match. Got {values}"
+        if isinstance(values, dict):
+            assert any(
+                values.get(k) is not None for k in ("path", "title")
+            ), f"Expected either path or title in match. Got {values}"
         return values
 
-    @validator('path')
+    @field_validator('path')
+    @classmethod
     def path_regex(cls, path):
         if isinstance(path, str):
             return re.compile(path)
@@ -193,18 +208,20 @@ class MediaType(str, Enum):
         return "episode" if self == MediaType.episode else "movie"
 
 
-class RemapRule(BaseModel, extra=Extra.forbid):
+class RemapRule(BaseModel, extra='forbid'):
     match: RemapMatch
     media_type: MediaType = Field(alias="type")
     media_id: MediaId = Field(alias="id")
-    season: Optional[int]
-    episode: Optional[NumOrRange]
+    season: Optional[int] = None
+    episode: Optional[NumOrRange] = None
     episode_delta: int = 0
 
-    @root_validator
+    @model_validator(mode='before')
+    @classmethod
     def check_no_ep_with_movie(cls, values):
-        if values.get("media_type") == MediaType.movie:
-            assert values.get("season") is None, "Got season in movie rule"
+        if isinstance(values, dict):
+            if values.get("media_type") == MediaType.movie:
+                assert values.get("season") is None, "Got season in movie rule"
         return values
 
     def apply(self, path: str, orig_info: dict):
@@ -273,7 +290,7 @@ def read_file(file: Path) -> List[RemapRule]:
     except tomllib.TomlDecodeError:
         logger.exception("Invalid TOML in remap_rules file. Ignoring.")
         return []
-    return RemapFile.parse_obj(data).rules
+    return RemapFile.model_validate(data).rules
 
 
 rules = read_file(REMAP_FILE_PATH)
