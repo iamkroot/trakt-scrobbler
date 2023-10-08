@@ -24,14 +24,22 @@ class MPCMon(WebInterfaceMon):
         super().__init__(scrobble_queue)
 
     @staticmethod
-    def _read_registry_cfg(path):
+    def _read_registry_cfg(*paths):
         import winreg
-        try:
-            hkey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, path)
-        except FileNotFoundError as e:
-            e.filename = path
-            raise
-        return {"port": lambda: winreg.QueryValueEx(hkey, "WebServerPort")[0]}
+        error = FileNotFoundError
+        for path, key in paths:
+            try:
+                hkey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, path)
+            except FileNotFoundError as e:
+                error = e
+                # try next entry in paths
+            else:
+                # found!
+                break
+        else:
+            error.filename = ",".join(paths)
+            raise error
+        return {"port": lambda: winreg.QueryValueEx(hkey, key)[0]}
 
     def get_vars(self):
         response = self.sess.get(self.URL)
@@ -61,7 +69,7 @@ class MPCHCMon(MPCMon):
     @classmethod
     def read_player_cfg(cls, auto_keys=None):
         path = "Software\\MPC-HC\\MPC-HC\\Settings"
-        return cls._read_registry_cfg(path)
+        return cls._read_registry_cfg((path, "WebServerPort"))
 
 
 class MPCBEMon(MPCHCMon):
@@ -70,5 +78,7 @@ class MPCBEMon(MPCHCMon):
 
     @classmethod
     def read_player_cfg(cls, auto_keys=None):
-        path = "Software\\MPC-BE\\Settings"
-        return cls._read_registry_cfg(path)
+        path1, key1 = "Software\\MPC-BE\\WebServer", "Port"
+        # old versions can store their port under Settings hkey
+        path2, key2 = "Software\\MPC-BE\\Settings", "WebServerPort"
+        return cls._read_registry_cfg((path1, key1), (path2, key2))
