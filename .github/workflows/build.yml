@@ -28,7 +28,7 @@ jobs:
       run: poetry install --no-interaction
 
     - name: Run tests
-      run: poetry run python -m unittest tests
+      run: poetry run python -m unittest
 
   build:
     needs: test
