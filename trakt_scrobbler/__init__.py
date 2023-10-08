@@ -23,7 +23,7 @@ def register_exception_handler():
         except Exception:
             logger.exception("Exception while notifying user.")
 
-    def thread_excepthook(args: threading.ExceptHookArgs):
+    def thread_excepthook(args):
         if args.exc_type == SystemExit:
             # ignore SystemExit
             return
