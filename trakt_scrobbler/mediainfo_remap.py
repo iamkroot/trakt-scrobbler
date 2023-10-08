@@ -81,7 +81,7 @@ class NumOrRange:
                 end = int(m["end"])
             except KeyError:
                 end = start
-            assert start <= end, f"Got {start=} > {end=}"
+            assert start <= end, f"Got start={start} > end={end}"
             return cls(start, end)
         else:
             raise TypeError("Expected int or string range")
