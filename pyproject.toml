@@ -20,9 +20,9 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-requests = "^2.25.1"
+requests = "^2.31.0"
 urllib3 = "^1.26.0"
-guessit = "^3.3.1"
+guessit = "^3.7.1"
 appdirs = "^1.4.4"
 pywin32 = {version = ">=227", platform = "win32"}
 cleo = "^0.8.1"
