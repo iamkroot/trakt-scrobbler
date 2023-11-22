@@ -50,27 +50,42 @@ def register_exception_handler():
         error_logger(*args)
 
     sys.excepthook = error_logger
+    threading.excepthook = thread_excepthook
 
-    if sys.version_info >= (3, 8):
-        threading.excepthook = thread_excepthook
-    else:
-        # monkey-patch the excepthook mechanism into Thread class
-        # from http://stackoverflow.com/a/31622038
-        init_original = threading.Thread.__init__
+    # monkey-patch the start method to log RuntimeError
+    # This is needed for python 3.12 due to some interpreter errors.
+    # adapted from http://stackoverflow.com/a/31622038
+    init_original = threading.Thread.__init__
 
-        def init(self, *args, **kwargs):
-            init_original(self, *args, **kwargs)
-            run_original = self.run
+    def init(self, *args, **kwargs):
+        init_original(self, *args, **kwargs)
+        start_original = self.start
 
-            def run_with_except_hook(*args2, **kwargs2):
-                try:
-                    run_original(*args2, **kwargs2)
-                except Exception:
-                    thread_excepthook((*sys.exc_info(), self))
+        def start_with_except_hook(*args2, **kwargs2):
+            try:
+                start_original(*args2, **kwargs2)
+            except RuntimeError:
+                logger.exception("Runtime error in Thread start")
 
-            self.run = run_with_except_hook
+        self.start = start_with_except_hook
 
-        threading.Thread.__init__ = init
+    threading.Thread.__init__ = init
+
+    init_original_2 = threading.Timer.__init__
+
+    def init(self, *args, **kwargs):
+        init_original_2(self, *args, **kwargs)
+        start_original = self.start
+
+        def start_with_except_hook(*args2, **kwargs2):
+            try:
+                return start_original(*args2, **kwargs2)
+            except RuntimeError:
+                logger.exception("Runtime error in Timer start")
+
+        self.start = start_with_except_hook
+
+    threading.Timer.__init__ = init
 
 
 register_exception_handler()
