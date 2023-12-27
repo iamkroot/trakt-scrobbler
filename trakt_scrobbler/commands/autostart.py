@@ -62,6 +62,7 @@ class AutostartEnableCommand(Command):
 
             [Service]
             ExecStart="{self.cmd_path}" run
+            Env="DISPLAY=:0"
 
             [Install]
             WantedBy=default.target
