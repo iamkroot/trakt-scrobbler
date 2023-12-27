@@ -2,6 +2,8 @@ from queue import Queue
 import confuse
 from trakt_scrobbler import config, logger
 from trakt_scrobbler.backlog_cleaner import BacklogCleaner
+from trakt_scrobbler.log_config import LOG_PATH
+from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.player_monitors import collect_monitors
 from trakt_scrobbler.scrobbler import Scrobbler
 
@@ -33,6 +35,9 @@ def main():
     for t in threads:
         # will exit when monitors die
         t.join()
+    logger.critical("Exiting scrobbler - no more monitors")
+    notify(f"monitors dead - trakts log open ({LOG_PATH})", category="exception")
+
 
 
 if __name__ == '__main__':

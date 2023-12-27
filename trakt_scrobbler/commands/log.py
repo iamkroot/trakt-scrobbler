@@ -10,18 +10,18 @@ class LogOpenCommand(Command):
     """
 
     def handle(self):
-        from trakt_scrobbler.log_config import file_path
+        from trakt_scrobbler.log_config import LOG_PATH
 
-        if not file_path.exists():
-            self.line(f'Log file not found at "{file_path}"', "error")
+        if not LOG_PATH.exists():
+            self.line(f'Log file not found at "{LOG_PATH}"', "error")
             return 1
-        self.info(f'Log file is located at: <comment>"{file_path}"</comment>')
+        self.info(f'Log file is located at: <comment>"{LOG_PATH}"</comment>')
         if platform == "darwin":
-            sp.Popen(["open", file_path])
+            sp.Popen(["open", LOG_PATH])
         elif platform == "linux":
-            sp.Popen(["xdg-open", file_path])
+            sp.Popen(["xdg-open", LOG_PATH])
         elif platform == "win32":
-            sp.Popen(["explorer", file_path])
+            sp.Popen(["explorer", LOG_PATH])
         self.line(
             "In case this command doesn't work, "
             "manually open the log file from the path."
@@ -36,9 +36,9 @@ class LogLocationCommand(Command):
     """
 
     def handle(self):
-        from trakt_scrobbler.log_config import file_path
+        from trakt_scrobbler.log_config import LOG_PATH
 
-        self.line(f'{file_path}')
+        self.line(f'{LOG_PATH}')
 
 
 class LogCommand(Command):

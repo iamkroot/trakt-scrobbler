@@ -1,7 +1,7 @@
 import logging.config
 import sys
 from trakt_scrobbler.app_dirs import DATA_DIR
-file_path = DATA_DIR / "trakt_scrobbler.log"
+LOG_PATH = DATA_DIR / "trakt_scrobbler.log"
 IS_DEV = "trakts" not in sys.argv[0]
 
 
@@ -79,7 +79,7 @@ LOGGING_CONF = {
     'handlers': {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': file_path,
+            'filename': LOG_PATH,
             'maxBytes': 131072,
             'backupCount': 5,
             'mode': 'a',
