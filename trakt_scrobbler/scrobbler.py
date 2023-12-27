@@ -1,5 +1,5 @@
 import webbrowser
-from threading import Event, Thread
+from threading import Thread
 
 import confuse
 from trakt_scrobbler import config, logger
@@ -23,24 +23,20 @@ class Scrobbler(Thread):
     """Scrobbles the data from queue to Trakt."""
 
     def __init__(self, scrobble_queue, backlog_cleaner):
-        super().__init__(name='scrobbler')
+        super().__init__(name='scrobbler', daemon=True)
         logger.info('Started scrobbler thread.')
         self.scrobble_queue = scrobble_queue
         self.backlog_cleaner = backlog_cleaner
         self.prev_scrobble = None
-        self._stop_event = Event()
 
     def run(self):
-        while not self._stop_event.is_set():
+        while True:
             verb, data = self.scrobble_queue.get()
             if self.filter_scrobble(verb, data):
                 self.scrobble(verb, data)
             else:
                 logger.debug(f"Filtered out {verb} scrobble")
             self.scrobble_queue.task_done()
-
-    def stop(self):
-        self._stop_event.set()
 
     def filter_scrobble(self, verb, data):
         return verb in allowed_scrobbles[data['media_info']['type']]

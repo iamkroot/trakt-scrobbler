@@ -33,8 +33,6 @@ def main():
     for t in threads:
         # will exit when monitors die
         t.join()
-    # no point running the scrobbler if all monitors are dead
-    scrobbler.stop()
 
 
 if __name__ == '__main__':
