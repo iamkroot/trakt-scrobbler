@@ -19,6 +19,7 @@ def main():
     if unknown:
         logger.warning(f"Unknown player(s): {', '.join(unknown)}")
 
+    threads = []
     for Mon in all_monitors:
         if Mon.name not in allowed_monitors:
             continue
@@ -27,6 +28,13 @@ def main():
             logger.warning(f"Could not start monitor for {Mon.name}")
             continue
         mon.start()
+        threads.append(mon)
+
+    for t in threads:
+        # will exit when monitors die
+        t.join()
+    # no point running the scrobbler if all monitors are dead
+    scrobbler.stop()
 
 
 if __name__ == '__main__':
