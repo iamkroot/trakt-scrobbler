@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Union, List
 from urllib.parse import unquote, urlsplit, urlunsplit
 
@@ -28,7 +29,12 @@ def split_whitelist(whitelist: List[str]):
             # ignore result
         except BadMatchPattern:
             # local paths will raise BadMatchPattern error
-            local.append(path)
+            try:
+                local_path = Path(path)
+            except ValueError:
+                logger.warning(f"Couldn't convert str {path!r} to path", exc_info=True)
+            else:
+                local.append(local_path)
         else:
             remote.append(path)
     return local, remote
@@ -37,16 +43,11 @@ def split_whitelist(whitelist: List[str]):
 local_paths, remote_paths = split_whitelist(whitelist)
 
 
-def whitelist_local(local_path: str, file_path: str) -> bool:
+def whitelist_local(local_path: Path, file_path: Path) -> bool:
     """
     Simply checks that the whitelist path should be prefix of file_path.
-
-    An edge case that is deliberately not handled:
-    Suppose user has whitelisted "path/to/tv" directory
-    and the user also has another directory "path/to/tv shows".
-    If the user plays something from the latter, it will still be whitelisted.
     """
-    return file_path.startswith(local_path)
+    return local_path in file_path.parents
 
 
 def whitelist_remote(whitelist_path: str, file_path: str) -> bool:
@@ -57,13 +58,18 @@ def whitelist_file(file_path: str, is_url=False, return_path=False) -> Union[boo
     """Check if the played media file is in the allowed list of paths"""
     if not whitelist:
         return True
-    is_whitelisted = whitelist_remote if is_url else whitelist_local
-    whitelist_paths = remote_paths if is_url else local_paths
+    if is_url:
+        is_whitelisted = whitelist_remote    
+        whitelist_paths = remote_paths
+    else:
+        is_whitelisted = whitelist_local
+        whitelist_paths = local_paths
+        file_path = Path(file_path)
 
     for path in whitelist_paths:
         if is_whitelisted(path, file_path):
             logger.debug(f"Matched whitelist entry {path!r}")
-            return path if return_path else True
+            return str(path) if return_path else True
 
     return False
 
