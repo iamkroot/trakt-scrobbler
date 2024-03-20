@@ -13,6 +13,8 @@ from typing import List, Optional, Union
 from pydantic_core import CoreSchema, core_schema
 from pydantic import GetCoreSchemaHandler, field_validator, model_validator
 
+from trakt_scrobbler.utils import pluralize
+
 if sys.version_info >= (3, 11):
     import tomllib
 else:
@@ -287,13 +289,15 @@ def read_file(file: Path) -> List[RemapRule]:
             data = tomllib.load(f)
     except FileNotFoundError:
         return []
-    except tomllib.TomlDecodeError:
-        logger.exception("Invalid TOML in remap_rules file. Ignoring.")
+    except tomllib.TOMLDecodeError:
+        logger.exception(f"Invalid TOML in remap_rules file at {file}. Ignoring.")
         return []
     return RemapFile.model_validate(data).rules
 
 
 rules = read_file(REMAP_FILE_PATH)
+if rules:
+    logger.debug(f"Read {len(rules)} remap {pluralize(len(rules), 'rule')} from {REMAP_FILE_PATH}")
 
 
 def apply_remap_rules(path: str, media_info: dict):
