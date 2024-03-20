@@ -33,7 +33,7 @@ pydantic = "^2.4"
 pydantic-core = "^2.10.1"
 tomli = {version = "^2.0.1", python = "<3.11"}
 desktop-notifier = [
-    {version = "^3.4.2", markers = "sys_platform != 'win32'"},
+    {version = "^3.5.6", markers = "sys_platform != 'win32'"},
     # need to use the winsdk b10 version until desktop-notifier is updated
     {git = "https://github.com/samschott/desktop-notifier.git", branch = "main", markers = "sys_platform == 'win32'"}
 ]
