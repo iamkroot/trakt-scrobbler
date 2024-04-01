@@ -121,9 +121,12 @@ class RemapMatch(BaseModel):
             return re.compile(path)
         return path
 
-    def match(self, path: str, guess):
+    def match(self, path: Optional[str], guess):
         path_match = None
         if self.path is not None:
+            if path is None:
+                # If match.path is provided, the path _has_ to be present
+                return None
             path_match = self.path.fullmatch(path)
             if not path_match:
                 return None
@@ -226,7 +229,7 @@ class RemapRule(BaseModel, extra='forbid'):
                 assert values.get("season") is None, "Got season in movie rule"
         return values
 
-    def apply(self, path: str, orig_info: dict):
+    def apply(self, path: Optional[str], orig_info: dict):
         """If the rule matches, apply it to orig_info and return modified media_info"""
         media_info = deepcopy(orig_info)
         match = self.match.match(path, media_info)
@@ -300,7 +303,7 @@ if rules:
     logger.debug(f"Read {len(rules)} remap {pluralize(len(rules), 'rule')} from {REMAP_FILE_PATH}")
 
 
-def apply_remap_rules(path: str, media_info: dict):
+def apply_remap_rules(path: Optional[str], media_info: dict):
     for rule in rules:
         upd = rule.apply(path, media_info)
         if upd is not None:

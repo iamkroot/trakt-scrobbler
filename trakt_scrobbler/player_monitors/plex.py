@@ -3,6 +3,7 @@ import confuse
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.file_info import cleanup_guess
+from trakt_scrobbler.mediainfo_remap import apply_remap_rules
 from trakt_scrobbler.player_monitors.monitor import WebInterfaceMon
 from trakt_scrobbler.notifier import notify
 from trakt_scrobbler.utils import read_json, safe_request
@@ -165,4 +166,5 @@ class PlexMon(WebInterfaceMon):
             suffix = f" ({year})"
             if info["title"].endswith(suffix):
                 info["title"] = info["title"].replace(suffix, "")
-        return cleanup_guess(info)
+        guess = cleanup_guess(info)
+        return apply_remap_rules(None, guess) if guess else guess
