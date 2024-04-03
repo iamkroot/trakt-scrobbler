@@ -165,9 +165,13 @@ def cleanup_guess(guess):
             notify(msg)
             return None
         guess['season'] = int(season)
+        # if it came from regex, this might be a string
+        guess['episode'] = int(guess['episode'])
         req_keys += ['season', 'episode']
 
     if 'year' in guess:
+        # ensure it is an int
+        guess['year'] = int(guess['year'])
         req_keys += ['year']
 
     return {key: guess[key] for key in req_keys}
