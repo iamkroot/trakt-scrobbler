@@ -81,7 +81,7 @@ class NumOrRange:
             start = int(m.group("start"))
             try:
                 end = int(m["end"])
-            except KeyError:
+            except (KeyError, TypeError):
                 end = start
             assert start <= end, f"Got start={start} > end={end}"
             return cls(start, end)
