@@ -102,7 +102,7 @@ class PlexMon(WebInterfaceMon):
             return data["Metadata"][0]
 
         for metadata in data["Metadata"]:
-            if metadata["User"]["title"] == self.config["scrobble_user"]:
+            if metadata["User"].get("title") == self.config["scrobble_user"]:
                 return metadata
 
     def _update_status(self):
