@@ -80,8 +80,8 @@ class NumOrRange:
                 raise ValueError("Invalid range")
             start = int(m.group("start"))
             try:
-                end = int(m["end"])
-            except (KeyError, TypeError):
+                end = int(m["end"]) if m["end"] != None else start
+            except KeyError:
                 end = start
             assert start <= end, f"Got start={start} > end={end}"
             return cls(start, end)
