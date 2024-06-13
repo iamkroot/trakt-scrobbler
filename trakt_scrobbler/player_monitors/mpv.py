@@ -299,18 +299,36 @@ class MPVWinMon(MPVMon):
                 raise
 
     def conn_loop(self):
-        self.file_handle = win32file.CreateFile(
-            self.ipc_path,
-            win32file.GENERIC_READ | win32file.GENERIC_WRITE,
-            0,
-            None,
-            win32file.OPEN_EXISTING,
-            win32file.FILE_FLAG_OVERLAPPED,
-            None
-        )
+        # we could be using the same IPC pipe as some other tool
+        # (very likely, some mpv wrapper like syncplay.) If it has already
+        # connected to the pipe and written to it, we will get an error
+        # if we try to connect now. So handle it gracefully and retry.
+        for _ in range(5):
+            try:
+                self.file_handle = win32file.CreateFile(
+                    self.ipc_path,
+                    win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+                    0,
+                    None,
+                    win32file.OPEN_EXISTING,
+                    win32file.FILE_FLAG_OVERLAPPED,
+                    None
+                )
+            except win32file.error as e:
+                if e.args[0] == ERROR_PIPE_BUSY:
+                    # racing with someone else? retry.
+                    continue
+                else:
+                    raise
+            else:
+                break
+        else:
+            logger.error(f"Failed to connect to pipe, is there a race?")
+            return
+
         if self.file_handle == win32file.INVALID_HANDLE_VALUE:
             err = win32api.FormatMessage(win32api.GetLastError())
-            logging.error(f"Failed to connect to pipe: {err}")
+            logger.error(f"Failed to connect to pipe: {err}")
             self.file_handle = None
             return
 
