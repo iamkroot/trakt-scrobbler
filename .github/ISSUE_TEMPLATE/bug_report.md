@@ -15,6 +15,7 @@ A clear and concise description of what the bug/error is.
  - OS and Version: [e.g. Ubuntu 20.10]
  - Python Version: [e.g. 3.7.3]
  - Player and Version: [e.g. VLC v1.3.2]
+ - Trakt Scrobbler Version: [e.g. 1.6.3]
 
 **To Reproduce**
 
