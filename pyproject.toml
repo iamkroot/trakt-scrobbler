@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "trakt-scrobbler"
-version = "1.6.3"
+version = "1.7.0-beta.1"
 description = "Scrobbler for trakt.tv that supports VLC, Plex, MPC-HC, and MPV"
 authors = ["iamkroot <kroot.patel@gmail.com>"]
 readme = "README.md"
@@ -53,5 +53,5 @@ reportImplicitStringConcatenation = false
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py312']
 skip-string-normalization = true
