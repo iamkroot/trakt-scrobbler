@@ -32,7 +32,7 @@ urlmatch = "^1.0.1"
 pydantic = "^2.4"
 pydantic-core = "^2.10.1"
 tomli = {version = "^2.0.1", python = "<3.11"}
-desktop-notifier = "^4.0.0"
+desktop-notifier = "^5.0.0"
 # win10toast = {version = "^0.9", platform = "win32"}
 
 [tool.poetry.dev-dependencies]
