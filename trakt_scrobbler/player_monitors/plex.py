@@ -1,5 +1,6 @@
 from json.decoder import JSONDecodeError
 import confuse
+from requests import HTTPError
 from trakt_scrobbler import logger
 from trakt_scrobbler.app_dirs import DATA_DIR
 from trakt_scrobbler.file_info import cleanup_guess
@@ -86,7 +87,14 @@ class PlexMon(WebInterfaceMon):
         if resp is None:
             return
         # TODO: If we get a 401, clear token and restart plex auth flow
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except HTTPError:
+            if resp.status_code == 503 and "Maintenance" in resp.text:
+                logger.warning("Plex server unavailable, ignoring")
+                return None
+            raise
+
         try:
             data = resp.json()["MediaContainer"]
         except JSONDecodeError:
