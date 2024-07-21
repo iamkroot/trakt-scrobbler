@@ -94,10 +94,11 @@ jobs:
 
     - name: Release(github)
       if: ${{ ! env.ACT }}
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: dist/*.*
         body: ${{steps.github_release.outputs.changelog}}
+        prerelease: ${{ contains(github.ref, '-beta') }}
 
     - name: Release(pypi)
       run:  poetry publish --ansi --no-interaction
