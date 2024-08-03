@@ -283,7 +283,7 @@ class RemapRule(BaseModel, extra='forbid'):
 
 
 class RemapFile(BaseModel):
-    rules: List[RemapRule]
+    rules: List[RemapRule] = Field(default_factory=list)
 
 
 def read_file(file: Path) -> List[RemapRule]:
@@ -298,13 +298,18 @@ def read_file(file: Path) -> List[RemapRule]:
     return RemapFile.model_validate(data).rules
 
 
-rules = read_file(REMAP_FILE_PATH)
-if rules:
-    logger.debug(f"Read {len(rules)} remap {pluralize(len(rules), 'rule')} from {REMAP_FILE_PATH}")
+_rules: Optional[List[RemapRule]] = None
 
 
 def apply_remap_rules(path: Optional[str], media_info: dict):
-    for rule in rules:
+    global _rules
+    if _rules is None:
+        # read from file on first use
+        _rules = read_file(REMAP_FILE_PATH)
+        if _rules:
+            logger.debug(f"Read {len(_rules)} remap {pluralize(len(_rules), 'rule')} from {REMAP_FILE_PATH}")
+
+    for rule in _rules:
         upd = rule.apply(path, media_info)
         if upd is not None:
             return upd
