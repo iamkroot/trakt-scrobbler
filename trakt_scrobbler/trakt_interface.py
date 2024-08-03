@@ -35,7 +35,7 @@ def get_trakt_id(title, item_type, year=None):
 
     key = f"{title}{year or ''}"
 
-    trakt_id = trakt_cache[required_type].get(key)
+    trakt_id = trakt_cache.get(required_type, {}).get(key)
     if trakt_id:
         return trakt_id
 
@@ -60,6 +60,8 @@ def get_trakt_id(title, item_type, year=None):
     else:
         trakt_id = results[0][required_type]['ids']['trakt']
 
+    if not trakt_cache.get(required_type):
+        trakt_cache[required_type] = {}
     trakt_cache[required_type][key] = trakt_id
     logger.debug(f'Trakt ID: {trakt_id}')
     write_json(trakt_cache, TRAKT_CACHE_PATH)
@@ -67,14 +69,14 @@ def get_trakt_id(title, item_type, year=None):
 
 
 def get_ids(media_info):
-    try:
-        trakt_id = media_info['trakt_id']
-    except KeyError:
-        try:
-            trakt_slug = media_info['trakt_slug']
-        except KeyError:
-            title = media_info["title"]
-            trakt_id = get_trakt_id(title, media_info['type'], media_info.get('year'))
+    trakt_id = media_info.get('trakt_id')
+    if not trakt_id:
+        logger.warning(f"Invalid trakt id for {media_info}, looking for slug")
+        trakt_slug = media_info.get('trakt_slug')
+        if not trakt_slug:
+            logger.warning(f"Invalid trakt slug for {media_info}, looking for title")
+            title = media_info.get('title')
+            trakt_id = get_trakt_id(title, media_info.get('type'), media_info.get('year'))
             if trakt_id < 1:
                 logger.warning(f"Invalid trakt id for {title}")
                 return None
@@ -83,7 +85,7 @@ def get_ids(media_info):
             return {'slug': trakt_slug}
     else:
         if trakt_id < 1:
-            logger.warning(f"Invalid trakt id for {media_info}")    
+            logger.warning(f"Invalid trakt id for {media_info}")
             return None
         return {'trakt': trakt_id}
 
