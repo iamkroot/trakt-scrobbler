@@ -43,3 +43,10 @@ dist/
 trakt_scrobbler.egg-info/
 wiki/
 aur/
+
+# Python venv #
+###############
+Scripts/
+Lib/
+Include/
+pyvenv.cfg
