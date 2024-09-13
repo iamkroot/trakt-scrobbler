@@ -83,9 +83,7 @@ class PlexMon(WebInterfaceMon):
         self.media_info_cache = {}
 
     def get_data(self, url):
-        resp = safe_request("get", {"url": url}, self.sess)
-        if resp is None:
-            return
+        resp = self.sess.get(url)
         # TODO: If we get a 401, clear token and restart plex auth flow
         try:
             resp.raise_for_status()
