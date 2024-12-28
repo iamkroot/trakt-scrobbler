@@ -13,7 +13,7 @@ jobs:
     #   check-out repo and set-up python and poetry
     #----------------------------------------------
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install poetry
       run: pipx install poetry
@@ -39,7 +39,7 @@ jobs:
     #   check-out repo and set-up python and poetry
     #----------------------------------------------
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install poetry
       run: pipx install poetry
@@ -53,7 +53,7 @@ jobs:
     - name: Build
       run: poetry build --ansi --no-interaction
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       with:
         name: dist
@@ -66,7 +66,7 @@ jobs:
       contents: write
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install poetry
       run: pipx install poetry
