@@ -66,7 +66,7 @@ categories = deepcopy(CATEGORIES)
 merge_categories(categories, user_notif_categories)
 enabled_categories = set(flatten_categories(categories))
 
-if enabled_categories:
+if notifier is not None and enabled_categories:
     logger.debug(
         "Notifications enabled for categories: "
         f"{', '.join(sorted(enabled_categories))}"
@@ -92,10 +92,13 @@ enabled_notif_action_categories = set(flatten_categories(categories))
 notif_action_interface = config['general']['notif_actions']['primary_interface'].get(
     confuse.Choice(['button', 'click'], default='button')
 )
-logger.debug(
-    "Notif actions enabled for categories: "
-    f"{', '.join(sorted(enabled_notif_action_categories))}"
-)
+if notifier is not None:
+    logger.debug(
+        "Notif actions enabled for categories: "
+        f"{', '.join(sorted(enabled_notif_action_categories))}"
+    )
+else:
+    logger.warning("Notifier is not initialized!")
 
 
 def notify(
@@ -108,6 +111,8 @@ def notify(
 ):
     if stdout:
         print(body)
+    if notifier is None:
+        return
     if category not in enabled_categories:
         return
     if actions and category in enabled_notif_action_categories:
@@ -119,9 +124,13 @@ def notify(
     else:
         on_clicked = None
         actions = ()
-    notif_task = notifier.send(
-        title, body, icon="", on_clicked=on_clicked, buttons=actions
-    )
+    try:
+        notif_task = notifier.send(
+            title, body, icon="", on_clicked=on_clicked, buttons=actions
+        )
+    except Exception:
+        logger.error("Error when creating notification", exc_info=True)
+        return
     fut = asyncio.run_coroutine_threadsafe(notif_task, notif_loop)
     try:
         # wait for the notification to be _sent_

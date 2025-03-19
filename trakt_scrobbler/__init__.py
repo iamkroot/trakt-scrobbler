@@ -6,6 +6,7 @@ import threading
 import confuse
 import yaml
 
+APP_NAME = 'Trakt Scrobbler'
 # For reasons beyond my understanding, we cannot instantiate
 # DesktopNotifier _after_ we have imported pythoncom on Windows.
 # Trying to do so gives error "The application called an interface that was marshalled for a different thread"
@@ -13,17 +14,21 @@ import yaml
 # Possibly a conflict between win32 (pythoncom) and winrt (notifier) APIs.
 # 
 # So workaround is to instantiate the notifier _before_ any other import happens
-APP_NAME = 'Trakt Scrobbler'
-from desktop_notifier.main import DesktopNotifier
+try:
+    from desktop_notifier.main import DesktopNotifier
 
-notifier = DesktopNotifier(APP_NAME)
-if sys.platform == 'win32':
-    # this is another workaround for windows.
-    # See https://github.com/samschott/desktop-notifier/issues/95
-    notifier._did_request_authorisation = True
-# else:
-#     # can be initialized later
-#     notifier = None
+    notifier = DesktopNotifier(APP_NAME)
+except Exception as e:
+    # FIXME: haven't even initialized logging yet, where to log??
+    print("Error setting up notifier!", e, file=sys.stderr)
+    print("\nReport this issue to github.", file=sys.stderr)
+    notifier = None
+else:
+    if sys.platform == 'win32':
+        # this is another workaround for windows.
+        # See https://github.com/samschott/desktop-notifier/issues/95
+        notifier._did_request_authorisation = True
+
 
 from trakt_scrobbler.log_config import LOGGING_CONF
 from trakt_scrobbler.__version__ import __version__  # noqa
