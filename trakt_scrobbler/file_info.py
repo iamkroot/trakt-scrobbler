@@ -15,6 +15,9 @@ whitelist = cfg["whitelist"].get(confuse.StrSeq())
 regexes: dict = cfg['include_regexes'].get({
     "movie": confuse.Sequence(RegexPat()),
     "episode": confuse.Sequence(RegexPat()),
+    "raw_movie_path": confuse.Sequence(RegexPat()),
+    "raw_episode_path": confuse.Sequence(RegexPat()),
+    "raw_path": confuse.Sequence(RegexPat()),
 })
 use_regex = any(regexes.values())
 exclude_patterns: list = cfg["exclude_patterns"].get(confuse.Sequence(RegexPat()))
@@ -82,7 +85,9 @@ def exclude_file(file_path: str) -> bool:
     return False
 
 
-def custom_regex(file_path: str):
+def custom_regex(file_path: str, **kwargs):
+    if not use_regex:
+        return None
     for item_type, patterns in regexes.items():
         for pattern in patterns:
             m = pattern.match(file_path)
@@ -93,9 +98,14 @@ def custom_regex(file_path: str):
                 return guess
 
 
-def use_guessit(file_path: str):
+def clean_raw_type(val: str):
+    """Given the name of a raw type ("raw_movie_path", "raw_path", etc.), get the type (or None)"""
+    return val.removeprefix("raw").removesuffix("path").strip("_") or None
+
+
+def use_guessit(path: str, **kwargs):
     try:
-        return guessit.guessit(file_path)
+        return guessit.guessit(path, options=kwargs)
     except guessit.api.GuessitException:
         # lazy import the notifier module
         # This codepath will not be executed 99.99% of the time, and importing notify
@@ -130,7 +140,30 @@ def get_media_info(file_path: str):
     if exclude_file(file_path):
         logger.info("Ignoring file.")
         return None
-    guess = use_regex and custom_regex(file_path) or use_guessit(guessit_path)
+    return extract_info(file_path, guessit_path)
+
+def extract_info(file_path: str, guessit_path: str):
+    # first, try to apply custom regexes
+    guess = custom_regex(file_path)
+    guessit_args = {"path": guessit_path}
+    # handle raw regexes
+    if guess is not None and guess["type"].startswith("raw"):
+        if "path" not in guess:
+            logger.error(f"Expected 'path' from raw regex, got {guess}")
+            return None
+        if extra_keys := [k for k in guess.keys() if k not in ["type", "path"]]:
+            logger.error("Expected only 'path' from raw regex, "
+                f"got extra keys {extra_keys} in {guess}")
+            return None
+        # in case "path" is extracted by regex, we further pass that value to guessit
+        guessit_args["path"] = guess["path"]
+        # also provide the type hint to guessit :)
+        guessit_args["type"] = clean_raw_type(guess["type"])
+        logger.debug(f"Got guessit args from custom regex: {guessit_args}")
+        # reset so we use guessit next
+        guess = None
+    if guess is None:
+        guess = use_guessit(**guessit_args)
     logger.debug(f"Guess: {guess}")
     guess = cleanup_guess(guess)
     if guess:
