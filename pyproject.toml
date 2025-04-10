@@ -25,7 +25,7 @@ urllib3 = "^1.26.0"
 guessit = "^3.7.1"
 appdirs = "^1.4.4"
 pywin32 = {version = ">=227", platform = "win32"}
-cleo = "^0.8.1"
+cleo = ">=0.8.1,<2.1.0"
 confuse = "^2.0"
 pysocks = {version = "^1.7.1", optional = true}
 urlmatch = "^1.0.1"
