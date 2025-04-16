@@ -3,6 +3,7 @@ import locale
 import logging.config
 import os
 import re
+import subprocess as sp
 import sys
 import threading
 import time
@@ -197,3 +198,15 @@ class RegexPat(confuse.Template):
         except TypeError as e:
             self.fail(u"Couldn't compile regex from '{}'. Error: {}".format(value, e),
                       view, type_error=True)
+
+
+def open_file(path):
+    try:
+        if sys.platform == "darwin":
+            sp.Popen(["open", path])
+        elif sys.platform == "linux":
+            sp.Popen(["xdg-open", path])
+        elif sys.platform == "win32":
+            sp.Popen(["explorer", path])
+    except (sp.CalledProcessError, OSError):
+        logger.warning(f"Failed to open file {path}", exc_info=True)

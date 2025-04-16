@@ -11,17 +11,13 @@ class LogOpenCommand(Command):
 
     def handle(self):
         from trakt_scrobbler.log_config import LOG_PATH
+        from trakt_scrobbler.utils import open_file
 
         if not LOG_PATH.exists():
             self.line(f'Log file not found at "{LOG_PATH}"', "error")
             return 1
         self.info(f'Log file is located at: <comment>"{LOG_PATH}"</comment>')
-        if platform == "darwin":
-            sp.Popen(["open", LOG_PATH])
-        elif platform == "linux":
-            sp.Popen(["xdg-open", LOG_PATH])
-        elif platform == "win32":
-            sp.Popen(["explorer", LOG_PATH])
+        open_file(LOG_PATH)
         self.line(
             "In case this command doesn't work, "
             "manually open the log file from the path."

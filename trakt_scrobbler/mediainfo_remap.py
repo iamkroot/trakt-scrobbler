@@ -293,7 +293,13 @@ def read_file(file: Path) -> List[RemapRule]:
     except FileNotFoundError:
         return []
     except tomllib.TOMLDecodeError:
-        logger.exception(f"Invalid TOML in remap_rules file at {file}. Ignoring.")
+        msg = f"Invalid TOML in remap_rules file at {file}."
+        logger.exception(msg)
+        # lazy import
+        from trakt_scrobbler.notifier import notify, Button
+        from trakt_scrobbler.utils import open_file
+        onclick = Button("Open file", on_pressed=lambda: open_file(file))
+        notify(msg, category="exception", actions=[onclick])
         return []
     return RemapFile.model_validate(data).rules
 
