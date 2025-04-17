@@ -57,6 +57,31 @@ class Transition:
     def abs_progress(self) -> float:
         return abs(self.progress)
 
+    @property
+    def expected_progress_delta(self) -> float:
+        """Calculate expected % of file played between the two states.
+        Example: duration=50seconds, prev.upd_at=5, cur.upd_at=12
+        Here, elapsed time=7s; we expect (12-5)/50=7/50=14% of progress delta
+        """
+        if self.prev['duration'] != self.current['duration'] or self.current['state'] != State.Playing:
+            # doesn't make sense to have an expected progress in these cases.
+            return 0
+        return 100 * self.elapsed_realtime / self.current['duration']
+
+    @property
+    def progress_skipped(self) -> float:
+        """Compare the progress with the expected progress based on real time.
+        
+        Continuing above example, if prev.prog=8%, and expected_prog_delta=14%, 
+        cur.prog _should be_ 8+14 = 22%.
+        We calculate ((cur.prog - prev.prog) - exp_delta), should be close to 0.
+        """
+        return self.progress - self.expected_progress_delta
+
+    @property
+    def abs_progress_skipped(self) -> float:
+        return abs(self.progress_skipped)
+
 
 class Monitor(Thread):
     """Generic base class that polls the player for state changes,
@@ -185,6 +210,7 @@ class Monitor(Thread):
         progress = min(round(status['position'] * 100 / status['duration'], 2), 100)
         return {
             'state': status['state'],
+            'duration': status['duration'],
             'progress': progress,
             'media_info': media_info,
             'updated_at': time.time(),
@@ -218,10 +244,10 @@ class Monitor(Thread):
                     not prev 
                     or not transition.is_same_media
                     or transition.state_changed
-                    or transition.abs_progress > self.skip_interval
+                    or transition.abs_progress_skipped > self.skip_interval
                 ):
                     yield 'scrobble'
-        elif transition.state_changed or transition.abs_progress > self.skip_interval:
+        elif transition.state_changed or transition.abs_progress_skipped > self.skip_interval:
             # state changed
             if self.preview:
                 if current['state'] == State.Stopped:
@@ -235,7 +261,7 @@ class Monitor(Thread):
             elif self.fast_pause:
                 if (
                     current['state'] == State.Stopped
-                    or transition.abs_progress > self.skip_interval
+                    or transition.abs_progress_skipped > self.skip_interval
                 ):
                     yield 'scrobble'
                     yield 'exit_fast_pause'
