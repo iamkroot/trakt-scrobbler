@@ -30,6 +30,7 @@ class TestStateChange(unittest.TestCase):
             "progress": 30,
             "media_info": self.media_infos["show1"],
             "state": State.Playing,
+            "duration": 120,
             "updated_at": 1
         }
         actions = tuple(self.mon.decide_action(None, state))
@@ -39,6 +40,7 @@ class TestStateChange(unittest.TestCase):
             "progress": 50,
             "media_info": self.media_infos["show1"],
             "state": State.Paused,
+            "duration": 120,
             "updated_at": 5
         }
 
@@ -50,6 +52,7 @@ class TestStateChange(unittest.TestCase):
             "progress": 90,
             "media_info": self.media_infos["show1"],
             "state": State.Playing,
+            "duration": 120,
             "updated_at": 1
         }
         actions = tuple(self.mon.decide_action(None, state_1))
@@ -61,6 +64,7 @@ class TestStateChange(unittest.TestCase):
             "progress": 91,
             "media_info": self.media_infos["show1"],
             "state": State.Paused,
+            "duration": 120,
             "updated_at": 4
         }
         actions = tuple(self.mon.decide_action(state_1, state_2))
@@ -70,6 +74,7 @@ class TestStateChange(unittest.TestCase):
             "progress": 91,
             "media_info": self.media_infos["show1"],
             "state": State.Playing,
+            "duration": 120,
             "updated_at": 100
         }
         actions = tuple(self.mon.decide_action(state_2, state_3))
@@ -79,6 +84,7 @@ class TestStateChange(unittest.TestCase):
             "progress": 94,
             "media_info": self.media_infos["show1"],
             "state": State.Stopped,
+            "duration": 120,
             "updated_at": 110
         }
         actions = tuple(self.mon.decide_action(state_3, state_4))
@@ -90,6 +96,7 @@ class TestStateChange(unittest.TestCase):
             "progress": 10,
             "media_info": self.media_infos["show1"],
             "state": State.Stopped,
+            "duration": 120,
             "updated_at": 115
         }
         actions = tuple(self.mon.decide_action(state_4, state_5))
