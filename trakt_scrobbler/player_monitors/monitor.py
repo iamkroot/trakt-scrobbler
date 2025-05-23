@@ -134,10 +134,12 @@ class Monitor(Thread):
         if not auto_keys:
             return monitor_cfg
         try:
-            loaders = getattr(cls, "read_player_cfg")(auto_keys)
+            read_cfg = getattr(cls, "read_player_cfg")
         except AttributeError:
             raise AutoloadError(param=auto_keys,
                                 extra_msg=f"Autoload not supported for {cls.name}.")
+        try:
+            loaders = read_cfg(auto_keys)
         except FileNotFoundError as e:
             raise AutoloadError(src=e.filename, extra_msg="File not found")
 
