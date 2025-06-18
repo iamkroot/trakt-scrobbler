@@ -21,7 +21,7 @@ include = [
 [tool.poetry.dependencies]
 python = ">=3.9,<3.14"
 requests = "^2.31.0"
-urllib3 = "^1.26.0"
+urllib3 = ">=1.26,<3.0"
 guessit = "^3.7.1"
 appdirs = "^1.4.4"
 pywin32 = {version = ">=227", platform = "win32"}
