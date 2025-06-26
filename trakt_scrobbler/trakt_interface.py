@@ -123,6 +123,7 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
             return None
         elif scrobble_resp.status_code == HTTPStatus.CONFLICT:
             logger.warning("Scrobble already exists on trakt server.")
+            notify("Scrobble already exists on trakt server.", category="trakt")
             return None
 
     return scrobble_resp.json() if scrobble_resp else False
