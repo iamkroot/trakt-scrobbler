@@ -133,7 +133,7 @@ def prepare_history_data(watched_at, media_info):
     ids = get_ids(media_info)
     if ids is None:
         return
-    if type == 'movie':
+    if media_info['type'] == 'movie':
         return {'movies': [{'ids': ids, 'watched_at': watched_at}]}
     else:  # TODO: Group data by show instead of sending episode-wise
         return {'shows': [
