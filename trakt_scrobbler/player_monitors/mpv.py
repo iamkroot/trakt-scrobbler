@@ -16,6 +16,7 @@ if os.name == 'posix':
     import select
     import socket
 elif os.name == 'nt':
+    import win32api
     import win32event
     import win32file
     import win32pipe
