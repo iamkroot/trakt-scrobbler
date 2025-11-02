@@ -98,7 +98,7 @@ class NumOrRange:
         return f"NumOrRange(start={self.start},end={self.end})"        
 
 
-class RemapMatch(BaseModel):
+class RemapMatch(BaseModel, extra='forbid'):
     path: Optional[re.Pattern] = None
     episode: Optional[NumOrRange] = None
     season: Optional[NumOrRange] = None

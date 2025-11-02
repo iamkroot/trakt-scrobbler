@@ -9,6 +9,7 @@ from trakt_scrobbler.commands.init import InitCommand
 from trakt_scrobbler.commands.log import LogCommand
 from trakt_scrobbler.commands.lookup import LookupCommand
 from trakt_scrobbler.commands.plex import PlexAuthCommand
+from trakt_scrobbler.commands.remap import RemapCommand
 from trakt_scrobbler.commands.run import RunCommand
 from trakt_scrobbler.commands.start import StartCommand
 from trakt_scrobbler.commands.status import StatusCommand
@@ -26,6 +27,7 @@ def main():
     application.add(InitCommand())
     application.add(LogCommand())
     application.add(LookupCommand())
+    application.add(RemapCommand())
     application.add(PlexAuthCommand())
     application.add(RunCommand())
     application.add(StartCommand())
