@@ -166,7 +166,15 @@ def cleanup_guess(guess):
             return None
         guess['season'] = int(season)
         # if it came from regex, this might be a string
-        guess['episode'] = int(guess['episode'])
+        try:
+            guess['episode'] = int(guess['episode'])
+        except ValueError:
+            from trakt_scrobbler.notifier import notify
+            msg = f"Couldn't get a integer number episode from {guess['episode']:!r}. "
+            msg += "Consider renaming the file(s) or using a custom regex pattern."
+            logger.warning(msg, exc_info=True)
+            notify(msg)
+            return None
         req_keys += ['season', 'episode']
 
     if 'year' in guess:
