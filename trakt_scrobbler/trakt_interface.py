@@ -75,23 +75,20 @@ def get_ids(media_info):
         except KeyError:
             title = media_info["title"]
             trakt_id = get_trakt_id(title, media_info['type'], media_info.get('year'))
-            if trakt_id < 1:
-                logger.warning(f"Invalid trakt id for {title}")
-                return None
-            return {'trakt': trakt_id}
         else:
             return {'slug': trakt_slug}
-    else:
-        if trakt_id < 1:
-            logger.warning(f"Invalid trakt id for {media_info}")    
-            return None
-        return {'trakt': trakt_id}
+    if trakt_id == 0:
+        return False
+    if trakt_id < 0:
+        logger.warning(f"Invalid trakt id for {media_info}")    
+        return None
+    return {'trakt': trakt_id}
 
 
 def prepare_scrobble_data(media_info):
     ids = get_ids(media_info)
-    if ids is None:
-        return
+    if ids is None or ids is False:
+        return ids
     if media_info['type'] == 'movie':
         return {'movie': {"ids": ids}}
     elif media_info['type'] == 'episode':
@@ -107,7 +104,7 @@ def prepare_scrobble_data(media_info):
 def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_data = prepare_scrobble_data(media_info)
     if not scrobble_data:
-        return None
+        return scrobble_data
     scrobble_data['progress'] = progress
     scrobble_params = {
         "url": API_URL + '/scrobble/' + verb,
@@ -131,8 +128,8 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
 
 def prepare_history_data(watched_at, media_info):
     ids = get_ids(media_info)
-    if ids is None:
-        return
+    if ids is None or ids is False:
+        return ids
     if media_info['type'] == 'movie':
         return {'movies': [{'ids': ids, 'watched_at': watched_at}]}
     else:  # TODO: Group data by show instead of sending episode-wise
@@ -149,7 +146,7 @@ def add_to_history(media_info, updated_at, *args, **kwargs):
     watched_at = dt.utcfromtimestamp(updated_at).isoformat() + 'Z'
     history = prepare_history_data(watched_at, media_info)
     if not history:
-        return
+        return history
     params = {
         "url": API_URL + '/sync/history',
         "headers": trakt_auth.headers,
