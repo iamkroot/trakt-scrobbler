@@ -6,7 +6,7 @@ from typing import Sequence
 import confuse
 import sys
 
-from desktop_notifier.main import Button
+from desktop_notifier.main import Button, Urgency
 
 from trakt_scrobbler import config, logger, notifier, APP_NAME
 CATEGORIES = {
@@ -124,9 +124,14 @@ def notify(
     else:
         on_clicked = None
         actions = ()
+    urgency = Urgency.Normal
+    if category.startswith("scrobble"):
+        urgency = Urgency.Low 
+    elif category.startswith("exception"):
+        urgency = Urgency.Critical
     try:
         notif_task = notifier.send(
-            title, body, icon="", on_clicked=on_clicked, buttons=actions
+            title, body, icon="", on_clicked=on_clicked, buttons=actions, urgency=urgency
         )
     except Exception:
         logger.error("Error when creating notification", exc_info=True)
