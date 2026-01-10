@@ -28,6 +28,7 @@ dependencies = [
     # "pydantic-core>=2.10.1,<3",
     "tomli>=2.0.1,<3 ; python_version < '3.11'",
     "desktop-notifier>=6.1.0,<7",
+    "typer>=0.21.1",
 ]
 
 [project.optional-dependencies]
@@ -37,7 +38,8 @@ socks = ["pysocks>=1.7.1,<2"]
 repository = "https://github.com/iamkroot/trakt-scrobbler"
 
 [project.scripts]
-trakts = "trakt_scrobbler.console:main"
+trakts = "trakt_scrobbler.cli.main:app"
+trakts_old = "trakt_scrobbler.console:main"
 
 [dependency-groups]
 dev = []
