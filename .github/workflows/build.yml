@@ -9,51 +9,39 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
     runs-on: ${{ matrix.os }}
     steps:
-    #----------------------------------------------
-    #   check-out repo and set-up python and poetry
-    #----------------------------------------------
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
-    - name: Install poetry
-      run: pipx install poetry
-
-    - name: Setup Python 3
-      uses: actions/setup-python@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
       with:
-         python-version: ${{ matrix.python-version }}
-         cache: 'poetry'
+        version: "0.9.24"
+        python-version: ${{ matrix.python-version }}
 
     - name: Install project
-      run: poetry install --no-interaction
+      run: uv sync --locked --all-extras --dev
 
     - name: Run tests
-      run: poetry run python -m unittest
+      run: uv run python -m unittest
 
   build:
     needs: test
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     steps:
-    #----------------------------------------------
-    #   check-out repo and set-up python and poetry
-    #----------------------------------------------
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
-    - name: Install poetry
-      run: pipx install poetry
-
-    - name: Setup Python 3
-      uses: actions/setup-python@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
       with:
-         python-version: '3.x'
-         cache: 'poetry'
+        enable-cache: true
+        version: "0.9.24"
 
-    - name: Build
-      run: poetry build --ansi --no-interaction
+    - name: Install project
+      run: uv build
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v6
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
       with:
         name: dist
@@ -62,20 +50,23 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/trakt-scrobbler
     permissions:
-      contents: write
+      id-token: write  # needed for pypi
+      contents: write  # needed for github release
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Install poetry
-      run: pipx install poetry
-
-    - name: Setup Python 3
-      uses: actions/setup-python@v4
+      uses: actions/checkout@v6
       with:
-         python-version: '3.x'
-         cache: 'poetry'
+        fetch-depth: 0  # needed for changelog
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        version: "0.9.24"
 
     - uses: actions/download-artifact@v4.1.7
       with:
@@ -84,11 +75,11 @@ jobs:
 
     - name: Generate Changelog
       id: changelog
-      uses: mikepenz/release-changelog-builder-action@v3
+      uses: mikepenz/release-changelog-builder-action@v6
       with:
         owner: iamkroot
         ignorePreReleases: true
-        commitMode: true
+        mode: "hybrid"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -97,11 +88,8 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: dist/*.*
-        body: ${{steps.github_release.outputs.changelog}}
+        body: ${{steps.changelog.outputs.changelog}}
         prerelease: ${{ contains(github.ref, '-beta') }}
 
     - name: Release(pypi)
-      run:  poetry publish --ansi --no-interaction
-      env:
-        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-# vim:ft=yaml:ts=2:et:
+      run:  uv publish
