@@ -54,7 +54,8 @@ class VLCMon(WebInterfaceMon):
             prefs_dirs = (Path(appdirs.user_config_dir("vlc", False, roaming=True)),)
         else:
             prefs_dirs = (Path(appdirs.user_config_dir("vlc", False, roaming=True)),
-                          Path("~/snap/vlc/common/").expanduser(),)
+                          Path("~/snap/vlc/common/").expanduser(),
+                          Path("~/.var/app/org.videolan.VLC/config/vlc/").expanduser(),)
         vlcrc_path = tuple(prefs_dir / "vlcrc" for prefs_dir in prefs_dirs)
         vlcrc = ConfigParser(strict=False, inline_comment_prefixes="#")
         vlcrc.optionxform = lambda option: option
