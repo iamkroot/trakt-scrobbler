@@ -1,4 +1,5 @@
 import typer
+from rich.prompt import Confirm, Prompt
 
 from .console import console
 from .utils import MultiChoicePrompt
@@ -7,7 +8,7 @@ app = typer.Typer(help="Runs the initial setup of the scrobbler.")
 
 
 @app.command()
-def init(ctx: typer.Context):
+def init():
     from trakt_scrobbler.player_monitors import collect_monitors
 
     console.print(
@@ -23,60 +24,75 @@ def init(ctx: typer.Context):
         choices=sorted(Mon.name for Mon in monitors),
         console=console,
     )
-    return
-    self.call_sub("config set", f"players.monitored {' '.join(players)}", True)
-    self.line(f"Selected: {', '.join(players)}")
-    self.line(
-        "<info>If you wish to change these in the future, use</info> "
-        "<comment>trakts config set players.monitored player1 player2</comment>"
+    from trakt_scrobbler.cli import config
+
+    if retval := config.set_("players.monitored", players):
+        return retval
+    console.print(f"Selected: {', '.join(players)}")
+    console.print(
+        "[info]If you wish to change these in the future, use[/] "
+        "[comment]trakts config set players.monitored player1 player2[/]"
     )
 
-    for Mon, name, val in self.get_reqd_params(monitors, players):
+    for Mon, name, _ in get_reqd_params(monitors, players):
         msg = f"Enter '{name}' for {Mon.name}"
         if name == "password":
-            val = self.secret(
-                msg + " (keep typing, password won't be displayed on screen)"
+            res = Prompt.ask(
+                msg + " [cyan](keep typing, password won't be displayed on screen)",
+                password=True,
             )
         else:
-            val = self.ask(msg)
-        self.call_sub("config set", f'players.{Mon.name}.{name} "{val}"', True)
+            res = Prompt.ask(msg)
+        if retval := config.set_(f"players.{Mon.name}.{name}", [res]):
+            return retval
 
     if "plex" in players:
-        val = self.call("plex")
-        if val:
-            return val
-
+        # from trakt_scrobbler.cli import plex
+        # if retval := plex.auth():
+        #     return retval
+        pass
+    SETUP_URL = "https://github.com/iamkroot/trakt-scrobbler/wiki/Players-Setup"
     console.print(
-        "Remember to configure your player(s) as outlined at "
-        "<comment>https://github.com/iamkroot/trakt-scrobbler/wiki/Players-Setup</comment>",
-        style="info",
+        "[info]Remember to configure your player(s) as outlined at[/] "
+        f"[link {SETUP_URL}]{SETUP_URL}[/]",
     )
 
-    val = self.call("auth")
-    if val:
-        return val
+    from trakt_scrobbler.cli import trakt
 
-    if self.confirm(
-        "Do you wish to set the whitelist of folders to be monitored? "
-        "(recommended to be set to the roots of your media directories, "
+    if retval := trakt.auth():
+        return retval
+
+    if Confirm.ask(
+        "[question]Do you wish to set the whitelist of folders to be monitored? "
+        "[info](recommended to be set to the roots of your media directories, "
         "such as Movies folder, TV Shows folder, etc.)",
-        True,
+        default=True,
+        console=console,
     ):
-        msg = "Enter path to directory (or leave blank to continue):"
-        folder = self.ask(msg)
+        msg = "Enter path to directory [dim](or leave blank to continue)[/]"
+        folder = Prompt.ask(msg, console=console)
         while folder:
             if folder.endswith("\\"):  # fix escaping
                 folder += "\\"
-            self.call_sub("whitelist add", f'"{folder}"')
-            folder = self.ask(msg)
+            # self.call_sub("whitelist add", f'"{folder}"')
+            folder = Prompt.ask(msg, console=console)
+    if Confirm.ask(
+        "[question]Enable autostart service for scrobbler?",
+        default=True,
+        console=console,
+    ):
+        # from trakt_scrobbler.cli import autostart
+        #
+        # if retval := autostart.enable():
+        #    return retval
+        pass
 
-    if self.confirm("Enable autostart service for scrobbler?", True):
-        val = self.call_sub("autostart enable")
-        if val:
-            return val
-
-    if self.confirm("Start scrobbler service now?", True):
-        self.call("start")
+    if Confirm.ask(
+        "[question]Start scrobbler service now?", default=True, console=console
+    ):
+        # from trakt_scrobbler.cli import start
+        # return start.start()
+        pass
 
 
 def get_reqd_params(monitors, selected):
