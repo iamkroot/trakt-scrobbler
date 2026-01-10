@@ -1,51 +1,66 @@
-[tool.poetry]
+[project]
 name = "trakt-scrobbler"
 version = "1.8.0"
 description = "Scrobbler for trakt.tv that supports VLC, Plex, MPC-HC, and MPV"
-authors = ["iamkroot <kroot.patel@gmail.com>"]
+authors = [{ name = "iamkroot", email = "kroot.patel@gmail.com" }]
+requires-python = ">=3.9,<3.15"
 readme = "README.md"
-repository = "https://github.com/iamkroot/trakt-scrobbler"
 license = "GPL-2.0-only"
-keywords = ["trakt", "scrobbler"]
+keywords = [
+    "trakt",
+    "scrobbler",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
     "Operating System :: OS Independent",
 ]
-include = [
-	{path = "tests", format = "sdist"},
-	{path = "completions/**/*.*?sh", format = "sdist"}
+dependencies = [
+    "requests>=2.31.0,<3",
+    "urllib3>=2.5.0,<3",
+    "guessit>=3.7.1,<4",
+    "appdirs>=1.4.4,<2",
+    "pywin32>=227 ; sys_platform == 'win32'",
+    "cleo>=0.8.1,<0.9",
+    "confuse>=2.1.0,<3",
+    "urlmatch>=1.0.1,<2",
+    "pydantic>=2.12",
+    # "pydantic-core>=2.10.1,<3",
+    "tomli>=2.0.1,<3 ; python_version < '3.11'",
+    "desktop-notifier>=6.1.0,<7",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.9,<3.15"
-requests = "^2.31.0"
-urllib3 = "^2.5.0"
-guessit = "^3.7.1"
-appdirs = "^1.4.4"
-pywin32 = {version = ">=227", platform = "win32"}
-cleo = "^0.8.1"
-confuse = "^2.0"
-pysocks = {version = "^1.7.1", optional = true}
-urlmatch = "^1.0.1"
-pydantic = "^2.4"
-pydantic-core = "^2.10.1"
-tomli = {version = "^2.0.1", python = "<3.11"}
-desktop-notifier = "^6.1.0"
-# win10toast = {version = "^0.9", platform = "win32"}
+[project.optional-dependencies]
+socks = ["pysocks>=1.7.1,<2"]
 
-[tool.poetry.dev-dependencies]
+[project.urls]
+repository = "https://github.com/iamkroot/trakt-scrobbler"
 
-[tool.poetry.extras]
-socks = ["pysocks"]
-
-[tool.poetry.scripts]
+[project.scripts]
 trakts = "trakt_scrobbler.console:main"
 
+[dependency-groups]
+dev = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["trakt_scrobbler"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "trakt_scrobbler/**/*.py",
+    "trakt_scrobbler/config_default.yaml",
+    # "tests",
+    "completions/**/*.*?sh",
+]
+
+[tool.setuptools]
+packages = ["trakt_scrobbler"]
+# [tool.uv.build-backend]
+# module-root = "."
+
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pyright]
 reportGeneralTypeIssues = true
@@ -56,5 +71,5 @@ reportMissingParameterType = false
 
 [tool.black]
 line-length = 88
-target-version = ['py312']
+target-version = ['py314']
 skip-string-normalization = true
