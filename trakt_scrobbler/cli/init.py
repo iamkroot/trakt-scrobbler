@@ -4,10 +4,10 @@ from rich.prompt import Confirm, Prompt
 from .console import console
 from .utils import MultiChoicePrompt
 
-app = typer.Typer(help="Runs the initial setup of the scrobbler.")
+app = typer.Typer()
 
 
-@app.command()
+@app.command(help="Runs the initial setup of the scrobbler.")
 def init():
     from trakt_scrobbler.player_monitors import collect_monitors
 
@@ -26,8 +26,7 @@ def init():
     )
     from trakt_scrobbler.cli import config
 
-    if retval := config.set_("players.monitored", players):
-        return retval
+    config.set_("players.monitored", players)
     console.print(f"Selected: {', '.join(players)}")
     console.print(
         "[info]If you wish to change these in the future, use[/] "
@@ -43,14 +42,13 @@ def init():
             )
         else:
             res = Prompt.ask(msg)
-        if retval := config.set_(f"players.{Mon.name}.{name}", [res]):
-            return retval
+        config.set_(f"players.{Mon.name}.{name}", [res])
 
     if "plex" in players:
-        # from trakt_scrobbler.cli import plex
-        # if retval := plex.auth():
-        #     return retval
-        pass
+        from trakt_scrobbler.cli import plex
+
+        plex.auth()
+
     SETUP_URL = "https://github.com/iamkroot/trakt-scrobbler/wiki/Players-Setup"
     console.print(
         "[info]Remember to configure your player(s) as outlined at[/] "
@@ -59,8 +57,7 @@ def init():
 
     from trakt_scrobbler.cli import trakt
 
-    if retval := trakt.auth():
-        return retval
+    trakt.auth()
 
     if Confirm.ask(
         "[question]Do you wish to set the whitelist of folders to be monitored? "
@@ -81,18 +78,16 @@ def init():
         default=True,
         console=console,
     ):
-        # from trakt_scrobbler.cli import autostart
-        #
-        # if retval := autostart.enable():
-        #    return retval
-        pass
+        from trakt_scrobbler.cli import autostart
+
+        autostart.enable()
 
     if Confirm.ask(
         "[question]Start scrobbler service now?", default=True, console=console
     ):
-        # from trakt_scrobbler.cli import start
-        # return start.start()
-        pass
+        from trakt_scrobbler.cli import start
+
+        start.start()
 
 
 def get_reqd_params(monitors, selected):

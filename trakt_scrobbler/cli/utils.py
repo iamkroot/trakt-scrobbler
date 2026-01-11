@@ -1,3 +1,6 @@
+import logging
+
+from rich.logging import RichHandler
 from rich.prompt import InvalidResponse, PromptBase
 from rich.text import Text
 
@@ -46,3 +49,61 @@ class MultiChoicePrompt(PromptBase[list[str]]):
 
     def process_response(self, value: str) -> list[str]:
         return self.response_type(value)
+
+
+def _get_win_pid():
+    import re
+    import subprocess as sp
+
+    from . import CMD_NAME
+
+    try:
+        op = sp.check_output(
+            [
+                "wmic",
+                "process",
+                "where",
+                f"name='{CMD_NAME}.exe'",
+                "get",
+                "CommandLine,ProcessID",
+            ],
+            text=True,
+        )
+        pattern = re.compile(r" run.*?(?P<pid>\d+)")
+    except FileNotFoundError:
+        op = sp.check_output(
+            [
+                "powershell",
+                "-NonInteractive",
+                "-NoLogo",
+                "-NoProfile",
+                "-Command",
+                "gwmi -Query \"select processid from win32_process where name='trakts.exe' and commandline like '%run%'\"",
+            ],
+            text=True,
+        )
+        pattern = re.compile(r"ProcessId\s*:\s*(?P<pid>\d+)")
+    for line in op.split("\n"):
+        match = pattern.search(line)
+        if match:
+            return match["pid"]
+
+
+def _kill_task_win(pid):
+    import subprocess as sp
+
+    sp.check_call(["taskkill", "/pid", pid, "/f", "/t"])
+
+
+def add_log_handler(verbose: int, console):
+    """Output the log messages to stdout too"""
+    from trakt_scrobbler import logger
+
+    if verbose >= 3:
+        level = logging.DEBUG
+    elif verbose >= 1:
+        level = logging.INFO
+    else:
+        level = logging.WARNING
+    h = RichHandler(level=level, console=console)
+    logger.addHandler(h)
