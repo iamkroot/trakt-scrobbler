@@ -38,8 +38,8 @@ socks = ["pysocks>=1.7.1,<2"]
 repository = "https://github.com/iamkroot/trakt-scrobbler"
 
 [project.scripts]
-trakts = "trakt_scrobbler.cli.main:app"
-trakts_old = "trakt_scrobbler.console:main"
+trakts = "trakt_scrobbler.console:main"
+trakts-new = "trakt_scrobbler.cli.main:app"
 
 [dependency-groups]
 dev = []
