@@ -241,9 +241,13 @@ class Monitor(Thread):
                 yield 'exit_fast_pause'
             if current:
                 if current['progress'] > self.preview_threshold:
-                    yield 'enter_preview'
+                    if current['state'] != State.Stopped:
+                        yield 'enter_preview'
+                    else:
+                        # Can't really enter_preview on a stopped file
+                        yield 'ignore'
                 elif (
-                    not prev 
+                    not prev
                     or not transition.is_same_media
                     or transition.state_changed
                     or transition.abs_progress_skipped > self.skip_interval
@@ -359,8 +363,10 @@ class Monitor(Thread):
                 self.fast_pause_timer.start()
             elif action == "exit_fast_pause":
                 self.exit_fast_pause()
+            elif action == "ignore":
+                logger.info(f"Ignoring update {current}")
             else:
-                logger.warning(f"Invalid action {action}")
+                logger.warning(f"Invalid action {action}: {prev=} {current=}")
 
     def handle_status_update(self):
         current_state = self.parse_status(self.status)
