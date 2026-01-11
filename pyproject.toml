@@ -21,7 +21,6 @@ dependencies = [
     "guessit>=3.7.1,<4",
     "appdirs>=1.4.4,<2",
     "pywin32>=227 ; sys_platform == 'win32'",
-    "cleo>=0.8.1,<0.9",
     "confuse>=2.1.0,<3",
     "urlmatch>=1.0.1,<2",
     "pydantic>=2.12",
@@ -38,7 +37,6 @@ socks = ["pysocks>=1.7.1,<2"]
 repository = "https://github.com/iamkroot/trakt-scrobbler"
 
 [project.scripts]
-trakts-old = "trakt_scrobbler.console:main"
 trakts = "trakt_scrobbler.cli.main:app"
 
 [dependency-groups]
