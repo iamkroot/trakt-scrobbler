@@ -9,40 +9,40 @@ class TestTraktInterfaceIds(unittest.TestCase):
     def test_get_ids_uses_guid_ids_for_movie(self):
         media_info = {
             "type": "movie",
-            "title": "Example Movie",
-            "ids": {"imdb": "tt1234567", "tmdb": 12345},
+            "title": "The Shawshank Redemption",
+            "ids": {"imdb": "tt0111161", "tmdb": 278},
         }
         self.assertEqual(media_info["ids"], get_ids(media_info))
 
     def test_prepare_scrobble_data_episode_uses_ids(self):
         media_info = {
             "type": "episode",
-            "title": "Example Show",
+            "title": "Stranger Things",
             "season": 1,
-            "episode": 2,
-            "show_ids": {"tvdb": 111},
-            "episode_ids": {"tvdb": 222},
+            "episode": 1,
+            "show_ids": {"tvdb": 305288},
+            "episode_ids": {"tvdb": 5349651},
         }
         payload = prepare_scrobble_data(media_info)
-        self.assertEqual({"tvdb": 111}, payload["show"]["ids"])
-        self.assertEqual({"tvdb": 222}, payload["episode"]["ids"])
+        self.assertEqual({"tvdb": 305288}, payload["show"]["ids"])
+        self.assertEqual({"tvdb": 5349651}, payload["episode"]["ids"])
         self.assertNotIn("season", payload["episode"])
         self.assertNotIn("number", payload["episode"])
 
     def test_prepare_history_data_episode_uses_ids(self):
         media_info = {
             "type": "episode",
-            "title": "Example Show",
+            "title": "Stranger Things",
             "season": 3,
             "episode": 4,
-            "show_ids": {"tvdb": 333},
-            "episode_ids": {"tvdb": 444},
+            "show_ids": {"tvdb": 305288},
+            "episode_ids": {"tvdb": 5349678},
         }
         payload = prepare_history_data("2026-01-30T00:00:00Z", media_info)
         show_payload = payload["shows"][0]
         episode_payload = show_payload["seasons"][0]["episodes"][0]
-        self.assertEqual({"tvdb": 333}, show_payload["ids"])
-        self.assertEqual({"tvdb": 444}, episode_payload["ids"])
+        self.assertEqual({"tvdb": 305288}, show_payload["ids"])
+        self.assertEqual({"tvdb": 5349678}, episode_payload["ids"])
         self.assertNotIn("number", episode_payload)
 
     def test_scrobble_retries_with_episode_ids_only(self):
