@@ -52,9 +52,6 @@ class Scrobbler(Thread):
         return 'resume' if self._is_resume(verb, media_info) else verb
 
     def handle_successful_scrobble(self, verb, data, resp):
-        if 'skipped' in resp:
-            # Already logged as successful
-            return
         if 'movie' in resp:
             name = resp['movie']['title']
             url = f"https://trakt.tv/movies/{resp['movie']['ids']['slug']}"
@@ -78,6 +75,10 @@ class Scrobbler(Thread):
     def scrobble(self, verb, data):
         logger.debug(f"Scrobbling {verb} at {data['progress']:.2f}% for "
                      f"{data['media_info']['title']}")
+        if verb == 'pause' and data['progress'] < 1:
+            logger.debug("Skipping pause scrobble due to low progress.")
+            self.prev_scrobble = (verb, data)
+            return
         resp = trakt.scrobble(verb, **data)
         if resp:
             self.handle_successful_scrobble(verb, data, resp)

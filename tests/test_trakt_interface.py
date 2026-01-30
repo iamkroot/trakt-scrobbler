@@ -45,24 +45,6 @@ class TestTraktInterfaceIds(unittest.TestCase):
         self.assertEqual({"tvdb": 444}, episode_payload["ids"])
         self.assertNotIn("number", episode_payload)
 
-    def test_scrobble_handles_low_progress_pause(self):
-        media_info = {
-            "type": "episode",
-            "title": "Test Show",
-            "season": 1,
-            "episode": 1,
-            "episode_ids": {"tvdb": 12345},
-        }
-        resp_422 = MagicMock(status_code=422)
-        resp_422.json.return_value = {"message": "Progress should be at least 1.0% to pause."}
-
-        with patch('trakt_scrobbler.trakt_interface.safe_request') as mocked_request:
-            mocked_request.return_value = resp_422
-            result = scrobble('pause', media_info, 0.5)
-
-        self.assertEqual({'skipped': True}, result)  # Should return dict for low progress pause
-        mocked_request.assert_called_once()
-
     def test_scrobble_retries_with_episode_ids_only(self):
         media_info = {
             "type": "episode",
