@@ -17,7 +17,7 @@ Automatically scrobble TV show episodes and movies you are watching to [Trakt.tv
 *   Scrobbling is independent of the player(s) where the media is played. Support for new players can thus be easily added.
 *   Currently supports:
     *   [VLC](https://www.videolan.org/vlc/) (via web interface)
-    *   [Plex](https://www.plex.tv) (doesn't require Plex Pass)
+    *   [Plex](https://www.plex.tv) (doesn't require Plex Pass) - Uses GUID-based metadata (IMDb/TMDB/TVDB) for accurate show/episode/movie identification, with fallback to title/year and season/episode if needed
     *   [MPV](https://mpv.io) (via IPC server)
     *   [MPC-BE](https://sourceforge.net/projects/mpcbe/)/[MPC-HC](https://mpc-hc.org) (via web interface).
 *   **Folder whitelisting:** Only media files from subdirectories of these folders are synced with trakt.
