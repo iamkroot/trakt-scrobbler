@@ -60,7 +60,7 @@ class TestTraktInterfaceIds(unittest.TestCase):
             mocked_request.return_value = resp_422
             result = scrobble('pause', media_info, 0.5)
 
-        self.assertTrue(result)  # Should return True for low progress pause
+        self.assertEqual({'skipped': True}, result)  # Should return dict for low progress pause
         mocked_request.assert_called_once()
 
     def test_scrobble_retries_with_episode_ids_only(self):

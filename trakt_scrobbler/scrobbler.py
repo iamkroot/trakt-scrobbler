@@ -52,6 +52,9 @@ class Scrobbler(Thread):
         return 'resume' if self._is_resume(verb, media_info) else verb
 
     def handle_successful_scrobble(self, verb, data, resp):
+        if 'skipped' in resp:
+            # Already logged as successful
+            return
         if 'movie' in resp:
             name = resp['movie']['title']
             url = f"https://trakt.tv/movies/{resp['movie']['ids']['slug']}"

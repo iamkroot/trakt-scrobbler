@@ -17,7 +17,7 @@ def search(query, types=None, year=None, extended=False, page=1, limit=1):
     search_params = {
         "url": API_URL + '/search/' + ",".join(types),
         "params": {'query': query, 'extended': extended,
-                   'field': 'title', 'years': year, 
+                   'field': 'title', 'years': year,
                    'page': page, 'limit': limit},
         "headers": trakt_auth.headers,
         "timeout": 30,
@@ -83,7 +83,7 @@ def get_ids(media_info):
     if trakt_id == 0:
         return False
     if trakt_id < 0:
-        logger.warning(f"Invalid trakt id for {media_info}")    
+        logger.warning(f"Invalid trakt id for {media_info}")
         return None
     return {'trakt': trakt_id}
 
@@ -149,7 +149,7 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
                 error_msg = error_data.get('message', '')
                 if 'Progress should be at least 1.0% to pause' in error_msg and progress < 1:
                     logger.debug("Skipping pause scrobble due to low progress.")
-                    return True  # Treat as success
+                    return {'skipped': True}  # Treat as success
             except Exception:
                 pass
             logger.warning("Invalid scrobble data.")
