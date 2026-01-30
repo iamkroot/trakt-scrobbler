@@ -73,6 +73,9 @@ def get_ids(media_info):
         try:
             trakt_slug = media_info['trakt_slug']
         except KeyError:
+            ids = media_info.get('ids') or media_info.get('show_ids')
+            if ids:
+                return ids
             title = media_info["title"]
             trakt_id = get_trakt_id(title, media_info['type'], media_info.get('year'))
         else:
@@ -92,12 +95,16 @@ def prepare_scrobble_data(media_info):
     if media_info['type'] == 'movie':
         return {'movie': {"ids": ids}}
     elif media_info['type'] == 'episode':
-        return {
-            'show': {"ids": ids},
-            'episode': {
+        if media_info.get('episode_ids'):
+            episode_data = {'ids': media_info['episode_ids']}
+        else:
+            episode_data = {
                 'season': media_info['season'],
                 'number': media_info['episode']
             }
+        return {
+            'show': {"ids": ids},
+            'episode': episode_data
         }
 
 
@@ -105,6 +112,9 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
     scrobble_data = prepare_scrobble_data(media_info)
     if not scrobble_data:
         return scrobble_data
+    prefer_episode_ids = media_info['type'] == 'episode' and media_info.get('episode_ids')
+    if prefer_episode_ids:
+        scrobble_data = {'episode': {'ids': media_info['episode_ids']}}
     scrobble_data['progress'] = progress
     scrobble_params = {
         "url": API_URL + '/scrobble/' + verb,
@@ -116,11 +126,33 @@ def scrobble(verb, media_info, progress, *args, **kwargs):
 
     if scrobble_resp is not None:
         if scrobble_resp.status_code == HTTPStatus.NOT_FOUND:
+            if prefer_episode_ids:
+                retry_data = prepare_scrobble_data(media_info)
+                if retry_data:
+                    retry_data['progress'] = progress
+                    retry_params = scrobble_params.copy()
+                    retry_params['json'] = retry_data
+                    scrobble_resp = safe_request('post', retry_params)
+                    if scrobble_resp is None:
+                        return False
+                    if scrobble_resp.status_code != HTTPStatus.NOT_FOUND:
+                        return scrobble_resp.json() if scrobble_resp else False
             logger.warning("Not found on trakt. The media info is incorrect.")
             return None
         elif scrobble_resp.status_code == HTTPStatus.CONFLICT:
             logger.warning("Scrobble already exists on trakt server.")
             notify("Scrobble already exists on trakt server.", category="trakt")
+            return None
+        elif scrobble_resp.status_code == 422:
+            try:
+                error_data = scrobble_resp.json()
+                error_msg = error_data.get('message', '')
+                if 'Progress should be at least 1.0% to pause' in error_msg and progress < 1:
+                    logger.debug("Skipping pause scrobble due to low progress.")
+                    return True  # Treat as success
+            except Exception:
+                pass
+            logger.warning("Invalid scrobble data.")
             return None
 
     return scrobble_resp.json() if scrobble_resp else False
@@ -133,10 +165,14 @@ def prepare_history_data(watched_at, media_info):
     if media_info['type'] == 'movie':
         return {'movies': [{'ids': ids, 'watched_at': watched_at}]}
     else:  # TODO: Group data by show instead of sending episode-wise
+        if media_info.get('episode_ids'):
+            episode_data = {'ids': media_info['episode_ids'], 'watched_at': watched_at}
+        else:
+            episode_data = {'number': media_info['episode'], 'watched_at': watched_at}
         return {'shows': [
             {'ids': ids, 'seasons': [
                 {'number': media_info['season'], 'episodes': [
-                    {'number': media_info['episode'], 'watched_at': watched_at}]
+                    episode_data]
                  }]
              }]
         }

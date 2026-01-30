@@ -57,6 +57,11 @@ class PlexMon(WebInterfaceMon):
     exclude_import = False
     URL = "http://{ip}:{port}"
     STATES = {"stopped": 0, "paused": 1, "buffering": 1, "playing": 2}
+    GUID_PREFIXES = {
+        "imdb://": "imdb",
+        "tmdb://": "tmdb",
+        "tvdb://": "tvdb",
+    }
     CONFIG_TEMPLATE = {
         "ip": confuse.String(default="localhost"),
         "port": confuse.String(default="32400"),
@@ -81,6 +86,7 @@ class PlexMon(WebInterfaceMon):
         self.sess.headers["X-Plex-Token"] = self.token
         self.session_url = self.URL + "/status/sessions"
         self.media_info_cache = {}
+        self.metadata_cache = {}
 
     def get_data(self, url):
         resp = self.sess.get(url)
@@ -139,20 +145,25 @@ class PlexMon(WebInterfaceMon):
                 if not show_data:
                     show_data = self.get_data(self.URL + show_key)
                     self.media_info_cache[show_key] = show_data
+                episode_key = status_data.get("key") or f"/library/metadata/{status_data['ratingKey']}"
+                episode_data = self._get_metadata(episode_key)
             else:
                 show_data = None
-            media_info = self._get_media_info(status_data, show_data)
+                episode_data = None
+            media_info = self._get_media_info(status_data, show_data, episode_data)
             self.media_info_cache[status_data["ratingKey"]] = media_info
         return media_info
 
-    @staticmethod
-    def _get_media_info(status_data, show_data=None):
+    def _get_media_info(self, status_data, show_data=None, episode_data=None):
         if status_data["type"] == "movie":
             info = {
                 "type": "movie",
                 "title": status_data["title"],
                 "year": status_data.get("year"),
             }
+            movie_key = status_data.get("key") or f"/library/metadata/{status_data['ratingKey']}"
+            movie_data = self._get_metadata(movie_key)
+            movie_ids = self._extract_ids(movie_data)
         elif status_data["type"] == "episode":
             info = {
                 "type": "episode",
@@ -161,6 +172,8 @@ class PlexMon(WebInterfaceMon):
                 "episode": status_data["index"],
                 "year": show_data and show_data.get("year"),
             }
+            show_ids = self._extract_ids(show_data)
+            episode_ids = self._extract_ids(episode_data)
         else:
             logger.warning(f"Unknown media type {status_data['type']}")
             return None
@@ -173,4 +186,56 @@ class PlexMon(WebInterfaceMon):
             if info["title"].endswith(suffix):
                 info["title"] = info["title"].replace(suffix, "")
         guess = cleanup_guess(info)
-        return apply_remap_rules(None, guess) if guess else guess
+        if not guess:
+            return None
+        guess = apply_remap_rules(None, guess) if guess else guess
+        if info["type"] == "movie" and movie_ids:
+            guess["ids"] = movie_ids
+        if info["type"] == "episode":
+            if show_ids:
+                guess["show_ids"] = show_ids
+            if episode_ids:
+                guess["episode_ids"] = episode_ids
+        return guess
+
+    def _get_metadata(self, key):
+        if not key:
+            return None
+        cache_key = key
+        if cache_key in self.metadata_cache:
+            return self.metadata_cache[cache_key]
+        if key.startswith("http://") or key.startswith("https://"):
+            url = key
+        else:
+            url = self.URL + key
+        metadata = self.get_data(url)
+        self.metadata_cache[cache_key] = metadata
+        return metadata
+
+    def _extract_ids(self, metadata):
+        if not metadata:
+            return {}
+        ids = {}
+        guid_list = metadata.get("Guid") or []
+        for guid in guid_list:
+            guid_id = guid.get("id") if isinstance(guid, dict) else guid
+            if not guid_id:
+                continue
+            key, value = self._parse_guid(guid_id)
+            if key and value and key not in ids:
+                ids[key] = value
+        guid_string = metadata.get("guid")
+        if guid_string:
+            key, value = self._parse_guid(guid_string)
+            if key and value and key not in ids:
+                ids[key] = value
+        return ids
+
+    def _parse_guid(self, guid_value):
+        for prefix, key in self.GUID_PREFIXES.items():
+            if guid_value.startswith(prefix):
+                value = guid_value[len(prefix):]
+                if value.isdigit():
+                    return key, int(value)
+                return key, value
+        return None, None
