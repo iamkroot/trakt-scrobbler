@@ -1,6 +1,6 @@
 [project]
 name = "trakt-scrobbler"
-version = "1.8.0"
+version = "1.9.0b1"
 description = "Scrobbler for trakt.tv that supports VLC, Plex, MPC-HC, and MPV"
 authors = [{ name = "iamkroot", email = "kroot.patel@gmail.com" }]
 requires-python = ">=3.9,<3.15"
