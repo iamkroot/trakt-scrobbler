@@ -55,9 +55,10 @@ token = PlexToken()
 class PlexMon(WebInterfaceMon):
     name = "plex"
     exclude_import = False
-    URL = "http://{ip}:{port}"
+    URL = "{ip_scheme}://{ip}:{port}"
     STATES = {"stopped": 0, "paused": 1, "buffering": 1, "playing": 2}
     CONFIG_TEMPLATE = {
+        "ip_scheme": confuse.Choice(["http", "https"], default="http"),
         "ip": confuse.String(default="localhost"),
         "port": confuse.String(default="32400"),
         "poll_interval": confuse.Number(default=10),
