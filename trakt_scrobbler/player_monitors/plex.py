@@ -1,3 +1,6 @@
+import os
+import time
+import webbrowser
 from json.decoder import JSONDecodeError
 import confuse
 from requests import HTTPError
@@ -15,6 +18,7 @@ class PlexToken:
 
     TODO: Use some form of OS-provided encrypted storage
     """
+
     PATH = DATA_DIR / "plex_token.txt"
     OLD_PATH = DATA_DIR / "plex_token.json"
 
@@ -52,6 +56,84 @@ class PlexToken:
 token = PlexToken()
 
 
+class PlexAuth:
+    # https://forums.plex.tv/t/authenticating-with-plex/609370
+    API_URL = "https://plex.tv/api/v2"
+    CLIENT_ID = (
+        "com.iamkroot.trakt_scrobbler"  # Reuse from CLI or consistently use this
+    )
+    PRODUCT = "Trakt Scrobbler"
+
+    def __init__(self):
+        self._token_store = token
+
+    def get_pin(self):
+        params = {
+            "url": f"{self.API_URL}/pins",
+            "headers": {"Accept": "application/json"},
+            "data": {
+                "strong": "true",
+                "X-Plex-Product": self.PRODUCT,
+                "X-Plex-Client-Identifier": self.CLIENT_ID,
+            },
+        }
+        resp = safe_request("post", params)
+        return resp.json() if resp else None
+
+    def device_auth(self):
+        pin_data = self.get_pin()
+        if not pin_data:
+            logger.error("Could not get Plex PIN.")
+            return False
+
+        auth_url = (
+            f"https://app.plex.tv/auth#?clientID={self.CLIENT_ID}&code={pin_data['code']}"
+            f"&context[device][product]={self.PRODUCT}"
+        )
+
+        logger.info(f"Verification URL: {auth_url}")
+        notify(
+            "Opening browser for Plex authentication...", stdout=True, category="plex"
+        )
+
+        term_bak = os.environ.pop("TERM", None)
+        webbrowser.open(auth_url)
+        if term_bak is not None:
+            os.environ["TERM"] = term_bak
+
+        # Poll for token
+        pin_id = pin_data["id"]
+        check_url = f"{self.API_URL}/pins/{pin_id}"
+
+        start_time = time.time()
+        poll_interval = 2
+        # at max 2 minutes
+        expires_in = min(pin_data.get("expiresIn", 120), 120)
+
+        while time.time() - start_time < expires_in:
+            params = {
+                "url": check_url,
+                "headers": {"Accept": "application/json"},
+                "params": {"X-Plex-Client-Identifier": self.CLIENT_ID},
+            }
+            resp = safe_request("get", params)
+            if resp and resp.status_code == 200:
+                data = resp.json()
+                if data.get("authToken"):
+                    self._token_store.data = data["authToken"]
+                    logger.info("Plex authenticated successfully.")
+                    notify(
+                        "Plex authenticated successfully.", stdout=True, category="plex"
+                    )
+                    return True
+
+            time.sleep(poll_interval)
+
+        logger.error("Plex authentication timed out.")
+        notify("Plex authentication timed out.", stdout=True, category="plex")
+        return False
+
+
 class PlexMon(WebInterfaceMon):
     name = "plex"
     exclude_import = False
@@ -62,7 +144,7 @@ class PlexMon(WebInterfaceMon):
         "ip": confuse.String(default="localhost"),
         "port": confuse.String(default="32400"),
         "poll_interval": confuse.Number(default=10),
-        "scrobble_user": confuse.String(default="")
+        "scrobble_user": confuse.String(default=""),
     }
 
     def __init__(self, scrobble_queue):
@@ -74,8 +156,9 @@ class PlexMon(WebInterfaceMon):
         self.token = token.data
         if not self.token:
             logger.error("Unable to retrieve plex token.")
-            notify("Unable to retrieve plex token. Rerun plex auth.",
-                   category="exception")
+            notify(
+                "Unable to retrieve plex token. Rerun plex auth.", category="exception"
+            )
             return
         super().__init__(scrobble_queue)
         self.sess.headers["Accept"] = "application/json"
