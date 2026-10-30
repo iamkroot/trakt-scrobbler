@@ -26,7 +26,7 @@ def get_autostart_serv_path() -> Path:
             r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",
         )
         path = QueryValueEx(key, "Startup")[0]
-        return Path(path) / (APP_NAME + ".vbs")
+        return Path(path) / (APP_NAME + ".lnk")
 
 
 @app.command(help="Installs and enables the autostart service.")
@@ -85,8 +85,31 @@ def enable():
         sp.check_call(["systemctl", "--user", "enable", "trakt-scrobbler"])
     else:
         win_startup_script = get_autostart_serv_path()
-        contents = f'CreateObject("Wscript.Shell").Run "{CMD_NAME} run", 0, False'
-        win_startup_script.write_text(contents.strip())
+        try:
+            import win32com.client
+        except ImportError:
+            win32com = None
+
+        if win32com is not None:
+            shell = win32com.client.Dispatch("WScript.Shell")
+            shortcut = shell.CreateShortCut(str(win_startup_script))
+            shortcut.Targetpath = cmd_path
+            shortcut.Arguments = "run"
+            shortcut.WorkingDirectory = str(Path(cmd_path).parent)
+            shortcut.WindowStyle = 7  # Minimized, hidden
+            shortcut.save()
+        else:
+            # Fallback: create shortcut using PowerShell
+            ps_script = f'''
+$WshShell = New-Object -ComObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut("{str(win_startup_script)}")
+$Shortcut.TargetPath = "{cmd_path}"
+$Shortcut.Arguments = "run"
+$Shortcut.WorkingDirectory = "{str(Path(cmd_path).parent)}"
+$Shortcut.WindowStyle = 7
+$Shortcut.Save()
+'''
+            sp.check_call(["powershell", "-ExecutionPolicy", "Bypass", "-Command", ps_script.strip()])
 
     console.print(
         "Autostart Service has been enabled. "
