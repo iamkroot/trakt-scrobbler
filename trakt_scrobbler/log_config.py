@@ -80,6 +80,7 @@ LOGGING_CONF = {
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': LOG_PATH,
+            'encoding': 'utf-8',
             'maxBytes': 131072,
             'backupCount': 5,
             'mode': 'a',

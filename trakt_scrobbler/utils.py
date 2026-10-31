@@ -107,7 +107,7 @@ def cleanup_encoding(file_path: str) -> str:
     if sys.platform == "win32":
         enc = locale.getpreferredencoding()
         try:
-            file_path = str(file_path).encode(enc).decode()
+            file_path = str(file_path).encode(enc).decode(enc)
         except (UnicodeEncodeError, UnicodeDecodeError) as e:
             logger.debug(f"System encoding scheme: '{enc}'")
             try:
